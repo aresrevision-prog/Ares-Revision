@@ -1,0 +1,16 @@
+{
+  "name": "ares-gun-relay",
+  "version": "1.0.0",
+  "description": "Private GUN sync relay for Ares Revision — keeps student/parent/school data syncing across devices.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "gun": "^0.2020.1240",
+    "express": "^4.19.2"
+  }
+}
