@@ -1,2 +1,2 @@
 # Ares-Revision
-Revision app for AQA all and EXCEDEL maths
+Revision app for year 9, 10, and 11s.
