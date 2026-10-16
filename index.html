@@ -751,6 +751,7 @@ html,html,body{height:100%}body{min-height:100%;background:var(--bg);color:var(-
     <button class="topbar-btn" onclick="toggleProgModal()" title="View your progress">📊 Progress</button>
     <button class="topbar-btn" onclick="eventsOpen()" title="Upcoming events">📅 Events<span id="events-badge" style="display:none;margin-left:5px;background:#f97316;color:#fff;border-radius:99px;padding:0 6px;font-size:10px;font-weight:800;"></span></button>
     <button class="topbar-btn home-btn" onclick="goHome()" title="Return to home screen">🏠 Home</button>
+    <span id="topbar-m-hint" style="font-size:11px;color:rgba(255,255,255,0.4);white-space:nowrap;">press <kbd style="border:1px solid rgba(255,255,255,0.3);border-radius:4px;padding:0 5px;font-family:inherit;font-weight:700;color:rgba(255,255,255,0.7);">M</kbd> to go to home menu</span>
     <button id="mute-toggle-btn" onclick="toggleSoundMuted()" title="Mute all sound"
       aria-pressed="false"
       class="topbar-btn"
@@ -8750,6 +8751,17 @@ function toggleBannedDevicesPanel(){
   if(!isOpen) renderBannedDevicesList();
 }
 
+// Press M anywhere (outside text fields and games) to return to the home screen
+document.addEventListener('keydown', function(e){
+  if(e.key !== 'm' && e.key !== 'M') return;
+  if(e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+  const t = e.target, tag = t && t.tagName;
+  if(tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (t && t.isContentEditable)) return;
+  // don't hijack the key while a game / overlay is open
+  const open = [...document.querySelectorAll('[id$="-overlay"],#arena-hub,#events-modal,#ping-popup')].some(el => el.style.display && el.style.display !== 'none');
+  if(open) return;
+  if(typeof goHome === 'function'){ e.preventDefault(); goHome(); }
+});
 // ── Events & pings ──────────────────────────────────────────────────────
 // One `events` table: kind 'ping' = popup shown once to everyone; kind 'event'
 // = dated entry in the 📅 Events list.
