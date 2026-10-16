@@ -12693,6 +12693,7 @@ function _aresUpdateArenaButton(){
     <button onclick="wsSave()">💾 Save</button><button onclick="wsLoadOpen()">📂 Load</button>
     <button onclick="wsShare()">📋 Share</button><button onclick="wsImport()">📥 Import</button>
     <button onclick="wsSnap()" title="Grid snap">🧲</button><button onclick="wsAuto()" title="Auto-attach">🔗auto</button><button onclick="wsFollow()" title="Camera follow">🎥</button>
+    <button onclick="wsCrewOpen()">👩‍🚀 Crew</button><button onclick="wsStationOpen()">🛰️ Station</button><span id="ws-credits" style="font-weight:800;color:#ffd23f;font-size:13px">💰 150</span>
     <button onclick="wsClear()" style="color:#f87171">🗑 Clear</button>
   </div>
   <div class="ws-main">
@@ -12706,7 +12707,10 @@ function _aresUpdateArenaButton(){
         <div style="display:flex;gap:10px"><button ontouchstart="wsPad('dir',-1)" ontouchend="wsPad('dir',0)" onmousedown="wsPad('dir',-1)" onmouseup="wsPad('dir',0)">◀</button><button ontouchstart="wsPad('dir',1)" ontouchend="wsPad('dir',0)" onmousedown="wsPad('dir',1)" onmouseup="wsPad('dir',0)">▶</button></div>
         <button ontouchstart="wsPad('go',true)" ontouchend="wsPad('go',false)" onmousedown="wsPad('go',true)" onmouseup="wsPad('go',false)">🚀</button>
       </div>
+      <div id="ws-banner" style="position:absolute;left:50%;top:18%;transform:translateX(-50%) scale(.92);opacity:0;transition:opacity .5s,transform .5s;text-align:center;color:#fff;text-shadow:0 2px 14px #000,0 0 30px rgba(120,180,255,.6);pointer-events:none;max-width:90%;z-index:6"></div>
       <div id="ws-toast"></div>
+<div id="ws-crewm" onclick="if(event.target===this)this.style.display='none'" style="display:none;position:absolute;inset:0;z-index:30;background:rgba(0,0,0,.72);align-items:center;justify-content:center;padding:16px"><div class="box" style="background:#140d05;border:1.5px solid #ffa03c;border-radius:14px;max-width:460px;width:100%;max-height:80vh;display:flex;flex-direction:column"><div style="padding:12px 14px;font-weight:800;color:#ffa03c;border-bottom:1px solid rgba(255,255,255,.1);display:flex;justify-content:space-between"><span>👩‍🚀 Your crew</span><span id="ws-crewcr" style="color:#ffd23f"></span></div><div style="font-size:11px;opacity:.65;padding:8px 14px">Place a 🧑‍🚀 Crew capsule on your rocket to carry crew. Fly it to orbit or beyond to earn XP and credits. Level up crew by training them.</div><div id="ws-crewlist" style="overflow-y:auto"></div></div></div>
+<div id="ws-stnm" onclick="if(event.target===this)this.style.display='none'" style="display:none;position:absolute;inset:0;z-index:30;background:rgba(0,0,0,.72);align-items:center;justify-content:center;padding:16px"><div class="box" style="background:#140d05;border:1.5px solid #6fa8ff;border-radius:14px;max-width:460px;width:100%;max-height:86vh;display:flex;flex-direction:column"><div style="padding:12px 14px;font-weight:800;color:#6fa8ff;border-bottom:1px solid rgba(255,255,255,.1)">🛰️ Space Station</div><canvas id="ws-stncv" width="440" height="230" style="width:100%;display:block"></canvas><div id="ws-stninfo" style="padding:8px 14px;font-size:12px"></div><div id="ws-stnlist" style="overflow-y:auto"></div></div></div>
       <div id="ws-load" onclick="if(event.target===this)this.style.display='none'"><div class="box"><div style="padding:12px 14px;font-weight:800;color:#ffa03c;border-bottom:1px solid rgba(255,255,255,.1)">📂 Your saved builds</div><div id="ws-saves" style="overflow-y:auto"></div></div></div>
     </div>
   </div>
@@ -13168,10 +13172,13 @@ var PD={
  wheel:{shape:'circle',r:26,d:.0015,mat:'wheel',n:'Motor wheel',speed:.28},
  bigwheel:{shape:'circle',r:42,d:.0012,mat:'wheel',n:'Big wheel',speed:.17},
  balloon:{shape:'circle',r:24,d:.0002,mat:'balloon',n:'Balloon'},
- warp:{shape:'box',w:40,h:34,d:.003,mat:'warp',n:'Warp drive'}
+ warp:{shape:'box',w:40,h:34,d:.003,mat:'warp',n:'Warp drive'},
+ engine:{shape:'box',w:46,h:62,d:.004,mat:'engine',n:'Rocket engine'},
+ capsule:{shape:'box',w:46,h:54,d:.0015,mat:'capsule',n:'Crew capsule'},
+ nose:{shape:'box',w:46,h:42,d:.0008,mat:'nose',n:'Nose cone'}
 };
 var TOOLS=[['select','🖐️','Move'],['pan','✋','Pan'],['plank','🟫','Plank'],['block','🧱','Block'],['beam','🔩','Steel beam'],['plate','⬛','Steel plate'],
- ['wheel','⚙️','Motor wheel'],['bigwheel','🛞','Big wheel'],['thruster','🚀','Thruster'],['warp','🌀','Warp drive'],['balloon','🎈','Balloon'],['weight','⚓','Heavy weight'],
+ ['wheel','⚙️','Motor wheel'],['bigwheel','🛞','Big wheel'],['thruster','🚀','Thruster'],['engine','🔥','Rocket engine'],['capsule','🧑‍🚀','Crew capsule'],['nose','🔺','Nose cone'],['warp','🌀','Warp drive'],['balloon','🎈','Balloon'],['weight','⚓','Heavy weight'],
  ['weld','🔗','Weld link'],['pivot','📍','Hinge link'],['spring','🌀','Spring link'],['erase','🗑️','Erase']];
 var LEVELS=[
  {n:'Sandbox',d:'Build anything. Drive right to the flag!',pts:[[[-3000,0],[5000,0]]],goal:{t:'x',v:3200}},
@@ -13186,6 +13193,12 @@ var LEVELS=[
  {n:'⭐ Proxima Centauri',d:'4.24 light-years — the nearest star. Stack those warp drives.',space:1,km:4.01e13,lyOut:1,win:'⭐ You reached Proxima Centauri!',pts:[[[-3000,0],[5000,0]]],goal:{t:'h',v:200000}},
  {n:'🌀 Interdimensional Rift',d:'Beyond the stars… a tear in reality. Fly into it.',space:1,km:1e99,rift:1,win:'🌀 You crossed into another dimension!',pts:[[[-3000,0],[5000,0]]],goal:{t:'h',v:400000}}
 ];
+var MILES=[{a:2500,t:'🌤️ Leaving the lower atmosphere',s:'The sky is getting darker…'},{a:6000,t:'🌍 You have exited Earth’s atmosphere',s:'Welcome to space — past the Kármán line'},{a:9000,t:'🛰️ Earth’s gravity has faded',s:'You’re in open space'},
+ {a:12400,t:'🌙 You have entered the Moon’s atmosphere',s:'Lunar gravity well ahead'},{a:16500,t:'🌙 You have left the Moon’s atmosphere',s:'Next stop: Mars'},
+ {a:37500,t:'🔴 You have entered Mars’s atmosphere',s:'Thin, dusty and red'},{a:44000,t:'🔴 You have left Mars’s atmosphere',s:'On toward the gas giants'},
+ {a:85500,t:'🪐 You have entered Jupiter’s atmosphere',s:'Storm bands and crushing gravity'},{a:96000,t:'🪐 You have left Jupiter’s atmosphere',s:'Heading out of the Solar System'},
+ {a:130000,t:'☀️ You have exited the Solar System',s:'Interstellar space — nothing but stars'},{a:192000,t:'⭐ You have entered Proxima Centauri’s system',s:'4.24 light-years from home'},
+ {a:380000,t:'🌀 Reality is tearing apart…',s:'The rift is close'}];
 var PLANETS=[{n:'Moon',alt:14000,r:900,c1:'#e6e6ea',c2:'#8e8e96',k:'moon'},{n:'Mars',alt:40000,r:1300,c1:'#ff9b6a',c2:'#8e2f14',k:'mars'},{n:'Jupiter',alt:90000,r:2600,c1:'#f2d3a4',c2:'#9a6a3a',k:'jup'},{n:'Proxima Centauri',alt:200000,r:3200,c1:'#fff1b0',c2:'#ff5a1f',k:'star'},{n:'The Rift',alt:400000,r:3600,c1:'#d7a8ff',c2:'#2a0a6a',k:'rift'}];
 var S={parts:[],links:[],nid:1,tool:'plank',rot:0,mode:'build',level:0,cam:{x:200,y:-180,z:1},keys:{},first:null,sel:null,sim:null,snap:true,auto:true,follow:true,done:false,ptr:{x:0,y:0,over:false},drag:null,pan:null,t0:0};
 var cv,cx,raf=0,open=false,last=0,acc=0,ro=null,fx=[];
@@ -13193,6 +13206,7 @@ function $(i){return document.getElementById(i)}
 function deg(a){return a*Math.PI/180}
 function rotp(x,y,a){var c=Math.cos(a),s=Math.sin(a);return{x:x*c-y*s,y:x*s+y*c}}
 function dims(p){var d=PD[p.t];return d.shape==='circle'?{w:d.r*2,h:d.r*2}:{w:d.w,h:d.h}}
+function banner(t,sub){var b=$('ws-banner');if(!b)return;b.innerHTML='<div style="font-size:clamp(18px,3.6vw,30px);font-weight:900;letter-spacing:.04em">'+t+'</div><div style="font-size:13px;opacity:.8;margin-top:4px">'+sub+'</div>';b.style.opacity=1;b.style.transform='translateX(-50%) scale(1)';clearTimeout(banner._t);banner._t=setTimeout(function(){b.style.opacity=0;b.style.transform='translateX(-50%) scale(.92)'},3200)}
 function toast(m){var t=$('ws-toast');if(!t)return;t.textContent=m;t.style.opacity=1;clearTimeout(toast._t);toast._t=setTimeout(function(){t.style.opacity=0},2200)}
 function s2w(sx,sy){var z=S.cam.z;return{x:(sx-cv.clientWidth/2)/z+S.cam.x,y:(sy-cv.clientHeight/2)/z+S.cam.y}}
 function w2s(x,y){var z=S.cam.z;return{x:(x-S.cam.x)*z+cv.clientWidth/2,y:(y-S.cam.y)*z+cv.clientHeight/2}}
@@ -13214,11 +13228,14 @@ function addLink(a,b,k,wx,wy,qx,qy){
 function place(t,x,y,a){
   if(S.parts.length>=250){toast('Part limit reached (250)');return null}
   var p={id:S.nid++,t:t,x:x,y:y,a:a};
+  if(t==='capsule'){var used=crewInRockets(),cc=CR.crew.filter(function(c){return !c.stationed&&!used[c.id]})[0];
+    if(!cc){toast('No free crew — hire more in 👩‍🚀 Crew');return null}p.crew=cc.id;toast(face(cc)+' '+cc.name+' boards the capsule')}
   var d=PD[t];
   if(d.shape==='box'||d.shape==='circle'){ // keep above ground visually only; physics decides
   }
   S.parts.push(p);
   if(S.auto)autoAttach(p);
+  if(t==='capsule')renderCrew&&0;
   autosave();return p;
 }
 function autoAttach(p){
@@ -13236,6 +13253,68 @@ function autoAttach(p){
   });
 }
 function removePart(p){S.parts=S.parts.filter(function(q){return q!==p});S.links=S.links.filter(function(l){return l.a!==p.id&&l.b!==p.id});autosave()}
+// ── crew, credits & space station ─────────────────────
+var NAMES=['Ava','Kai','Mia','Leo','Zoe','Noah','Ivy','Finn','Luna','Omar','Yuki','Sam','Nia','Theo','Ruby','Jax'];
+var ROLES={pilot:{i:'🧭',n:'Pilot',d:'Keeps your rocket upright automatically'},engineer:{i:'🔧',n:'Engineer',d:'+5% engine power per level'},scientist:{i:'🔬',n:'Scientist',d:'+10% mission credits per level'}};
+var STN=[{k:'hab',n:'Habitat',i:'🏠',cost:100,lvl:1,inc:1},{k:'solar',n:'Solar array',i:'☀️',cost:80,lvl:1,inc:.5},{k:'dock',n:'Docking port',i:'🔌',cost:150,lvl:2,inc:1},
+ {k:'lab',n:'Science lab',i:'🔬',cost:300,lvl:3,inc:3},{k:'farm',n:'Greenhouse',i:'🌱',cost:400,lvl:4,inc:4},{k:'obs',n:'Observatory',i:'🔭',cost:700,lvl:6,inc:7},{k:'reactor',n:'Fusion reactor',i:'⚛️',cost:1200,lvl:8,inc:14}];
+var MISSION=[[50,100],[120,250],[250,500],[400,800],[700,1500],[1000,3000]];
+var CR={credits:150,crew:[],station:[],nid:1,last:Date.now()};
+function loadCrew(){try{var o=JSON.parse(localStorage.getItem('ares_ws_crew')||'null');if(o&&o.crew)CR=o}catch(e){}
+  if(!CR.crew.length){newCrew('pilot','Ava');newCrew('engineer','Kai')}CR.last=CR.last||Date.now()}
+function saveCrew(){try{localStorage.setItem('ares_ws_crew',JSON.stringify(CR))}catch(e){}}
+function newCrew(role,name){var c={id:CR.nid++,name:name||NAMES[Math.floor(Math.random()*NAMES.length)],role:role||['pilot','engineer','scientist'][Math.floor(Math.random()*3)],xp:0,visited:false,stationed:false};CR.crew.push(c);return c}
+function crewById(id){for(var i=0;i<CR.crew.length;i++)if(CR.crew[i].id===id)return CR.crew[i];return null}
+function clvl(c){return 1+Math.floor(Math.sqrt(c.xp/40))}
+function face(c){return c.id%2?'👩‍🚀':'👨‍🚀'}
+function stnRate(){return CR.station.reduce(function(t,m){return t+STN.filter(function(x){return x.k===m.k})[0].inc},0)}
+function maxStnLvl(){return CR.crew.filter(function(c){return c.stationed}).reduce(function(m,c){return Math.max(m,clvl(c))},0)}
+function tickEco(){var now=Date.now(),dt=Math.min(1440,(now-(CR.last||now))/60000);if(dt<.02)return;CR.last=now;
+  if(CR.station.length){CR.credits+=dt*stnRate();CR.crew.forEach(function(c){if(c.stationed)c.xp+=dt*2})}saveCrew();updCredits()}
+function updCredits(){var e=$('ws-credits');if(e)e.textContent='💰 '+Math.floor(CR.credits)}
+function crewInRockets(){var ids={};S.parts.forEach(function(p){if(p.t==='capsule'&&p.crew)ids[p.crew]=1});return ids}
+function missionReward(){
+  var lv=S.level-5;if(lv<0||!MISSION[lv])return;var m=MISSION[lv],aboard=[];
+  S.parts.forEach(function(p){if(p.t==='capsule'&&p.crew){var c=crewById(p.crew);if(c)aboard.push(c)}});
+  var sci=aboard.reduce(function(t,c){return t+(c.role==='scientist'?clvl(c):0)},0),cred=Math.round(m[1]*(aboard.length?1+.1*sci:.25)),msg=[];
+  aboard.forEach(function(c){var b=clvl(c);c.xp+=m[0];c.visited=true;if(clvl(c)>b)msg.push(face(c)+' '+c.name+' reached level '+clvl(c)+'!')});
+  CR.credits+=cred;saveCrew();updCredits();
+  setTimeout(function(){toast(aboard.length?'+'+m[0]+' XP each · +💰'+cred+(msg.length?' · '+msg.join(' '):''):'+💰'+cred+' — fly a 🧑‍🚀 Crew capsule to earn crew XP!')},1800)}
+window.wsCrewOpen=function(){tickEco();renderCrew();$('ws-crewm').style.display='flex'};
+function renderCrew(){var inR=crewInRockets(),el=$('ws-crewlist');
+  el.innerHTML=CR.crew.map(function(c){var L=clvl(c),lo=40*(L-1)*(L-1),hi=40*L*L,pc=Math.round((c.xp-lo)/(hi-lo)*100),R=ROLES[c.role];
+    return '<div class="ws-saverow" style="align-items:flex-start"><div style="font-size:30px">'+face(c)+'</div><div style="flex:1"><b>'+_esc(c.name)+'</b> · '+R.i+' '+R.n+' · <span style="color:#ffa03c">Lv '+L+'</span>'
+      +'<div style="height:6px;border-radius:3px;background:rgba(255,255,255,.12);margin:4px 0"><div style="height:100%;width:'+pc+'%;background:#ffa03c;border-radius:3px"></div></div>'
+      +'<div style="font-size:10.5px;opacity:.6">'+R.d+(inR[c.id]?' · 🚀 on your rocket':'')+(c.stationed?' · 🛰️ on station':'')+(c.visited&&!c.stationed?' · ✅ been to space':'')+'</div></div>'
+      +'<div style="display:flex;flex-direction:column;gap:4px"><button data-t="'+c.id+'">Train 💰'+(50*L)+'</button>'+(c.stationed?'<button data-r="'+c.id+'">Recall</button>':(c.visited?'<button data-s="'+c.id+'">To station</button>':''))+'</div></div>'}).join('')
+    +'<div style="padding:10px 12px"><button id="ws-hire" style="width:100%;padding:9px;border-radius:9px;background:#ffa03c;border:none;color:#111;font-weight:800;cursor:pointer">➕ Hire crew member · 💰'+(150+100*(CR.crew.length-2<0?0:CR.crew.length-2))+'</button></div>';
+  $('ws-crewcr').textContent='💰 '+Math.floor(CR.credits);
+  el.querySelectorAll('button[data-t]').forEach(function(b){b.onclick=function(){var c=crewById(+b.dataset.t),cost=50*clvl(c);if(CR.credits<cost){toast('Not enough credits');return}CR.credits-=cost;var o=clvl(c);c.xp+=40;saveCrew();updCredits();renderCrew();if(clvl(c)>o)toast(face(c)+' '+c.name+' leveled up to '+clvl(c)+'!')}});
+  el.querySelectorAll('button[data-s]').forEach(function(b){b.onclick=function(){var c=crewById(+b.dataset.s);c.stationed=true;S.parts.forEach(function(p){if(p.crew===c.id)delete p.crew});S.parts=S.parts.filter(function(p){return !(p.t==='capsule'&&!p.crew&&false)});saveCrew();autosave();renderCrew();toast('🛰️ '+c.name+' moved to the station')}});
+  el.querySelectorAll('button[data-r]').forEach(function(b){b.onclick=function(){crewById(+b.dataset.r).stationed=false;saveCrew();renderCrew()}});
+  $('ws-hire').onclick=function(){var cost=150+100*(CR.crew.length-2<0?0:CR.crew.length-2);if(CR.credits<cost){toast('Not enough credits');return}if(CR.crew.length>=12){toast('Crew is full (12)');return}CR.credits-=cost;var c=newCrew();saveCrew();updCredits();renderCrew();toast('👋 '+c.name+' the '+ROLES[c.role].n+' joined!')}}
+var stnRaf=0;
+window.wsStationOpen=function(){tickEco();renderStation();$('ws-stnm').style.display='flex';cancelAnimationFrame(stnRaf);(function lp(){if($('ws-stnm').style.display!=='flex')return;drawStation();stnRaf=requestAnimationFrame(lp)})()};
+function renderStation(){var lvl=maxStnLvl(),cap=3+2*CR.crew.filter(function(c){return c.stationed}).length,el=$('ws-stnlist');
+  $('ws-stninfo').innerHTML='🛰️ <b>'+CR.station.length+'/'+cap+'</b> modules · 💰 +'+stnRate().toFixed(1)+'/min · station crew: '+CR.crew.filter(function(c){return c.stationed}).length+' · top level '+lvl;
+  el.innerHTML=STN.map(function(m){var ok=lvl>=m.lvl&&CR.station.length<cap&&CR.credits>=m.cost;return '<div class="ws-saverow"><div style="font-size:24px">'+m.i+'</div><div style="flex:1"><b>'+m.n+'</b><div style="font-size:10.5px;opacity:.6">Needs crew Lv '+m.lvl+' · +'+m.inc+' 💰/min</div></div><button data-b="'+m.k+'" style="opacity:'+(ok?1:.45)+'">Build 💰'+m.cost+'</button></div>'}).join('');
+  el.querySelectorAll('button[data-b]').forEach(function(b){b.onclick=function(){var m=STN.filter(function(x){return x.k===b.dataset.b})[0];
+    if(!CR.crew.some(function(c){return c.stationed})){toast('Move a crew member to the station first (👩‍🚀 Crew → To station)');return}
+    if(maxStnLvl()<m.lvl){toast('A station crew member needs level '+m.lvl);return}if(CR.station.length>=cap){toast('Station full — station more crew for more room');return}if(CR.credits<m.cost){toast('Not enough credits');return}
+    CR.credits-=m.cost;CR.station.push({k:m.k});saveCrew();updCredits();renderStation();toast('🛰️ Built '+m.n+'!')}})}
+function drawStation(){var cv2=$('ws-stncv'),c=cv2.getContext('2d'),W_=cv2.width,H_=cv2.height,t=performance.now()/1000;
+  var g=c.createLinearGradient(0,0,0,H_);g.addColorStop(0,'#01020a');g.addColorStop(1,'#0b1a3d');c.fillStyle=g;c.fillRect(0,0,W_,H_);
+  c.fillStyle='#fff';for(var i=0;i<70;i++){c.globalAlpha=.3+(i%4)*.18;c.fillRect((i*137)%W_,(i*71)%H_,1.3,1.3)}c.globalAlpha=1;
+  var eg=c.createRadialGradient(W_/2,H_+120,40,W_/2,H_+120,260);eg.addColorStop(0,'#2d7be0');eg.addColorStop(.85,'#1b4fa8');eg.addColorStop(1,'rgba(120,190,255,.6)');c.fillStyle=eg;c.beginPath();c.arc(W_/2,H_+120,260,0,7);c.fill();
+  c.save();c.translate(W_/2,H_/2-10);c.rotate(Math.sin(t*.3)*.05);
+  c.fillStyle='#cfd6df';c.strokeStyle='#5a6574';c.lineWidth=2;c.fillRect(-18,-18,36,36);c.strokeRect(-18,-18,36,36);c.fillStyle='#6fa8ff';c.fillRect(-8,-6,16,12);
+  CR.station.forEach(function(m,i){var ang=i*2.399+t*.0,ring=Math.floor(i/6),r=58+ring*40,a=(i%6)/6*6.283+ring*.5;var x=Math.cos(a)*r,y=Math.sin(a)*r*.8;
+    c.strokeStyle='#8993a1';c.lineWidth=4;c.beginPath();c.moveTo(0,0);c.lineTo(x,y);c.stroke();
+    var def=STN.filter(function(d){return d.k===m.k})[0];c.fillStyle='#e8eef5';c.beginPath();c.arc(x,y,17,0,7);c.fill();c.strokeStyle='#5a6574';c.stroke();
+    c.font='19px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText(def.i,x,y+1);
+    if(m.k==='solar'){c.fillStyle='#2f6fd8';c.fillRect(x-34,y-5,16,10);c.fillRect(x+18,y-5,16,10)}});
+  c.restore();
+  if(!CR.station.length){c.fillStyle='rgba(255,255,255,.7)';c.font='13px sans-serif';c.textAlign='center';c.fillText('Your station is empty — send a crew member to orbit, then build!',W_/2,H_-18)}}
 // ── persistence ─────────────────────────
 function snapshot(){return{v:1,level:S.level,parts:S.parts,links:S.links,nid:S.nid}}
 function applySnap(o){S.parts=o.parts||[];S.links=o.links||[];S.nid=o.nid||(S.parts.reduce(function(m,p){return Math.max(m,p.id)},0)+1);if(typeof o.level==='number')setLevel(o.level,true)}
@@ -13285,7 +13364,8 @@ function startSim(){
   W.add(eng.world,terrainBodies());
   for(var k in bodies)W.add(eng.world,bodies[k]);
   W.add(eng.world,cons);
-  S.sim={eng:eng,bodies:bodies,cons:cons,t:0,thrust:0,maxX:-1e9};
+  var boost=1,pilot=false,caps=false;S.parts.forEach(function(p){if(p.t==='capsule'){caps=true;var c=p.crew&&crewById(p.crew);if(c){if(c.role==='engineer')boost+=.05*clvl(c);if(c.role==='pilot')pilot=true}}});
+  S.sim={eng:eng,bodies:bodies,cons:cons,t:0,thrust:0,maxX:-1e9,sh:{},boost:boost,pilot:pilot,caps:caps};
   S.mode='play';S.done=false;S.first=null;S.t0=performance.now();updHud();syncUi()
 }
 function stopSim(){S.sim=null;S.mode='build';fx=[];updHud();syncUi()}
@@ -13296,20 +13376,22 @@ function stepSim(){
   for(var id in sm.bodies){var b=sm.bodies[id],m=b.plugin.mat;
     if(m==='wheel'){if(brake)Bd.setAngularVelocity(b,b.angularVelocity*.7);else if(dir){var tgt=dir*b.plugin.spec.speed;Bd.setAngularVelocity(b,b.angularVelocity+(tgt-b.angularVelocity)*.25)}}
     else if(m==='balloon'){Bd.applyForce(b,b.position,{x:0,y:-.0034*(b.mass/.36)*1})}
-    else if(m==='warp'&&go){var f2=rotp(0,-.12,b.angle);Bd.applyForce(b,b.position,f2);for(var q=0;q<2;q++)fx.push({x:b.position.x-f2.x*100,y:b.position.y-f2.y*100,vx:-f2.x*160+(Math.random()-.5)*4,vy:-f2.y*160+(Math.random()-.5)*4,l:14,w:1});}
-    else if(m==='thruster'&&go){var f=rotp(0,-.032,b.angle);Bd.applyForce(b,b.position,f);if(Math.random()<.7)fx.push({x:b.position.x-f.x*600,y:b.position.y-f.y*600,vx:-f.x*400+(Math.random()-.5)*2,vy:-f.y*400+(Math.random()-.5)*2,l:14})}}
+    else if(m==='warp'&&go){var f2=rotp(0,-.12*sm.boost,b.angle);Bd.applyForce(b,b.position,f2);for(var q=0;q<2;q++)fx.push({x:b.position.x-f2.x*100,y:b.position.y-f2.y*100,vx:-f2.x*160+(Math.random()-.5)*4,vy:-f2.y*160+(Math.random()-.5)*4,l:14,w:1});}
+    else if(m==='engine'&&go){var f3=rotp(0,-.06*sm.boost,b.angle);Bd.applyForce(b,b.position,f3);for(var q2=0;q2<3;q2++)fx.push({x:b.position.x-f3.x*500+(Math.random()-.5)*8,y:b.position.y-f3.y*500+(Math.random()-.5)*8,vx:-f3.x*300+(Math.random()-.5)*3,vy:-f3.y*300+(Math.random()-.5)*3,l:16,sm:q2===0})}
+    else if(m==='thruster'&&go){var f=rotp(0,-.032*sm.boost,b.angle);Bd.applyForce(b,b.position,f);if(Math.random()<.7)fx.push({x:b.position.x-f.x*600,y:b.position.y-f.y*600,vx:-f.x*400+(Math.random()-.5)*2,vy:-f.y*400+(Math.random()-.5)*2,l:14})}}
   var ay=0,nb=0,sp=0;for(var i3 in sm.bodies){var q3=sm.bodies[i3];ay+=q3.position.y;nb++;sp+=Math.hypot(q3.velocity.x,q3.velocity.y)}
   ay=nb?-ay/nb:0;sm.alt=ay;sm.speed=nb?sp/nb:0;
+  MILES.forEach(function(m){if(ay>=m.a&&!sm.sh['m'+m.a]){sm.sh['m'+m.a]=1;banner(m.t,m.s)}});
   sm.eng.gravity.scale=.001*Math.max(0,1-Math.max(0,ay)/(LEVELS[S.level].space?9000:1e9));
   var thin=Math.max(0,1-Math.max(0,ay)/4000);
   for(var i4 in sm.bodies){var q4=sm.bodies[i4];if(q4.plugin.mat!=='balloon')q4.frictionAir=.01*thin;
-    if(S.stab&&(q4.plugin.mat==='thruster'||q4.plugin.mat==='warp')&&go){Bd.setAngularVelocity(q4,q4.angularVelocity*.86-Math.sin(q4.angle)*.012)}}
+    if((S.stab||sm.pilot)&&(q4.plugin.mat==='thruster'||q4.plugin.mat==='warp'||q4.plugin.mat==='engine')&&go){Bd.setAngularVelocity(q4,q4.angularVelocity*.86-Math.sin(q4.angle)*.012)}}
   E.update(sm.eng,1000/60);sm.t++;
   // goal
   var g=LEVELS[S.level].goal,hit=false,mx=-1e9;
-  for(var id2 in sm.bodies){var bb=sm.bodies[id2];mx=Math.max(mx,bb.position.x);if(g.t==='x'&&bb.position.x>g.v)hit=true;if(g.t==='h'&&bb.position.y<-g.v)hit=true;if(bb.position.y>2500){/*fell*/}}
+  for(var id2 in sm.bodies){var bb=sm.bodies[id2];mx=Math.max(mx,bb.position.x);if(g.t==='x'&&bb.position.x>g.v)hit=true;if(g.t==='h'&&bb.position.y<-g.v&&(!sm.caps||bb.plugin.mat==='capsule'))hit=true;if(bb.position.y>2500){/*fell*/}}
   sm.maxX=Math.max(sm.maxX,mx);
-  if(hit&&!S.done){S.done=true;if(LEVELS[S.level].space){sm.eng.timing.timeScale=.08;setTimeout(function(){if(S.sim)S.sim.eng.timing.timeScale=1},3500)}toast(LEVELS[S.level].win||'🏁 LEVEL COMPLETE!');try{var dn=JSON.parse(localStorage.getItem('ares_ws_done')||'{}');dn[S.level]=1;localStorage.setItem('ares_ws_done',JSON.stringify(dn))}catch(e){}confetti()}
+  if(hit&&!S.done){S.done=true;if(LEVELS[S.level].space){sm.eng.timing.timeScale=.08;setTimeout(function(){if(S.sim)S.sim.eng.timing.timeScale=1},3500)}toast(LEVELS[S.level].win||'🏁 LEVEL COMPLETE!');if(LEVELS[S.level].space)missionReward();banner(LEVELS[S.level].win||'🏁 Level complete!','Mission accomplished');try{var dn=JSON.parse(localStorage.getItem('ares_ws_done')||'{}');dn[S.level]=1;localStorage.setItem('ares_ws_done',JSON.stringify(dn))}catch(e){}confetti()}
 }
 function confetti(){for(var i=0;i<80;i++)fx.push({cf:1,x:S.cam.x+(Math.random()-.5)*400,y:S.cam.y-200,vx:(Math.random()-.5)*8,vy:-Math.random()*6,l:120,c:'hsl('+(Math.random()*360|0)+',90%,60%)'})}
 // ── rendering ──────────────────────────
@@ -13328,6 +13410,13 @@ function drawPartShape(c,p,ghost,ang,active){
     else if(d.mat==='steel'){g2=c.createLinearGradient(0,-h/2,0,h/2);g2.addColorStop(0,'#c3ccd6');g2.addColorStop(.5,'#8d99a6');g2.addColorStop(1,'#667282');c.fillStyle=g2;c.fillRect(-w/2,-h/2,w,h);c.strokeStyle='#3b4552';c.lineWidth=2;c.strokeRect(-w/2,-h/2,w,h);
       c.fillStyle='#e8eef5';[[-w/2+5,-h/2+5],[w/2-5,-h/2+5],[-w/2+5,h/2-5],[w/2-5,h/2-5]].forEach(function(q){c.beginPath();c.arc(q[0],q[1],1.8,0,7);c.fill()})}
     else if(d.mat==='weight'){c.fillStyle='#2b2f36';c.fillRect(-w/2,-h/2,w,h);c.strokeStyle='#000';c.lineWidth=2;c.strokeRect(-w/2,-h/2,w,h);c.fillStyle='#e8eef5';c.font='bold 11px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText('HEAVY',0,0)}
+    else if(d.mat==='engine'){c.fillStyle='#4a5260';c.fillRect(-w/2+6,-h/2,w-12,h*.35);c.strokeStyle='#1a1f27';c.lineWidth=2;c.strokeRect(-w/2+6,-h/2,w-12,h*.35);
+      c.beginPath();c.moveTo(-w/2+10,-h/2+h*.35);c.lineTo(w/2-10,-h/2+h*.35);c.lineTo(w/2,h/2);c.lineTo(-w/2,h/2);c.closePath();var eg2=c.createLinearGradient(-w/2,0,w/2,0);eg2.addColorStop(0,'#6b7380');eg2.addColorStop(.5,'#c9d1db');eg2.addColorStop(1,'#5a6270');c.fillStyle=eg2;c.fill();c.stroke();
+      c.fillStyle='#d94a2b';c.fillRect(-w/2+2,h/2-6,w-4,6);
+      if(active){c.beginPath();c.moveTo(-w/2+6,h/2);c.lineTo(0,h/2+60+Math.random()*26);c.lineTo(w/2-6,h/2);c.fillStyle='#ff7a1a';c.fill();c.beginPath();c.moveTo(-w/4,h/2);c.lineTo(0,h/2+34+Math.random()*12);c.lineTo(w/4,h/2);c.fillStyle='#fff3b0';c.fill()}}
+    else if(d.mat==='capsule'){c.beginPath();c.moveTo(-w/2,h/2);c.lineTo(w/2,h/2);c.lineTo(w/2-6,-h/4);c.quadraticCurveTo(0,-h*.75,-w/2+6,-h/4);c.closePath();var cg=c.createLinearGradient(-w/2,0,w/2,0);cg.addColorStop(0,'#e9edf2');cg.addColorStop(1,'#aab4c0');c.fillStyle=cg;c.fill();c.strokeStyle='#4a5260';c.lineWidth=2;c.stroke();
+      c.beginPath();c.arc(0,-2,12,0,7);c.fillStyle='#0b2a52';c.fill();c.strokeStyle='#ffa03c';c.lineWidth=3;c.stroke();var cr=p.crew&&crewById(p.crew);c.font='15px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText(cr?face(cr):'🧑‍🚀',0,-1)}
+    else if(d.mat==='nose'){c.beginPath();c.moveTo(-w/2,h/2);c.lineTo(w/2,h/2);c.quadraticCurveTo(w/4,-h/4,0,-h/2);c.quadraticCurveTo(-w/4,-h/4,-w/2,h/2);var ng=c.createLinearGradient(-w/2,0,w/2,0);ng.addColorStop(0,'#ff8a73');ng.addColorStop(1,'#c0392b');c.fillStyle=ng;c.fill();c.strokeStyle='#6e1d12';c.lineWidth=2;c.stroke()}
     else if(d.mat==='thruster'){c.fillStyle='#5a6270';c.fillRect(-w/2,-h/2,w,h*.7);c.strokeStyle='#222';c.lineWidth=2;c.strokeRect(-w/2,-h/2,w,h*.7);
       c.beginPath();c.moveTo(-w/2+5,h*.2);c.lineTo(w/2-5,h*.2);c.lineTo(w/2-9,h/2);c.lineTo(-w/2+9,h/2);c.closePath();c.fillStyle='#c0392b';c.fill();c.stroke();
       if(active){c.beginPath();c.moveTo(-8,h/2);c.lineTo(0,h/2+22+Math.random()*10);c.lineTo(8,h/2);c.fillStyle='#ffb020';c.fill()}}}
@@ -13369,7 +13458,7 @@ function draw(){
   if(S.first&&S.mode==='build'){var wp=s2w(S.ptr.x,S.ptr.y);c.strokeStyle='#ffd23f';c.lineWidth=2/z;c.beginPath();c.moveTo(S.first.x,S.first.y);c.lineTo(wp.x,wp.y);c.stroke()}
   // effects
   for(var i=fx.length-1;i>=0;i--){var f=fx[i];f.x+=f.vx;f.y+=f.vy;if(f.cf)f.vy+=.25;f.l--;if(f.l<=0){fx.splice(i,1);continue}
-    if(f.cf){c.fillStyle=f.c;c.fillRect(f.x,f.y,7,4)}else{c.globalAlpha=f.l/14;c.fillStyle=f.w?'#7cf3ff':'#ffb020';c.beginPath();c.arc(f.x,f.y,4,0,7);c.fill();c.globalAlpha=1}}
+    if(f.cf){c.fillStyle=f.c;c.fillRect(f.x,f.y,7,4)}else{c.globalAlpha=f.l/14;c.fillStyle=f.w?'#7cf3ff':(f.sm?'#9aa0a8':'#ffb020');c.beginPath();c.arc(f.x,f.y,4,0,7);c.fill();c.globalAlpha=1}}
   c.restore();
 }
 function drawPlanets(c,lv,z){
@@ -13433,8 +13522,9 @@ function ku(e){var k=e.key.length===1?e.key.toLowerCase():e.key;S.keys[k]=false}
 window.wsReset=function(){if(S.mode==='play'){stopSim();startSim()}else{S.cam={x:200,y:-180,z:1};S.sel=null;S.first=null;toast('↺ View reset')}};
 window.wsStab=function(){S.stab=!S.stab;toast(S.stab?'🧭 Auto-stabiliser ON — thrusters keep you upright':'🧭 Auto-stabiliser off')};
 window.wsRocket=function(){if(S.parts.length&&!confirm('Replace your build with the starter rocket?'))return;stopSim();S.parts=[];S.links=[];S.nid=1;S.auto=false;S.stab=true;
-  var b1=place('beam',0,-80,deg(90)),b2=place('beam',0,-220,deg(90)),pl=place('plate',0,-310,0),t1=place('warp',0,-12,0);
-  S.auto=true;addLink(b1,b2,'weld',0,-150);addLink(b2,pl,'weld',0,-295);addLink(t1,b1,'weld',0,-24);autosave();S.cam={x:0,y:-200,z:.8};toast('🚀 Starter rocket loaded — Play, then hold ↑ / Space')};
+  var en=place('engine',0,-31,0),b1=place('beam',0,-130,deg(90)),b2=place('beam',0,-250,deg(90)),cp=place('capsule',0,-345,0),ns=place('nose',0,-392,0);
+  S.auto=true;if(en&&b1)addLink(en,b1,'weld',0,-62);if(b1&&b2)addLink(b1,b2,'weld',0,-190);if(b2&&cp)addLink(b2,cp,'weld',0,-320);if(cp&&ns)addLink(cp,ns,'weld',0,-370);
+  autosave();S.cam={x:0,y:-220,z:.7};toast('🚀 Starter rocket loaded — Play, then hold ↑ / Space')};
 window.wsTogglePlay=function(){if(S.mode==='build')startSim();else stopSim()};
 window.wsRotate=function(){if(S.sel){S.sel.a+=deg(15);autosave()}else S.rot+=deg(15)};
 window.wsZoom=function(f){S.cam.z=Math.max(.2,Math.min(3,S.cam.z*f))};
@@ -13450,7 +13540,7 @@ window.workshopOpen=function(){
   if(!cv){cv=$('ws-canvas');cx=cv.getContext('2d');cv.addEventListener('pointerdown',pdown);cv.addEventListener('pointermove',pmove);cv.addEventListener('pointerup',pup);cv.addEventListener('pointercancel',pup);
     cv.addEventListener('pointerleave',function(){S.ptr.over=false});cv.addEventListener('wheel',wheel,{passive:false});cv.addEventListener('contextmenu',function(e){e.preventDefault()});
     $('ws-level').innerHTML=LEVELS.map(function(l,i){var dn={};try{dn=JSON.parse(localStorage.getItem('ares_ws_done')||'{}')}catch(e){}return '<option value="'+i+'">'+(dn[i]?'✅ ':'')+l.n+'</option>'}).join('');
-    buildTools();
+    buildTools();loadCrew();updCredits();setInterval(tickEco,10000);
     var a=null;try{a=JSON.parse(localStorage.getItem('ares_ws_auto')||'null')}catch(e){}
     if(a&&a.parts&&a.parts.length)applySnap(a);else starter();}
   document.addEventListener('keydown',kd);document.addEventListener('keyup',ku);
