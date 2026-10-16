@@ -749,6 +749,7 @@ html,html,body{height:100%}body{min-height:100%;background:var(--bg);color:var(-
     <span class="topbar-badge badge-bio" id="topbar-badge" style="display:none"></span>
     <span class="topbar-sub" id="topbar-sub">AQA GCSE</span>
     <button class="topbar-btn" onclick="toggleProgModal()" title="View your progress">📊 Progress</button>
+    <button class="topbar-btn" onclick="eventsOpen()" title="Upcoming events">📅 Events<span id="events-badge" style="display:none;margin-left:5px;background:#f97316;color:#fff;border-radius:99px;padding:0 6px;font-size:10px;font-weight:800;"></span></button>
     <button class="topbar-btn home-btn" onclick="goHome()" title="Return to home screen">🏠 Home</button>
     <button id="mute-toggle-btn" onclick="toggleSoundMuted()" title="Mute all sound"
       aria-pressed="false"
@@ -8749,6 +8750,119 @@ function toggleBannedDevicesPanel(){
   if(!isOpen) renderBannedDevicesList();
 }
 
+// ── Events & pings ──────────────────────────────────────────────────────
+// One `events` table: kind 'ping' = popup shown once to everyone; kind 'event'
+// = dated entry in the 📅 Events list.
+var _eventsCache = [], _pingQueue = [], _pingCurrent = null;
+function _evSeen(){ try{ return JSON.parse(localStorage.getItem('ares_seen_pings')||'[]'); }catch(e){ return []; } }
+async function checkEvents(){
+  try{
+    if(!supabaseClient) return;
+    const { data, error } = await supabaseClient.from('events').select('*').eq('active', true).order('created_at', { ascending: false }).limit(50);
+    if(error || !data) return;
+    _eventsCache = data.filter(r => r.kind === 'event');
+    _eventsUpdateBadge();
+    const seen = _evSeen(), weekAgo = Date.now() - 7*864e5;
+    data.filter(r => r.kind === 'ping' && !seen.includes(r.id) && new Date(r.created_at).getTime() > weekAgo)
+      .reverse().forEach(r => { if(!_pingQueue.some(q => q.id === r.id) && !(_pingCurrent && _pingCurrent.id === r.id)) _pingQueue.push(r); });
+    _pingNext();
+  }catch(e){ /* best-effort */ }
+}
+function _upcomingEvents(){
+  const cutoff = Date.now() - 3*36e5;
+  return _eventsCache.filter(r => !r.starts_at || new Date(r.starts_at).getTime() >= cutoff)
+    .sort((a,b) => (a.starts_at ? new Date(a.starts_at).getTime() : 9e15) - (b.starts_at ? new Date(b.starts_at).getTime() : 9e15));
+}
+function _eventsUpdateBadge(){
+  const b = document.getElementById('events-badge'); if(!b) return;
+  const n = _upcomingEvents().length;
+  b.textContent = n; b.style.display = n ? 'inline-block' : 'none';
+}
+function _fmtWhen(iso){
+  if(!iso) return 'Date TBC';
+  try{ return new Date(iso).toLocaleString([], { weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }); }catch(e){ return iso; }
+}
+function eventsOpen(){
+  const list = document.getElementById('events-list'); if(!list) return;
+  const ev = _upcomingEvents();
+  list.innerHTML = ev.length ? ev.map(r => '<div style="padding:10px 12px;margin-bottom:8px;border-radius:10px;background:rgba(56,189,248,0.07);border:1px solid rgba(56,189,248,0.2);">'
+    + '<div style="font-weight:700;color:#fff;font-size:14px;">' + _esc(r.title) + '</div>'
+    + '<div style="font-size:11px;color:#38bdf8;margin:2px 0 4px;">🕒 ' + _esc(_fmtWhen(r.starts_at)) + '</div>'
+    + (r.message ? '<div style="font-size:12px;color:rgba(255,255,255,0.65);white-space:pre-wrap;">' + _esc(r.message) + '</div>' : '') + '</div>').join('')
+    : '<div style="text-align:center;padding:24px;color:rgba(255,255,255,0.4);font-size:13px;">No upcoming events.</div>';
+  document.getElementById('events-modal').style.display = 'flex';
+  checkEvents();
+}
+function eventsClose(){ document.getElementById('events-modal').style.display = 'none'; }
+function _pingNext(){
+  if(_pingCurrent || !_pingQueue.length) return;
+  _pingCurrent = _pingQueue.shift();
+  document.getElementById('ping-popup-title').textContent = _pingCurrent.title || 'Notification';
+  document.getElementById('ping-popup-msg').textContent = _pingCurrent.message || '';
+  document.getElementById('ping-popup').style.display = 'flex';
+}
+function pingDismiss(){
+  if(_pingCurrent){
+    const seen = _evSeen(); if(!seen.includes(_pingCurrent.id)) seen.push(_pingCurrent.id);
+    try{ localStorage.setItem('ares_seen_pings', JSON.stringify(seen.slice(-100))); }catch(e){}
+  }
+  _pingCurrent = null;
+  document.getElementById('ping-popup').style.display = 'none';
+  setTimeout(_pingNext, 250);
+}
+setInterval(() => { if(supabaseClient) checkEvents().catch(()=>{}); }, 10000);
+document.addEventListener('DOMContentLoaded', () => { setTimeout(() => { if(supabaseClient) checkEvents().catch(()=>{}); }, 2500); });
+
+// admin side
+function toggleEventsAdminPanel(){
+  const p = document.getElementById('events-admin-panel'); if(!p) return;
+  const open = p.style.display === 'block';
+  p.style.display = open ? 'none' : 'block';
+  if(!open) _loadEventsAdminList();
+}
+async function _loadEventsAdminList(){
+  const box = document.getElementById('events-admin-list'); if(!box) return;
+  const { data } = await supabaseClient.from('events').select('*').eq('active', true).eq('kind', 'event').order('created_at', { ascending: false });
+  box.innerHTML = (data && data.length) ? data.map(r => '<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;"><div style="flex:1;"><b style="color:#fff;">' + _esc(r.title) + '</b> · ' + _esc(_fmtWhen(r.starts_at)) + '</div><button onclick="deleteEvent(' + r.id + ')" style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);color:#F87171;border-radius:6px;padding:3px 9px;font-size:11px;cursor:pointer;">Delete</button></div>').join('') : 'No live events.';
+}
+async function _postEventRow(row, statusId){
+  const st = document.getElementById(statusId);
+  try{
+    const { error } = await supabaseClient.from('events').insert(Object.assign({ active: true, created_by: currentUser }, row));
+    if(error) throw error;
+    return true;
+  }catch(e){ if(st) st.textContent = '⚠ Failed — has the events SQL been run? ' + (e.message||''); return false; }
+}
+async function sendPing(){
+  const t = document.getElementById('ping-title').value.trim(), m = document.getElementById('ping-message').value.trim();
+  const st = document.getElementById('ping-status');
+  if(!t || !m){ st.textContent = 'Add a title and a message.'; return; }
+  st.textContent = 'Sending…';
+  if(await _postEventRow({ kind: 'ping', title: t, message: m }, 'ping-status')){
+    st.textContent = '✓ Sent to everyone';
+    document.getElementById('ping-title').value = ''; document.getElementById('ping-message').value = '';
+    checkEvents();
+  }
+}
+async function addEvent(){
+  const t = document.getElementById('event-title').value.trim(), m = document.getElementById('event-message').value.trim();
+  const w = document.getElementById('event-when').value, st = document.getElementById('event-status');
+  if(!t){ st.textContent = 'Add a title.'; return; }
+  const when = w ? new Date(w).toISOString() : null;
+  st.textContent = 'Saving…';
+  if(await _postEventRow({ kind: 'event', title: t, message: m, starts_at: when }, 'event-status')){
+    if(document.getElementById('event-ping').checked)
+      await _postEventRow({ kind: 'ping', title: '📅 New event: ' + t, message: (w ? _fmtWhen(when) + (m ? '\n' : '') : '') + m }, 'event-status');
+    st.textContent = '✓ Added';
+    ['event-title','event-message','event-when'].forEach(i => document.getElementById(i).value = '');
+    _loadEventsAdminList(); checkEvents();
+  }
+}
+async function deleteEvent(id){
+  await supabaseClient.from('events').update({ active: false }).eq('id', id);
+  _loadEventsAdminList(); checkEvents();
+}
+
 // ── Global announcement (admin) ────────────────────────────────────────
 function toggleAnnouncementPanel(){
   const panel = document.getElementById('announcement-panel');
@@ -12143,6 +12257,9 @@ function _aresUpdateArenaButton(){
       <button onclick="toggleAnnouncementPanel()" style="background:rgba(249,115,22,0.12);
         border:1px solid rgba(249,115,22,0.3);color:#fb923c;
         border-radius:7px;padding:3px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">📢 Announcement</button>
+      <button onclick="toggleEventsAdminPanel()" style="background:rgba(56,189,248,0.12);
+        border:1px solid rgba(56,189,248,0.3);color:#38bdf8;
+        border-radius:7px;padding:3px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">🔔 Events &amp; Ping</button>
       <button onclick="togglePromoEmailPanel()" style="background:rgba(236,72,153,0.12);
         border:1px solid rgba(236,72,153,0.3);color:#f472b6;
         border-radius:7px;padding:3px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">✉️ Promo Email</button>
@@ -12168,6 +12285,21 @@ function _aresUpdateArenaButton(){
           border-radius:7px;padding:7px 16px;font-size:12px;cursor:pointer;font-family:inherit;">Clear current</button>
         <span id="announcement-status" style="font-size:11px;color:rgba(255,255,255,0.35);"></span>
       </div>
+    </div>
+    <div id="events-admin-panel" style="display:none;flex-shrink:0;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,0.07);background:rgba(56,189,248,0.04);max-height:70vh;overflow-y:auto;">
+      <div style="font-size:12px;font-weight:700;color:#38bdf8;margin-bottom:6px;">🔔 Ping everyone</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:6px;">A popup with a title and message, shown to every user (once each) — live if they're on the app, otherwise next time they open it.</div>
+      <input id="ping-title" maxlength="80" placeholder="Title" style="border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:#fff;font-size:13px;box-sizing:border-box;font-family:inherit;padding:9px 11px;border-radius:9px;width:100%;margin-bottom:6px;">
+      <textarea id="ping-message" maxlength="500" placeholder="Message" style="border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:#fff;font-size:13px;box-sizing:border-box;font-family:inherit;padding:9px 11px;border-radius:9px;width:100%;min-height:60px;resize:vertical;"></textarea>
+      <div style="display:flex;gap:8px;margin-top:8px;align-items:center;"><button onclick="sendPing()" style="background:#0ea5e9;border:none;color:#fff;border-radius:7px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Send ping</button><span id="ping-status" style="font-size:11px;color:rgba(255,255,255,0.4);"></span></div>
+      <div style="font-size:12px;font-weight:700;color:#38bdf8;margin:16px 0 6px;">📅 Add an event</div>
+      <input id="event-title" maxlength="80" placeholder="Event title" style="border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:#fff;font-size:13px;box-sizing:border-box;font-family:inherit;padding:9px 11px;border-radius:9px;width:100%;margin-bottom:6px;">
+      <textarea id="event-message" maxlength="500" placeholder="Details (optional)" style="border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:#fff;font-size:13px;box-sizing:border-box;font-family:inherit;padding:9px 11px;border-radius:9px;width:100%;min-height:50px;resize:vertical;margin-bottom:6px;"></textarea>
+      <input id="event-when" type="datetime-local" style="border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:#fff;font-size:13px;box-sizing:border-box;font-family:inherit;padding:9px 11px;border-radius:9px;width:100%;margin-bottom:6px;color-scheme:dark;">
+      <label style="font-size:11px;color:rgba(255,255,255,0.5);display:flex;gap:6px;align-items:center;"><input id="event-ping" type="checkbox" checked> Also ping everyone about it</label>
+      <div style="display:flex;gap:8px;margin-top:8px;align-items:center;"><button onclick="addEvent()" style="background:#0ea5e9;border:none;color:#fff;border-radius:7px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Add event</button><span id="event-status" style="font-size:11px;color:rgba(255,255,255,0.4);"></span></div>
+      <div style="font-size:12px;font-weight:700;color:#38bdf8;margin:16px 0 6px;">Live events</div>
+      <div id="events-admin-list" style="font-size:12px;color:rgba(255,255,255,0.6);">Loading…</div>
     </div>
     <div id="promo-email-panel" style="display:none;flex-shrink:0;padding:14px 18px;
       border-bottom:1px solid rgba(255,255,255,0.07);background:rgba(236,72,153,0.04);
@@ -12576,6 +12708,22 @@ function _aresUpdateArenaButton(){
   </div>
 </div>
 
+
+<!-- EVENTS + PING -->
+<div id="events-modal" style="display:none;position:fixed;inset:0;z-index:99800;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;padding:16px;" onclick="if(event.target===this)eventsClose()">
+  <div style="background:#10161f;border:1px solid rgba(56,189,248,0.3);border-radius:16px;max-width:460px;width:100%;max-height:80vh;display:flex;flex-direction:column;">
+    <div style="display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.08);"><div style="flex:1;font-weight:800;color:#38bdf8;">📅 Events</div><button onclick="eventsClose()" style="background:rgba(255,255,255,0.08);border:none;color:#fff;border-radius:8px;padding:5px 11px;cursor:pointer;">✕</button></div>
+    <div id="events-list" style="padding:12px 16px;overflow-y:auto;"></div>
+  </div>
+</div>
+<div id="ping-popup" style="display:none;position:fixed;inset:0;z-index:99900;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#10161f;border:1.5px solid #0ea5e9;border-radius:16px;max-width:380px;width:100%;padding:20px;box-shadow:0 10px 40px rgba(0,0,0,0.5);">
+    <div style="font-size:11px;font-weight:800;color:#38bdf8;letter-spacing:.08em;margin-bottom:6px;">🔔 NEW PING</div>
+    <div id="ping-popup-title" style="font-size:17px;font-weight:800;color:#fff;margin-bottom:8px;"></div>
+    <div id="ping-popup-msg" style="font-size:13px;color:rgba(255,255,255,0.75);line-height:1.5;white-space:pre-wrap;margin-bottom:16px;"></div>
+    <button onclick="pingDismiss()" style="width:100%;background:#0ea5e9;border:none;color:#fff;border-radius:9px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Got it</button>
+  </div>
+</div>
 
 <!-- BAN MODAL -->
 <div id="ban-modal" style="display:none;position:fixed;inset:0;z-index:22000;
