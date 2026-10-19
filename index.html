@@ -13461,7 +13461,8 @@ function startSim(){
   S.sim={eng:eng,bodies:bodies,cons:cons,t:0,thrust:0,maxX:-1e9,sh:{},boost:boost,pilot:pilot,caps:caps};
   S.mode='play';S.done=false;S.first=null;S.t0=performance.now();updHud();syncUi()
 }
-function stopSim(){try{if(S.sim&&S.sim.maxAlt>CR.best)CR.best=S.sim.maxAlt;saveCrew()}catch(e){}S.sim=null;S.mode='build';fx=[];updHud();syncUi()}
+function homeCam(){var n=S.parts.length,H=(cv&&cv.clientHeight)||600;if(!n)return{x:200,y:-180,z:1};var x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;S.parts.forEach(function(p){var d=dims(p),r=Math.max(d.w,d.h)/2;x0=Math.min(x0,p.x-r);x1=Math.max(x1,p.x+r);y0=Math.min(y0,p.y-r);y1=Math.max(y1,p.y+r)});y1=Math.max(y1,0);var z=Math.max(.25,Math.min(1,H*.62/Math.max(120,y1-y0,(x1-x0)*.6)));return{x:(x0+x1)/2,y:(y0+y1)/2-30,z:z}}
+function stopSim(){try{if(S.sim&&S.sim.maxAlt>CR.best)CR.best=S.sim.maxAlt;saveCrew()}catch(e){}var was=!!S.sim;S.sim=null;S.mode='build';fx=[];if(was){S.cam=homeCam();S.follow=true;var st_=$('ws-stats'),bn_=$('ws-banner');if(st_)st_.textContent='';if(bn_){bn_.style.opacity=0}}updHud();syncUi()}
 function stepSim(){
   var sm=S.sim;if(!sm)return;var k=S.keys,dir=(k.ArrowRight||k.d?1:0)-(k.ArrowLeft||k.a?1:0),brake=k.ArrowDown||k.s,go=k[' ']||k.ArrowUp||k.w;
   if(S.pad){dir=S.pad.dir||dir;go=go||S.pad.go}
@@ -13616,7 +13617,7 @@ function kd(e){if(!open)return;var k=e.key.length===1?e.key.toLowerCase():e.key;
     if((k==='Delete'||k==='Backspace')&&S.sel){removePart(S.sel);S.sel=null;updHud()}}
   var ae=document.activeElement;if(k==='Enter'&&(!ae||ae===document.body||ae.tagName==='CANVAS'))wsTogglePlay();if(k==='r'&&S.mode==='play')wsReset()}
 function ku(e){var k=e.key.length===1?e.key.toLowerCase():e.key;if(open&&k===' ')e.preventDefault();S.keys[k]=false}
-window.wsReset=function(){if(S.mode==='play'){stopSim();startSim()}else{S.cam={x:200,y:-180,z:1};S.sel=null;S.first=null;toast('↺ View reset')}};
+window.wsReset=function(){if(S.mode==='play'){stopSim();startSim()}else{S.cam=homeCam();S.sel=null;S.first=null;toast('↺ View reset')}};
 window.wsStab=function(){S.stab=!S.stab;toast(S.stab?'🧭 Auto-stabiliser ON — thrusters keep you upright':'🧭 Auto-stabiliser off')};
 window.wsRocket=function(){if(S.parts.length&&!confirm('Replace your build with the starter rocket?'))return;stopSim();S.parts=[];S.links=[];S.nid=1;S.auto=false;S.stab=true;
   var en=place('engine',0,-31,0),b1=place('beam',0,-130,deg(90)),b2=place('beam',0,-250,deg(90)),cp=place('capsule',0,-345,0),ns=place('nose',0,-392,0);
@@ -13629,7 +13630,7 @@ window.wsZoom=function(f){S.cam.z=Math.max(.2,Math.min(3,S.cam.z*f))};
 window.wsFollow=function(){S.follow=!S.follow;toast(S.follow?'🎥 Camera follows your build':'🎥 Free camera')};
 window.wsSnap=function(){S.snap=!S.snap;toast(S.snap?'🧲 Grid snap on':'🧲 Grid snap off')};
 window.wsAuto=function(){S.auto=!S.auto;toast(S.auto?'🔗 Auto-attach on':'🔗 Auto-attach off')};
-window.wsLevel=function(i){stopSim();setLevel(+i);S.cam={x:200,y:-180,z:1}};
+window.wsLevel=function(i){stopSim();setLevel(+i);S.cam=homeCam()};
 window.wsPad=function(k,v){S.pad=S.pad||{};S.pad[k]=v};
 function buildTools(){var el=$('ws-tools');el.innerHTML=TOOLS.map(function(t){return '<button data-k="'+t[0]+'" title="'+t[2]+'"><span>'+t[1]+'</span><i>'+t[2]+'</i></button>'}).join('');
   el.querySelectorAll('button').forEach(function(b){b.onclick=function(){S.tool=b.dataset.k;S.first=null;if(S.mode==='play'&&PD[S.tool])stopSim();syncUi()}})}
