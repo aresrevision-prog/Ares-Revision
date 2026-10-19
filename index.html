@@ -4311,21 +4311,15 @@ async function authSignup() {
   // Function — at this point the browser has no identity yet, so this is
   // the one step that still has to run with elevated (service-role)
   // access rather than as "this specific user."
-  let result;
-  try {
-    const resp = await fetch(SUPABASE_URL + '/functions/v1/signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY },
-      body: JSON.stringify({ username, password, displayName: username, accountType: acctType }),
-    });
-    result = await resp.json();
-    if (!resp.ok) {
-      btn.textContent = 'Create Account →'; btn.disabled = false;
-      return authShowError('signup-error', result.error || 'Could not create account.');
-    }
-  } catch(e) {
+  const sc = await _edgeCall('signup', { username, password, displayName: username, accountType: acctType }, 3);
+  if (sc.failed) {
     btn.textContent = 'Create Account →'; btn.disabled = false;
-    return authShowError('signup-error', 'Could not reach the server. Check your connection and try again.');
+    return authShowError('signup-error', sc.err && sc.err.status ? 'The server is having trouble right now. Please try again in a moment.' : 'Could not reach the server. Check your connection and try again.');
+  }
+  const result = sc.result || {};
+  if (!sc.resp.ok) {
+    btn.textContent = 'Create Account →'; btn.disabled = false;
+    return authShowError('signup-error', result.error || 'Could not create account.');
   }
 
   // From here on, every request carries this user's real, verified
@@ -4388,6 +4382,50 @@ async function authSignup() {
 }
 
 // ── Log in ────────────────────────────────────────────────────────────────
+// Calls an Edge Function with a timeout and automatic retries, so a slow or
+// flaky connection (or a cold-starting function) doesn't strand people on a
+// dead "Checking…" button. 5xx / 404 / network errors are retried; real
+// answers (200, 400, 401, 403, 429…) are returned straight away.
+async function _edgeCall(name, payload, tries) {
+  tries = tries || 3;
+  let lastErr = null;
+  for (let i = 0; i < tries; i++) {
+    const ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    const timer = setTimeout(() => { try { ctl && ctl.abort(); } catch(e){} }, 15000);
+    try {
+      const resp = await fetch(SUPABASE_URL + '/functions/v1/' + name, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY },
+        body: JSON.stringify(payload),
+        signal: ctl ? ctl.signal : undefined,
+      });
+      clearTimeout(timer);
+      let result = {};
+      try { result = await resp.json(); } catch(e) { result = {}; }
+      if (resp.status >= 500 || resp.status === 404) { lastErr = { status: resp.status }; await new Promise(r => setTimeout(r, 700 * (i + 1))); continue; }
+      return { resp, result };
+    } catch (e) {
+      clearTimeout(timer);
+      lastErr = { network: true, error: e };
+      await new Promise(r => setTimeout(r, 700 * (i + 1)));
+    }
+  }
+  return { failed: true, err: lastErr };
+}
+
+// Last-resort sign-in when the server can't be reached at all: if this device
+// has seen this account before, check the password against the locally cached
+// hash so people can still get in and study. Syncing resumes next time they
+// log in while online.
+async function _offlineLogin(username, password) {
+  try {
+    const acc = getAccounts()[username];
+    if (!acc || !acc.passwordHash) return false;
+    const h = await hashPassword(password);
+    return h === acc.passwordHash;
+  } catch (e) { return false; }
+}
+
 async function authLogin() {
   const username = document.getElementById('login-user').value.trim().toLowerCase();
   const password = document.getElementById('login-pass').value;
@@ -4408,29 +4446,30 @@ async function authLogin() {
   const btn = document.querySelector('#auth-login-form .auth-btn');
   btn.textContent = 'Checking…'; btn.disabled = true;
 
-  // Password verification now happens server-side, inside the login Edge
-  // Function — it's the only place that can see the real password hash
-  // and issue a token proving who this request actually is.
-  let result, resp;
-  try {
-    resp = await fetch(SUPABASE_URL + '/functions/v1/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY },
-      body: JSON.stringify({ username, password }),
-    });
-    result = await resp.json();
-  } catch(e) {
-    btn.textContent = 'Log In →'; btn.disabled = false;
-    return authShowError('login-error', 'Could not reach the server. Check your connection and try again.');
-  }
-
+  // Password verification happens server-side, inside the login Edge Function.
+  const call = await _edgeCall('login', { username, password }, 3);
   btn.textContent = 'Log In →'; btn.disabled = false;
+
+  if (call.failed) {
+    // Server unreachable or erroring — never count this as a wrong password.
+    if (await _offlineLogin(username, password)) {
+      localStorage.removeItem('ares_login_fails');
+      try { showXpPop('📴 Offline mode — log in again when you’re connected to sync'); } catch(e) {}
+      authEnterApp(username);
+      return;
+    }
+    return authShowError('login-error', call.err && call.err.status
+      ? 'The server is having trouble right now. Please try again in a moment.'
+      : 'Could not reach the server. Check your internet connection and try again.');
+  }
+  const resp = call.resp, result = call.result || {};
 
   if (!resp.ok) {
     if (result.error === 'banned') {
       authShowError('login-error', 'This account has been banned. Reason: ' + (result.reason || 'No reason given.'));
       return;
     }
+    if (resp.status === 429) return authShowError('login-error', result.error || 'Too many attempts. Please wait a minute and try again.');
     const fails = parseInt(localStorage.getItem('ares_login_fails') || '0', 10) + 1;
     localStorage.setItem('ares_login_fails', String(fails));
     if (fails >= 5) {
@@ -4440,6 +4479,7 @@ async function authLogin() {
     }
     return authShowError('login-error', result.error || 'Incorrect password. Please try again.');
   }
+  if (!result.token) return authShowError('login-error', 'Login didn’t complete. Please try again.');
 
   localStorage.removeItem('ares_login_fails');
   localStorage.removeItem('ares_login_lock_until');
@@ -13175,10 +13215,11 @@ var PD={
  warp:{shape:'box',w:40,h:34,d:.003,mat:'warp',n:'Warp drive'},
  engine:{shape:'box',w:46,h:62,d:.004,mat:'engine',n:'Rocket engine'},
  capsule:{shape:'box',w:46,h:54,d:.0015,mat:'capsule',n:'Crew capsule'},
- nose:{shape:'box',w:46,h:42,d:.0008,mat:'nose',n:'Nose cone'}
+ nose:{shape:'box',w:46,h:42,d:.0008,mat:'nose',n:'Nose cone'},
+ leg:{shape:'box',w:10,h:46,d:.002,mat:'steel',n:'Landing leg'}
 };
 var TOOLS=[['select','🖐️','Move'],['pan','✋','Pan'],['plank','🟫','Plank'],['block','🧱','Block'],['beam','🔩','Steel beam'],['plate','⬛','Steel plate'],
- ['wheel','⚙️','Motor wheel'],['bigwheel','🛞','Big wheel'],['thruster','🚀','Thruster'],['engine','🔥','Rocket engine'],['capsule','🧑‍🚀','Crew capsule'],['nose','🔺','Nose cone'],['warp','🌀','Warp drive'],['balloon','🎈','Balloon'],['weight','⚓','Heavy weight'],
+ ['wheel','⚙️','Motor wheel'],['bigwheel','🛞','Big wheel'],['thruster','🚀','Thruster'],['engine','🔥','Rocket engine'],['capsule','🧑‍🚀','Crew capsule'],['nose','🔺','Nose cone'],['leg','🦿','Landing leg'],['warp','🌀','Warp drive'],['balloon','🎈','Balloon'],['weight','⚓','Heavy weight'],
  ['weld','🔗','Weld link'],['pivot','📍','Hinge link'],['spring','🌀','Spring link'],['erase','🗑️','Erase']];
 var LEVELS=[
  {n:'Sandbox',d:'Build anything. Drive right to the flag!',pts:[[[-3000,0],[5000,0]]],goal:{t:'x',v:3200}},
@@ -13381,6 +13422,9 @@ function stepSim(){
     else if(m==='thruster'&&go){var f=rotp(0,-.032*sm.boost,b.angle);Bd.applyForce(b,b.position,f);if(Math.random()<.7)fx.push({x:b.position.x-f.x*600,y:b.position.y-f.y*600,vx:-f.x*400+(Math.random()-.5)*2,vy:-f.y*400+(Math.random()-.5)*2,l:14})}}
   var ay=0,nb=0,sp=0;for(var i3 in sm.bodies){var q3=sm.bodies[i3];ay+=q3.position.y;nb++;sp+=Math.hypot(q3.velocity.x,q3.velocity.y)}
   ay=nb?-ay/nb:0;sm.alt=ay;sm.speed=nb?sp/nb:0;
+  sm.maxAlt=Math.max(sm.maxAlt||0,ay);
+  var lowest=1e9;for(var i5 in sm.bodies)lowest=Math.min(lowest,-sm.bodies[i5].position.y);
+  if(sm.maxAlt>800&&lowest<90&&sm.speed<1.4&&!sm.landed&&sm.t>60){sm.landed=true;banner('🛬 Touchdown! Safe landing','Your build came back in one piece (+💰100)');CR.credits+=100;saveCrew();updCredits()}
   MILES.forEach(function(m){if(ay>=m.a&&!sm.sh['m'+m.a]){sm.sh['m'+m.a]=1;banner(m.t,m.s)}});
   sm.eng.gravity.scale=.001*Math.max(0,1-Math.max(0,ay)/(LEVELS[S.level].space?9000:1e9));
   var thin=Math.max(0,1-Math.max(0,ay)/4000);
@@ -13479,7 +13523,7 @@ function drawLink(c,k,A,Bp,z){
 }
 function fmtKm(k,lv){if(lv.rift)return '∞ km';if(lv.lyOut){return (k/9.461e12).toFixed(2)+' light-years'}return Math.round(k).toLocaleString()+' km'}
 function updHud(){var h=$('ws-hud');if(!h)return;var lv=LEVELS[S.level];h.innerHTML='<b>'+lv.n+'</b> — '+lv.d+'<br><span style="opacity:.75">'+(S.mode==='build'?'🔨 BUILD · '+S.parts.length+' parts':'▶ SIMULATING')+'</span>'}
-function syncUi(){var b=$('ws-play');if(b){b.textContent=S.mode==='build'?'▶ Play':'■ Stop';b.style.background=S.mode==='build'?'#22c55e':'#ef4444'}
+function syncUi(){var hn=$('ws-hint');if(hn)hn.textContent=S.mode==='play'?'← → / A D drive · ↑ / W / Space thrust · ↓ / S brake · R reset':'R rotate · right-drag / ✋ pan · scroll zoom · Enter play';var b=$('ws-play');if(b){b.textContent=S.mode==='build'?'▶ Play':'■ Stop';b.style.background=S.mode==='build'?'#22c55e':'#ef4444'}
   var pad=$('ws-pad');if(pad)pad.style.display=S.mode==='play'?'flex':'none';
   document.querySelectorAll('#ws-tools button').forEach(function(x){x.classList.toggle('on',x.dataset.k===S.tool)})}
 // ── main loop ──────────────────────────
@@ -13517,15 +13561,16 @@ function kd(e){if(!open)return;var k=e.key.length===1?e.key.toLowerCase():e.key;
   S.keys[k]=true;
   if(S.mode==='build'){if(k==='r'){if(S.sel){S.sel.a+=e.shiftKey?-deg(15):deg(15);autosave()}else S.rot+=e.shiftKey?-deg(15):deg(15)}
     if((k==='Delete'||k==='Backspace')&&S.sel){removePart(S.sel);S.sel=null;updHud()}}
-  if(k==='Enter')wsTogglePlay();if(k==='r'&&S.mode==='play')wsReset()}
-function ku(e){var k=e.key.length===1?e.key.toLowerCase():e.key;S.keys[k]=false}
+  var ae=document.activeElement;if(k==='Enter'&&(!ae||ae===document.body||ae.tagName==='CANVAS'))wsTogglePlay();if(k==='r'&&S.mode==='play')wsReset()}
+function ku(e){var k=e.key.length===1?e.key.toLowerCase():e.key;if(open&&k===' ')e.preventDefault();S.keys[k]=false}
 window.wsReset=function(){if(S.mode==='play'){stopSim();startSim()}else{S.cam={x:200,y:-180,z:1};S.sel=null;S.first=null;toast('↺ View reset')}};
 window.wsStab=function(){S.stab=!S.stab;toast(S.stab?'🧭 Auto-stabiliser ON — thrusters keep you upright':'🧭 Auto-stabiliser off')};
 window.wsRocket=function(){if(S.parts.length&&!confirm('Replace your build with the starter rocket?'))return;stopSim();S.parts=[];S.links=[];S.nid=1;S.auto=false;S.stab=true;
   var en=place('engine',0,-31,0),b1=place('beam',0,-130,deg(90)),b2=place('beam',0,-250,deg(90)),cp=place('capsule',0,-345,0),ns=place('nose',0,-392,0);
-  S.auto=true;if(en&&b1)addLink(en,b1,'weld',0,-62);if(b1&&b2)addLink(b1,b2,'weld',0,-190);if(b2&&cp)addLink(b2,cp,'weld',0,-320);if(cp&&ns)addLink(cp,ns,'weld',0,-370);
+  S.auto=true;var l1=place('leg',-33,-23,0),l2=place('leg',33,-23,0);if(en&&l1)addLink(l1,en,'weld',-28,-23);if(en&&l2)addLink(l2,en,'weld',28,-23);
+  if(en&&b1)addLink(en,b1,'weld',0,-62);if(b1&&b2)addLink(b1,b2,'weld',0,-190);if(b2&&cp)addLink(b2,cp,'weld',0,-320);if(cp&&ns)addLink(cp,ns,'weld',0,-370);
   autosave();S.cam={x:0,y:-220,z:.7};toast('🚀 Starter rocket loaded — Play, then hold ↑ / Space')};
-window.wsTogglePlay=function(){if(S.mode==='build')startSim();else stopSim()};
+window.wsTogglePlay=function(){try{document.activeElement&&document.activeElement.blur&&document.activeElement.blur()}catch(e){}if(S.mode==='build')startSim();else stopSim()};
 window.wsRotate=function(){if(S.sel){S.sel.a+=deg(15);autosave()}else S.rot+=deg(15)};
 window.wsZoom=function(f){S.cam.z=Math.max(.2,Math.min(3,S.cam.z*f))};
 window.wsFollow=function(){S.follow=!S.follow;toast(S.follow?'🎥 Camera follows your build':'🎥 Free camera')};
