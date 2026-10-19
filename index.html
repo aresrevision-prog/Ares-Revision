@@ -12711,7 +12711,7 @@ function _aresUpdateArenaButton(){
 #ws-stats:empty{display:none}
 #ws-toast{position:absolute;left:50%;bottom:70px;transform:translateX(-50%);background:rgba(0,0,0,.8);border:1px solid #ffa03c;padding:8px 16px;border-radius:99px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
 #ws-pad{display:none;position:absolute;left:0;right:0;bottom:10px;justify-content:space-between;padding:0 14px;pointer-events:none}
-#ws-pad2{position:absolute;right:92px;bottom:6px}#ws-pad2 button{width:50px!important;height:50px!important;font-size:20px!important}#ws-pad button{pointer-events:auto;width:62px;height:62px;border-radius:50%;border:2px solid rgba(255,255,255,.5);background:rgba(0,0,0,.45);color:#fff;font-size:24px;touch-action:none}
+#ws-pad2{position:absolute;right:92px;bottom:6px}#ws-pad2 button{width:46px!important;height:46px!important;font-size:19px!important}#ws-pad2{gap:5px!important}#ws-pad button{pointer-events:auto;width:62px;height:62px;border-radius:50%;border:2px solid rgba(255,255,255,.5);background:rgba(0,0,0,.45);color:#fff;font-size:24px;touch-action:none}
 #ws-zoom{position:absolute;right:10px;bottom:10px;display:flex;flex-direction:column;gap:5px}
 #ws-zoom button{width:34px;height:34px;border-radius:8px;border:1px solid rgba(255,255,255,.3);background:rgba(0,0,0,.5);color:#fff;font-size:16px;cursor:pointer}
 #ws-hint{position:absolute;left:10px;bottom:10px;font-size:11px;color:rgba(255,255,255,.85);background:rgba(0,0,0,.45);padding:4px 9px;border-radius:7px;pointer-events:none}
@@ -12733,7 +12733,7 @@ function _aresUpdateArenaButton(){
     <button onclick="wsSave()">💾 Save</button><button onclick="wsLoadOpen()">📂 Load</button>
     <button onclick="wsShare()">📋 Share</button><button onclick="wsImport()">📥 Import</button>
     <button onclick="wsSnap()" title="Grid snap">🧲</button><button onclick="wsAuto()" title="Auto-attach">🔗auto</button><button onclick="wsFollow()" title="Camera follow">🎥</button>
-    <button id="ws-mapbtn" onclick="wsMapOpen()" title="Space map (N)">🗺️ Map</button><button onclick="wsCrewOpen()">👩‍🚀 Crew</button><button onclick="wsStationOpen()">🛰️ Station</button><span id="ws-credits" style="font-weight:800;color:#ffd23f;font-size:13px">💰 150</span>
+    <button id="ws-mapbtn" onclick="wsMapOpen()" title="Space map (N)">🗺️ Map</button><button onclick="wsCrewOpen()">👩‍🚀 Crew</button><button onclick="wsStationOpen()">🛰️ Station</button><button onclick="wsFleetOpen()">🛸 Fleet</button><span id="ws-credits" style="font-weight:800;color:#ffd23f;font-size:13px">💰 150</span>
     <button onclick="wsClear()" style="color:#f87171">🗑 Clear</button>
   </div>
   <div class="ws-main">
@@ -12746,12 +12746,13 @@ function _aresUpdateArenaButton(){
       <div id="ws-pad">
         <div style="display:flex;gap:10px"><button ontouchstart="wsPad('dir',-1)" ontouchend="wsPad('dir',0)" onmousedown="wsPad('dir',-1)" onmouseup="wsPad('dir',0)">◀</button><button ontouchstart="wsPad('dir',1)" ontouchend="wsPad('dir',0)" onmousedown="wsPad('dir',1)" onmouseup="wsPad('dir',0)">▶</button></div>
         <button ontouchstart="wsPad('go',true)" ontouchend="wsPad('go',false)" onmousedown="wsPad('go',true)" onmouseup="wsPad('go',false)">🚀</button>
-        <div id="ws-pad2" style="display:flex;gap:8px"><button onclick="wsChutes()">🪂</button><button onclick="wsStage()">✂️</button><button onclick="wsNav()">🤖</button><button onclick="wsSpeed()">⏩</button></div>
+        <div id="ws-pad2" style="display:flex;gap:8px"><button onclick="wsChutes()">🪂</button><button onclick="wsStage()">✂️</button><button onclick="wsNav()">🤖</button><button onclick="wsSpeed()">⏩</button><button onclick="wsPark()">⚓</button></div>
       </div>
       <div id="ws-banner" style="position:absolute;left:50%;top:18%;transform:translateX(-50%) scale(.92);opacity:0;transition:opacity .5s,transform .5s;text-align:center;color:#fff;text-shadow:0 2px 14px #000,0 0 30px rgba(120,180,255,.6);pointer-events:none;max-width:90%;z-index:6"></div>
       <div id="ws-toast"></div>
 <div id="ws-crewm" onclick="if(event.target===this)this.style.display='none'" style="display:none;position:absolute;inset:0;z-index:30;background:rgba(0,0,0,.72);align-items:center;justify-content:center;padding:16px"><div class="box" style="background:#140d05;border:1.5px solid #ffa03c;border-radius:14px;max-width:460px;width:100%;max-height:80vh;display:flex;flex-direction:column"><div style="padding:12px 14px;font-weight:800;color:#ffa03c;border-bottom:1px solid rgba(255,255,255,.1);display:flex;justify-content:space-between"><span>👩‍🚀 Your crew</span><span id="ws-crewcr" style="color:#ffd23f"></span></div><div style="font-size:11px;opacity:.65;padding:8px 14px">Place a 🧑‍🚀 Crew capsule on your rocket to carry crew. Fly it to orbit or beyond to earn XP and credits. Level up crew by training them.</div><div id="ws-crewlist" style="overflow-y:auto"></div></div></div>
-<div id="ws-mapm" onclick="if(event.target===this)wsMapClose()" style="display:none;position:absolute;inset:0;z-index:31;background:rgba(0,0,0,.78);align-items:center;justify-content:center;padding:12px"><div class="box" style="background:#070b18;border:1.5px solid #6fa8ff;border-radius:14px;max-width:560px;width:100%;max-height:92vh;display:flex;flex-direction:column"><div style="padding:10px 14px;font-weight:800;color:#6fa8ff;border-bottom:1px solid rgba(255,255,255,.1);display:flex;justify-content:space-between"><span>🗺️ Space Map</span><span onclick="wsMapClose()" style="cursor:pointer;opacity:.7">✕</span></div><canvas id="ws-mapcv" width="540" height="190" style="width:100%;display:block;cursor:pointer"></canvas><div id="ws-mapinfo" style="overflow-y:auto;padding:4px 0"></div><div style="padding:8px 14px;border-top:1px solid rgba(255,255,255,.1);display:flex;gap:8px;flex-wrap:wrap"><button class="ws-mb" onclick="wsMapClose();wsLevel(11);toast('🌌 Solar System — build on the pad, press Play, then click a planet')">🌌 Explore the Solar System</button><button id="ws-mapgo" class="ws-mb" style="display:none"></button></div></div></div>
+<div id="ws-mapm" onclick="if(event.target===this)wsMapClose()" style="display:none;position:absolute;inset:0;z-index:31;background:rgba(0,0,0,.78);align-items:center;justify-content:center;padding:12px"><div class="box" style="background:#070b18;border:1.5px solid #6fa8ff;border-radius:14px;max-width:560px;width:100%;max-height:92vh;display:flex;flex-direction:column"><div style="padding:10px 14px;font-weight:800;color:#6fa8ff;border-bottom:1px solid rgba(255,255,255,.1);display:flex;justify-content:space-between"><span>🗺️ Space Map</span><span onclick="wsMapClose()" style="cursor:pointer;opacity:.7">✕</span></div><canvas id="ws-mapcv" width="540" height="270" style="width:100%;display:block;cursor:pointer"></canvas><div id="ws-mapinfo" style="overflow-y:auto;padding:4px 0"></div><div style="padding:8px 14px;border-top:1px solid rgba(255,255,255,.1);display:flex;gap:8px;flex-wrap:wrap"><button class="ws-mb" onclick="wsMapClose();wsLevel(11);toast('🌌 Solar System — build on the pad, press Play, then click a planet')">🌌 Explore the Solar System</button><button id="ws-mapgo" class="ws-mb" style="display:none"></button></div></div></div>
+<div id="ws-fleetm" onclick="if(event.target===this)wsFleetClose()" style="display:none;position:absolute;inset:0;z-index:30;background:rgba(0,0,0,.72);align-items:center;justify-content:center;padding:16px"><div class="box" style="background:#070b18;border:1.5px solid #6fa8ff;border-radius:14px;max-width:460px;width:100%;max-height:86vh;display:flex;flex-direction:column"><div style="padding:12px 14px;font-weight:800;color:#6fa8ff;display:flex;justify-content:space-between"><span>🛸 Your Fleet</span><span onclick="wsFleetClose()" style="cursor:pointer;opacity:.7">✕</span></div><div id="ws-fleetlist" style="overflow-y:auto"></div></div></div>
 <div id="ws-stnm" onclick="if(event.target===this)this.style.display='none'" style="display:none;position:absolute;inset:0;z-index:30;background:rgba(0,0,0,.72);align-items:center;justify-content:center;padding:16px"><div class="box" style="background:#140d05;border:1.5px solid #6fa8ff;border-radius:14px;max-width:460px;width:100%;max-height:86vh;display:flex;flex-direction:column"><div style="padding:12px 14px;font-weight:800;color:#6fa8ff;border-bottom:1px solid rgba(255,255,255,.1)">🛰️ Space Station</div><canvas id="ws-stncv" width="440" height="230" style="width:100%;display:block"></canvas><div id="ws-stninfo" style="padding:8px 14px;font-size:12px"></div><div id="ws-stnlist" style="overflow-y:auto"></div></div></div>
       <div id="ws-load" onclick="if(event.target===this)this.style.display='none'"><div class="box"><div style="padding:12px 14px;font-weight:800;color:#ffa03c;border-bottom:1px solid rgba(255,255,255,.1)">📂 Your saved builds</div><div id="ws-saves" style="overflow-y:auto"></div></div></div>
     </div>
@@ -13220,10 +13221,11 @@ var PD={
  nose:{shape:'box',w:46,h:42,d:.0008,mat:'nose',n:'Nose cone'},
  leg:{shape:'box',w:10,h:46,d:.002,mat:'steel',n:'Landing leg'},
  chute:{shape:'box',w:20,h:16,d:.0008,mat:'chute',n:'Parachute'},
- decoupler:{shape:'box',w:46,h:10,d:.002,mat:'decoupler',n:'Decoupler'}
+ decoupler:{shape:'box',w:46,h:10,d:.002,mat:'decoupler',n:'Decoupler'},
+ turret:{shape:'box',w:30,h:30,d:.002,mat:'turret',n:'Laser turret'}
 };
 var TOOLS=[['select','🖐️','Move'],['pan','✋','Pan'],['plank','🟫','Plank'],['block','🧱','Block'],['beam','🔩','Steel beam'],['plate','⬛','Steel plate'],
- ['wheel','⚙️','Motor wheel'],['bigwheel','🛞','Big wheel'],['thruster','🚀','Thruster'],['engine','🔥','Rocket engine'],['capsule','🧑‍🚀','Crew capsule'],['nose','🔺','Nose cone'],['leg','🦿','Landing leg'],['chute','🪂','Parachute'],['decoupler','✂️','Decoupler'],['warp','🌀','Warp drive'],['balloon','🎈','Balloon'],['weight','⚓','Heavy weight'],
+ ['wheel','⚙️','Motor wheel'],['bigwheel','🛞','Big wheel'],['thruster','🚀','Thruster'],['engine','🔥','Rocket engine'],['capsule','🧑‍🚀','Crew capsule'],['nose','🔺','Nose cone'],['leg','🦿','Landing leg'],['chute','🪂','Parachute'],['decoupler','✂️','Decoupler'],['turret','🔫','Laser turret'],['warp','🌀','Warp drive'],['balloon','🎈','Balloon'],['weight','⚓','Heavy weight'],
  ['weld','🔗','Weld link'],['pivot','📍','Hinge link'],['spring','🌀','Spring link'],['erase','🗑️','Erase']];
 var LEVELS=[
  {n:'Sandbox',d:'Build anything. Drive right to the flag!',pts:[[[-3000,0],[5000,0]]],goal:{t:'x',v:3200}},
@@ -13363,24 +13365,34 @@ function drawStation(){var cv2=$('ws-stncv'),c=cv2.getContext('2d'),W_=cv2.width
   if(!CR.station.length){c.fillStyle='rgba(255,255,255,.7)';c.font='13px sans-serif';c.textAlign='center';c.fillText('Your station is empty — send a crew member to orbit, then build!',W_/2,H_-18)}}
 
 // ── 🌌 Solar System: explorable 2D universe ───────────
-var DT2=1000/60*1000/60,ER=8000;
+var DT2=1000/60*1000/60,ER=7760;
 var WORLD=[
- {k:'earth',n:'Earth',i:'🌍',x:0,y:ER,R:ER,g:.001,atmH:4000,atm:1,land:1,c1:'#4d9de0',c2:'#1b4f8a'},
- {k:'moon',n:'Moon',i:'🌙',x:31177,y:-10000,R:900,g:.00022,atmH:0,atm:0,land:1,reward:300,c1:'#e6e6ea',c2:'#8e8e96'},
- {k:'mars',n:'Mars',i:'🔴',x:14545,y:-87000,R:1300,g:.00045,atmH:2500,atm:.35,land:1,reward:600,sky:[[150,70,50],[235,170,130]],c1:'#ff9b6a',c2:'#8e2f14'},
- {k:'jup',n:'Jupiter',i:'🪐',x:33848,y:-176000,R:2600,g:.0022,atmH:6000,atm:1.2,gas:1,c1:'#f2d3a4',c2:'#9a6a3a'},
- {k:'euro',n:'Europa',i:'🧊',x:23000,y:-182000,R:700,g:.00026,atmH:0,atm:0,land:1,reward:900,c1:'#e3f0fa',c2:'#6d8ea8'},
- {k:'star',n:'Proxima Centauri',i:'⭐',x:350000,y:-250000,R:3200,g:.0015,hot:1,c1:'#fff1b0',c2:'#ff5a1f'},
- {k:'prox',n:'Proxima b',i:'🪨',x:337000,y:-244000,R:1500,g:.0006,atmH:3000,atm:.8,land:1,reward:2000,sky:[[170,80,60],[255,170,120]],c1:'#ffb38a',c2:'#6b2a2a'},
+ {k:'earth',n:'Earth',i:'🌍',x:0,y:7760,R:8000,f:.97,g:.001,atmH:4000,atm:1,land:1,c1:'#4d9de0',c2:'#1b4f8a'},
+ {k:'moon',n:'Moon',i:'🌙',x:31177,y:-10000,R:3200,g:.00022,land:1,reward:300,c1:'#e6e6ea',c2:'#8e8e96'},
+ {k:'merc',n:'Mercury',i:'☿️',x:-85500,y:-19260,R:3000,g:.0003,land:1,reward:450,c1:'#c9b8a8',c2:'#6e5f55'},
+ {k:'venus',n:'Venus',i:'💛',x:-53500,y:60700,R:6500,g:.0009,atmH:5000,atm:2,land:1,reward:700,sky:[[150,110,40],[240,210,120]],c1:'#f5d98a',c2:'#a06a1e'},
+ {k:'mars',n:'Mars',i:'🔴',x:14545,y:-87000,R:4500,g:.00045,atmH:2500,atm:.35,land:1,reward:600,sky:[[150,70,50],[235,170,130]],c1:'#ff9b6a',c2:'#8e2f14'},
+ {k:'ceres',n:'Ceres',i:'🪨',x:42700,y:-109400,R:2200,g:.00015,land:1,reward:650,c1:'#b0a79a',c2:'#5a534b'},
+ {k:'jup',n:'Jupiter',i:'🪐',x:33848,y:-176000,R:9000,g:.0022,atmH:12000,atm:1.2,gas:1,c1:'#f2d3a4',c2:'#9a6a3a'},
+ {k:'euro',n:'Europa',i:'🧊',x:5000,y:-190000,R:3000,g:.00026,land:1,reward:900,c1:'#e3f0fa',c2:'#6d8ea8'},
+ {k:'io',n:'Io',i:'🌋',x:60000,y:-160000,R:3000,g:.00025,land:1,reward:1000,c1:'#ffe27a',c2:'#b5521a'},
+ {k:'sat',n:'Saturn',i:'🪐',x:117500,y:-184500,R:8000,g:.0018,atmH:10000,atm:1.1,gas:1,rings:1,c1:'#efd9a5',c2:'#a98a55'},
+ {k:'titan',n:'Titan',i:'🟠',x:145200,y:-196200,R:4000,g:.0004,atmH:4000,atm:1.4,land:1,reward:1400,sky:[[140,80,20],[230,160,70]],c1:'#e6a74a',c2:'#8a5418'},
+ {k:'pluto',n:'Pluto',i:'🌑',x:218600,y:-193400,R:2600,g:.00012,land:1,reward:1600,c1:'#e8d9cc',c2:'#8a7566'},
+ {k:'star',n:'Proxima Centauri',i:'⭐',x:350000,y:-250000,R:9000,g:.0015,hot:1,c1:'#fff1b0',c2:'#ff5a1f'},
+ {k:'prox',n:'Proxima b',i:'🪨',x:316000,y:-262000,R:4800,g:.0006,atmH:3000,atm:.8,land:1,reward:2000,sky:[[170,80,60],[255,170,120]],c1:'#ffb38a',c2:'#6b2a2a'},
  {k:'rift',n:'The Rift',i:'🌀',x:-350000,y:-300000,R:3000,g:.0005,portal:1,c1:'#d7a8ff',c2:'#2a0a6a'},
- {k:'aeth',n:'Aether',i:'🔮',x:1500000,y:1500000,R:1800,g:.0007,atmH:3000,atm:.6,land:1,reward:3000,landKey:'rift',sky:[[60,30,130],[170,120,230]],c1:'#d7a8ff',c2:'#3a1a7a'},
- {k:'sun',n:'The Sun',i:'☀️',x:-150000,y:ER,R:20000,g:0,hot:1,c1:'#fff6b0',c2:'#ff9a1f'}];
-var WORBITS=[{x:-150000,y:ER,r:150000},{x:-150000,y:ER,r:190000},{x:-150000,y:ER,r:260000},{x:0,y:ER,r:36000},{x:33848,y:-176000,r:11000},{x:350000,y:-250000,r:13000}];
+ {k:'aeth',n:'Aether',i:'🔮',x:1500000,y:1500000,R:5200,g:.0007,atmH:3000,atm:.6,land:1,reward:3000,landKey:'rift',up:1,sky:[[60,30,130],[170,120,230]],c1:'#d7a8ff',c2:'#3a1a7a'},
+ {k:'sun',n:'The Sun',i:'☀️',x:-150000,y:7760,R:20000,g:0,hot:1,c1:'#fff6b0',c2:'#ff9a1f'}];
+var WORBITS=[{x:-150000,y:7760,r:150000},{x:-150000,y:7760,r:190000},{x:-150000,y:7760,r:260000},{x:-150000,y:7760,r:70000},{x:-150000,y:7760,r:110000},{x:-150000,y:7760,r:225000},{x:-150000,y:7760,r:330000},{x:-150000,y:7760,r:420000},{x:0,y:7760,r:36000},{x:33848,y:-176000,r:32000},{x:117500,y:-184500,r:30000},{x:316000,y:-262000,r:0}];
+WORLD.forEach(function(p){if(!p.land)return;p.f=p.f||.88;p.Rf=p.R*p.f;p.baseKey=p.landKey||p.k;var ux=0,uy=-1;if(!p.up&&p.k!=='earth'){var dx=0-p.x,dy=7760-p.y,L=Math.hypot(dx,dy)||1;ux=dx/L;uy=dy/L}p.u={x:ux,y:uy};p.a0=Math.atan2(uy,ux);p.al=Math.acos(p.f)});
+function surfH(P,x,y){var h=Math.hypot(x-P.x,y-P.y)-P.R;if(P.u)h=Math.max(h,(x-P.x)*P.u.x+(y-P.y)*P.u.y-P.Rf);return h}
 function planetBy(k){for(var i=0;i<WORLD.length;i++)if(WORLD[i].k===k)return WORLD[i];return null}
 function thrGrp(a){var fx_=Math.sin(a),fy_=-Math.cos(a);if(Math.abs(fx_)>.72)return fx_>0?'R':'L';return fy_>0?'D':'U'}
 function worldNear(x,y){var best=null,bh=1e18;for(var i=0;i<WORLD.length;i++){var p=WORLD[i],h=Math.hypot(x-p.x,y-p.y)-p.R;if(h<bh){bh=h;best=p}}return{pl:best,h:bh,atmH:best.atmH||0}}
 function wGrav(x,y){var gx=0,gy=0;for(var i=0;i<WORLD.length;i++){var p=WORLD[i];if(!p.g)continue;var dx=p.x-x,dy=p.y-y,r=Math.hypot(dx,dy),inf=p.R*3.5;if(r>=inf||r<1)continue;var gs=p.g*Math.pow(p.R/Math.max(r,p.R),2)*(r>inf*.6?(inf-r)/(inf*.4):1);gx+=gs*dx/r;gy+=gs*dy/r}return{x:gx,y:gy}}
-function planetBodies(){var out=[];WORLD.forEach(function(p){if(!p.land)return;var sides=Math.max(28,Math.min(160,Math.round(p.R/30)));out.push(B.polygon(p.x,p.y,sides,p.R/Math.cos(Math.PI/sides),{isStatic:true,friction:1,frictionStatic:1,restitution:0,label:'planet',angle:Math.PI/sides*0}))});return out}
+function planetPoly(p){var v=[],n=Math.max(60,Math.min(200,Math.round(p.R/25))),a1=p.a0+p.al,a2=p.a0+Math.PI*2-p.al;for(var i=0;i<=n;i++){var a=a1+(a2-a1)*i/n;v.push({x:p.x+Math.cos(a)*p.R,y:p.y+Math.sin(a)*p.R})}return v}
+function planetBodies(){var out=[];WORLD.forEach(function(p){if(!p.land)return;var v=planetPoly(p),ce=M.Vertices.centre(v),b=B.fromVertices(ce.x,ce.y,[v],{isStatic:true,friction:1,frictionStatic:1,restitution:0,label:'planet'},true);if(b)out.push(b)});return out}
 function mainBodies(sm){var o=[];for(var i in sm.bodies){var b=sm.bodies[i];if(b.plugin.main!==false)o.push(b)}return o}
 function recomputeStages(sm){var uf={};for(var i in sm.bodies)uf[sm.bodies[i].id]=sm.bodies[i].id;function fd(x){while(uf[x]!==x){uf[x]=uf[uf[x]];x=uf[x]}return x}
   sm.cons.forEach(function(c){if(c.bodyA&&c.bodyB)uf[fd(c.bodyA.id)]=fd(c.bodyB.id)});
@@ -13397,10 +13409,10 @@ window.wsNav=function(){if(!S.target){toast('Click a planet (or its dot on the r
 window.wsSpeed=function(){var sm=S.sim;if(!sm)return;sm.speedMul=sm.speedMul===1?3:sm.speedMul===3?6:1;toast('⏩ Time ×'+sm.speedMul)};
 function worldClick(sx,sy,w){var R=S.radar,best=null;if(R){var bd_=14;R.b.forEach(function(q){var dd_=Math.hypot(sx-q.x,sy-q.y);if(dd_<bd_){bd_=dd_;best=q.k}})}
   if(!best)WORLD.forEach(function(p){if(Math.hypot(w.x-p.x,w.y-p.y)<p.R*1.15)best=p.k});
-  if(!best)return false;var pl=planetBy(best);if(pl.gas||pl.hot){toast('⚠️ '+pl.n+(pl.gas?' is a gas giant — no surface! Try its moon Europa 🧊':' is a star — you’d melt!'));return true}S.target=best;S.nav=true;toast('🤖 Autopilot → '+pl.n+' — press G to stop, or fly yourself');return true}
+  if(!best)return false;var pl=planetBy(best);if(pl.gas||pl.hot){toast('⚠️ '+pl.n+(pl.gas?' is a gas giant — no surface! Try its moon Europa 🧊':' is a star — you’d melt!'));return true}S.target=best;S.nav=true;if(S.sim)S.sim.desc=false;toast('🤖 Autopilot → '+pl.n+' — press G to stop, or fly yourself');return true}
 function worldStats(){var sm=S.sim,s='⏱ '+((performance.now()-S.t0)/1000).toFixed(0)+'s · '+(sm.near?sm.near.i+' '+sm.near.n+' ▲'+Math.max(0,Math.round(sm.alt||0)).toLocaleString():'')+' · 🚀 '+((sm.speed||0)*10).toFixed(0)+' m/s';
   if(S.target){var tp=planetBy(S.target),d=Math.hypot(tp.x-(sm.cx||0),tp.y-(sm.cy||0))-tp.R;s+=' · 🎯 '+tp.n+' '+Math.max(0,Math.round(d)).toLocaleString()+(S.nav?' 🤖':'')}
-  if(sm.speedMul>1)s+=' · ⏩×'+sm.speedMul;if(sm.dec&&sm.dec.length)s+=' · ✂️'+sm.dec.length;return s}
+  if(sm.speedMul>1)s+=' · ⏩×'+sm.speedMul;if(sm.hull<100)s+=' · 🛡️'+Math.max(0,Math.round(sm.hull))+'%';if(sm.en&&sm.en.length)s+=' · 👾'+sm.en.length;if(sm.dec&&sm.dec.length)s+=' · ✂️'+sm.dec.length;return s}
 function failMission(sm,t,sub){if(sm.failed)return;sm.failed=true;banner(t,sub);for(var i=0;i<50;i++)fx.push({x:sm.cx,y:sm.cy,vx:(Math.random()-.5)*14,vy:(Math.random()-.5)*14,l:30,sm:i%2});setTimeout(function(){if(S.sim===sm)wsReset()},2600)}
 function breakBody(sm,o,v){sm.cons=sm.cons.filter(function(c){if(c.bodyA===o||c.bodyB===o){W.remove(sm.eng.world,c);return false}return true});o.plugin.dead=true;o.plugin.main=false;
   for(var i=0;i<14;i++)fx.push({x:o.position.x,y:o.position.y,vx:(Math.random()-.5)*8,vy:(Math.random()-.5)*8,l:22,sm:i%2});
@@ -13423,11 +13435,14 @@ function worldStep(sm,k,dir,brake,go0){
   cxm/=n;cym/=n;vxm/=n;vym/=n;if(!ref)bs.forEach(function(b){if(!ref&&b.plugin.mat==='capsule')ref=b});
   var wn=worldNear(cxm,cym);sm.cx=cxm;sm.cy=cym;sm.near=wn.pl;sm.alt=wn.h;sm.speed=Math.hypot(vxm,vym);sm.maxH=Math.max(sm.maxH,wn.pl.k==='earth'?wn.h:sm.maxH);
   var q=k.q,e=k.e,manual=go0||dir||brake||q||e,go=go0,apTheta=null,thr=1,capv=60*(warp?2.2:1);sm.ap=false;
-  if(S.nav&&S.target&&!manual&&!sm.failed&&F>0&&ref){var tp=planetBy(S.target),dx=tp.x-cxm,dy=tp.y-cym,d=Math.hypot(dx,dy)||1,nx=dx/d,ny=dy/d,Rt=tp.portal?tp.R*.3:tp.R,h=d-Rt,A=F/Mt*DT2,gg=wGrav(cxm,cym),gpx=gg.x*DT2,gpy=gg.y*DT2,gT=Math.max(0,gpx*nx+gpy*ny),bd=Math.max(A*.25,A-gT),cap=capv*.9;
-    var vd=tp.portal?cap:Math.min(cap,.55*Math.sqrt(2*bd*Math.max(h-30-sm.speed*80,0))+.6);if(!tp.portal){vd=Math.min(vd,.5+Math.max(0,h)*.02);if(h<45)vd=.4}
+  if(S.nav&&S.target&&!manual&&!sm.failed&&F>0&&ref){var tp=planetBy(S.target),tx=tp.x,ty=tp.y,Rt=tp.portal?tp.R*.3:tp.R,upT=null;
+    if(tp.u){var Sx=tp.x+tp.u.x*tp.Rf,Sy=tp.y+tp.u.y*tp.Rf,Wx=Sx+tp.u.x*1500,Wy=Sy+tp.u.y*1500,dW=Math.hypot(Wx-cxm,Wy-cym),lat=Math.abs((cxm-Sx)*-tp.u.y+(cym-Sy)*tp.u.x);
+      if(sm.desc&&lat>1500)sm.desc=false;if(!sm.desc&&dW<450&&sm.speed<3)sm.desc=true;if(sm.desc){tx=Sx;ty=Sy}else{tx=Wx;ty=Wy}Rt=0;upT=(sm.desc||dW<3500)?Math.atan2(tp.u.x,-tp.u.y):null}
+    var dx=tx-cxm,dy=ty-cym,d=Math.hypot(dx,dy)||1,nx=dx/d,ny=dy/d,h=d-Rt;if(tp.u&&sm.desc){var lw=1e9;bs.forEach(function(b){lw=Math.min(lw,surfH(tp,b.position.x,b.position.y))});h=Math.max(0,lw)}var A=F/Mt*DT2,gg=wGrav(cxm,cym),gpx=gg.x*DT2,gpy=gg.y*DT2,gT=Math.max(0,gpx*nx+gpy*ny),bd=Math.max(A*.25,A-gT),cap=capv*.9;
+    var vd=tp.portal?cap:Math.min(cap,.55*Math.sqrt(2*bd*Math.max(h-30-sm.speed*80,0))+.6);if(!tp.portal){vd=Math.min(vd,.5+Math.max(0,h)*.02);if(h<400)vd=Math.min(vd,1+h*.006);if(h<45)vd=.4;if(tp.u&&sm.desc)vd=Math.min(cap,.55*Math.sqrt(2*bd*Math.max(h-30,0))+.8,.8+h*.01)}
     var avx=0,avy=0;WORLD.forEach(function(P){if(P===tp||P.portal)return;var px_=P.x-cxm,py_=P.y-cym,al=px_*nx+py_*ny;if(al<0||al>d)return;var qx=px_-nx*al,qy=py_-ny*al,pr=Math.hypot(qx,qy),lim=P.R*1.6+3000;if(pr<lim){var ox_=-qx,oy_=-qy,L=Math.hypot(ox_,oy_);if(L<1){ox_=-ny;oy_=nx;L=1}var wg=(1-pr/lim)*2;avx+=ox_/L*wg;avy+=oy_/L*wg}});
     var dxn=nx+avx,dyn=ny+avy,dl=Math.hypot(dxn,dyn)||1;dxn/=dl;dyn/=dl;
-    var adx=(dxn*vd-vxm)*.12-gpx,ady=(dyn*vd-vym)*.12-gpy,am=Math.hypot(adx,ady);apTheta=Math.atan2(adx,-ady);if(!tp.portal&&h<700){apTheta=Math.atan2(-nx,ny)}var ac=Math.min(am,A*.95);sm.apA={x:adx/(am||1)*ac,y:ady/(am||1)*ac};thr=am/A;sm.ap=true}
+    var adx=(dxn*vd-vxm)*.12-gpx,ady=(dyn*vd-vym)*.12-gpy,am=Math.hypot(adx,ady);apTheta=Math.atan2(adx,-ady);if(upT!==null)apTheta=upT;else if(!tp.portal&&!tp.u&&h<700){apTheta=Math.atan2(-nx,ny)}var ac=Math.min(am,A*.95);sm.apA={x:adx/(am||1)*ac,y:ady/(am||1)*ac};thr=am/A;sm.ap=true}
   var wav=0;bs.forEach(function(b){wav+=b.angularVelocity});wav/=n;var wt=0,act=false;
   if(apTheta!==null){var dth=apTheta-ref.angle;dth=Math.atan2(Math.sin(dth),Math.cos(dth));wt=Math.max(-.06,Math.min(.06,dth*.08));act=true;go=thr>.08}
   else if(dir){wt=dir*.03;act=true}
@@ -13448,32 +13463,121 @@ function worldStep(sm,k,dir,brake,go0){
     var P=nb.pl,r=nb.h+P.R;
     if(P.hot&&r<P.R*1.03)failMission(sm,'🔥 Your ship melted','Don’t fly into a star — resetting…');
     else if(P.gas&&r<P.R*.94)failMission(sm,'🪐 Crushed by Jupiter','No surface here, just crushing pressure — resetting…');
-    else if(P.land&&r<P.R-6){var ux=(px-P.x)/r,uy=(py-P.y)/r;Bd.setPosition(b,{x:P.x+ux*(P.R+1),y:P.y+uy*(P.R+1)});var vn=b.velocity.x*ux+b.velocity.y*uy;if(vn<-9)failMission(sm,'💥 Crashed into '+P.n,'Too fast — resetting…');if(vn<0)Bd.setVelocity(b,{x:b.velocity.x-ux*vn,y:b.velocity.y-uy*vn})}});
+    else if(P.land&&r<(P.Rf||P.R)-80){var ux=(px-P.x)/r,uy=(py-P.y)/r;Bd.setPosition(b,{x:P.x+ux*(P.R+1),y:P.y+uy*(P.R+1)});var vn=b.velocity.x*ux+b.velocity.y*uy;if(vn<-9)failMission(sm,'💥 Crashed into '+P.n,'Too fast — resetting…');if(vn<0)Bd.setVelocity(b,{x:b.velocity.x-ux*vn,y:b.velocity.y-uy*vn})}});
   // zone banners
   var zone=wn.pl.atmH?wn.pl.atmH:wn.pl.R*1.5;if(!wn.pl.hot&&wn.h<zone&&sm.zone!==wn.pl.k&&sm.t>60){sm.zone=wn.pl.k;banner('🌐 Entering '+wn.pl.n+'’s '+(wn.pl.atmH?'atmosphere':'orbit'),wn.pl.atmH?'Air resistance — parachutes work here (C)':'No air — brake with your engines')}
   else if(sm.zone&&wn.pl.k!==sm.zone||(sm.zone&&wn.h>zone*1.6)){if(sm.zone!==wn.pl.k||wn.h>zone*1.6){var zp=planetBy(sm.zone);if(zp&&sm.t>60)banner('🚀 You have left '+zp.n+'’s '+(zp.atmH?'atmosphere':'orbit'),'Deep space — click a planet to auto-fly');sm.zone=null}}
   // landing
-  if(!sm.failed&&wn.pl.land){var low=1e9;bs.forEach(function(b){low=Math.min(low,Math.hypot(b.position.x-wn.pl.x,b.position.y-wn.pl.y)-wn.pl.R)});
-    if(low<30&&sm.speed<1.1)sm.still=(sm.still||0)+1;else sm.still=0;if(sm.still>50&&sm.landedK!==wn.pl.k&&sm.t>90){sm.landedK=wn.pl.k;worldLanded(sm,wn.pl)}}
+  sm.stand=null;if(wn.pl.k!==sm.home||wn.h>800)sm.left=true;
+  if(!sm.failed&&wn.pl.land){var low=1e9;bs.forEach(function(b){low=Math.min(low,surfH(wn.pl,b.position.x,b.position.y))});
+    if(low<30&&sm.speed<1.1)sm.still=(sm.still||0)+1;else sm.still=0;if(sm.still>50)sm.stand=wn.pl.k;if(sm.still>50&&sm.landedK!==wn.pl.k&&sm.t>90&&(wn.pl.k!==sm.home||sm.left)){sm.landedK=wn.pl.k;sm.desc=false;worldLanded(sm,wn.pl)}}
   if(sm.landedK&&wn.h>500)sm.landedK=null;
+  if(!sm.failed)invStep(sm,wn,bs);
   // portal
   var rf=planetBy('rift'),rd=Math.hypot(cxm-rf.x,cym-rf.y);if(rd<rf.R*.35&&!sm.failed){var ae=planetBy('aeth'),ox=ae.x-cxm,oy=ae.y-ae.R-3000-cym;all.forEach(function(i){var b=sm.bodies[i];Bd.setPosition(b,{x:b.position.x+ox,y:b.position.y+oy});Bd.setVelocity(b,{x:0,y:0});Bd.setAngularVelocity(b,0)});
-    banner('🌀 You crossed into another dimension!','Aether — a world beyond reality (autopilot is landing you)');S.nav=true;S.target='aeth';if(!CR.landed.riftvisit){CR.landed.riftvisit=1;CR.credits+=1500;saveCrew();updCredits()}return}
+    banner('🌀 You crossed into another dimension!','Aether — a world beyond reality (autopilot is landing you)');S.nav=true;S.target='aeth';if(!CR.awake){CR.awake=1;saveCrew()}if(!CR.landed.riftvisit){CR.landed.riftvisit=1;CR.credits+=1500;saveCrew();updCredits()}return}
   E.update(sm.eng,1000/60);sm.t++}
+function planetPath(c,P){c.beginPath();if(P.u){c.arc(P.x,P.y,P.R,P.a0+P.al,P.a0+Math.PI*2-P.al);c.closePath()}else c.arc(P.x,P.y,P.R,0,7)}
+function drawModule(c,k,t){c.lineWidth=2;c.strokeStyle='#2a3240';
+  if(k==='dome'){var g=c.createRadialGradient(0,-40,5,0,-30,90);g.addColorStop(0,'#e8fbff');g.addColorStop(1,'#6fb6d6');c.fillStyle=g;c.beginPath();c.arc(0,0,85,Math.PI,0);c.closePath();c.fill();c.stroke();c.fillStyle='rgba(30,60,90,.6)';c.fillRect(-12,-40,24,40);c.fillStyle='#ffe9a8';c.fillRect(-48,-38,14,12);c.fillRect(34,-38,14,12)}
+  else if(k==='mine'){c.fillStyle='#8c95a1';c.fillRect(-16,-150,32,150);c.strokeRect(-16,-150,32,150);c.save();c.translate(0,-150);c.rotate(t*2);c.strokeStyle='#ffa03c';c.lineWidth=5;c.beginPath();c.moveTo(-40,0);c.lineTo(40,0);c.moveTo(0,-40);c.lineTo(0,40);c.stroke();c.restore();c.fillStyle='#6b5a48';c.beginPath();c.moveTo(30,0);c.lineTo(70,-40);c.lineTo(110,0);c.fill()}
+  else if(k==='lab'){c.fillStyle='#e6ecf2';c.fillRect(-72,-72,144,72);c.strokeRect(-72,-72,144,72);c.fillStyle='#4a90d0';for(var i=-48;i<48;i+=34)c.fillRect(i,-52,22,20);c.strokeStyle='#cfd6df';c.lineWidth=4;c.beginPath();c.moveTo(0,-72);c.lineTo(0,-130);c.stroke();c.beginPath();c.arc(0,-130,26,Math.PI*1.1,Math.PI*1.9);c.stroke()}
+  else if(k==='pad'){c.fillStyle='#4a525e';c.fillRect(-120,-14,240,14);c.strokeRect(-120,-14,240,14);c.fillStyle=Math.sin(t*6)>0?'#ff4a4a':'#7a1c1c';c.beginPath();c.arc(-110,-22,6,0,7);c.arc(110,-22,6,0,7);c.fill();c.fillStyle='#fff';c.font='bold 14px sans-serif';c.textAlign='center';c.fillText('H',0,-2)}
+  else if(k==='core'){var g2=c.createLinearGradient(0,-120,0,0);g2.addColorStop(0,'#ffd27a');g2.addColorStop(1,'#d9531e');c.fillStyle='#39414d';c.fillRect(-44,-118,88,118);c.strokeRect(-44,-118,88,118);c.fillStyle=g2;c.globalAlpha=.7+Math.sin(t*3)*.25;c.fillRect(-26,-100,52,80);c.globalAlpha=1}
+  else if(k==='defense'){c.fillStyle='#5a6270';c.fillRect(-30,-34,60,34);c.strokeRect(-30,-34,60,34);var an=(typeof S!=='undefined'&&S.sim&&S.sim.baseAim)||-.9;c.save();c.translate(0,-40);c.rotate(an);c.fillStyle='#2a3240';c.fillRect(0,-5,60,10);c.restore();c.fillStyle='#e04a4a';c.beginPath();c.arc(0,-40,12,0,7);c.fill()}}
+function drawBase(c,P){var mods=baseMods(P.baseKey||P.k);if(!mods.length||!P.u)return;var Sx=P.x+P.u.x*P.Rf,Sy=P.y+P.u.y*P.Rf,th=Math.atan2(P.u.x,-P.u.y),n=mods.length,tm=performance.now()/1000,sc=n>8?.7:1;
+  c.save();c.translate(Sx,Sy);c.rotate(th);c.scale(sc,sc);mods.forEach(function(m,i){var side=i%2?-1:1,X=side*(560+Math.floor(i/2)*220);c.save();c.translate(X,0);drawModule(c,m.k,tm);c.restore()});c.restore()}
+function drawPad(c,P){if(!P.u)return;var Sx=P.x+P.u.x*P.Rf,Sy=P.y+P.u.y*P.Rf,th=Math.atan2(P.u.x,-P.u.y);c.save();c.translate(Sx,Sy);c.rotate(th);c.fillStyle='rgba(55,60,72,.95)';c.fillRect(-420,-5,840,12);c.fillStyle='#fff';for(var i=-400;i<=400;i+=100)c.fillRect(i-6,-5,12,3);c.restore()}
+function fleetBox(e){if(e._b)return e._b;var x0=1e9,x1=-1e9,y1=-1e9;e.parts.forEach(function(p){var d=dims(p),r=Math.max(d.w,d.h)/2;x0=Math.min(x0,p.x-r);x1=Math.max(x1,p.x+r);y1=Math.max(y1,p.y+d.h/2)});return e._b={cx:(x0+x1)/2,by:y1,w:x1-x0}}
+function fleetSlot(e,P,b){var same=FLEET.filter(function(f){return f.k===e.k}),i=same.indexOf(e),nm=baseMods(P.baseKey||P.k).length;if(i<2)return(i?1:-1)*(250+b.w/2+30);var j=i-2;return(j%2?1:-1)*(560+Math.ceil(nm/2)*220+120+Math.floor(j/2)*340)}
+function drawFleet(c){if(!FLEET.length)return;FLEET.forEach(function(e){var P=planetBy(e.k);if(!P||!P.u)return;if(Math.hypot(S.cam.x-P.x,S.cam.y-P.y)>P.R+9000)return;var b=fleetBox(e);c.save();c.translate(P.x+P.u.x*P.Rf,P.y+P.u.y*P.Rf);c.rotate(Math.atan2(P.u.x,-P.u.y));c.translate(fleetSlot(e,P,b),0);c.translate(-b.cx,-b.by);e.parts.forEach(function(p){drawPartShape(c,p,false,p.a,false)});c.restore()})}
+function drawHive(c,P,t){for(var i=0;i<14;i++){var a=P.a0+P.al+0.12+(Math.PI*2-P.al*2-0.24)*i/13,bx=P.x+Math.cos(a)*P.R,by=P.y+Math.sin(a)*P.R,h=(i%3+2)*170,nx=Math.cos(a),ny=Math.sin(a);c.fillStyle='rgba(120,40,200,.9)';c.strokeStyle='#d9a7ff';c.lineWidth=3;c.beginPath();c.moveTo(bx-ny*70,by+nx*70);c.lineTo(bx+nx*h,by+ny*h);c.lineTo(bx+ny*70,by-nx*70);c.closePath();c.fill();c.stroke();c.fillStyle='rgba(220,150,255,'+(.5+.4*Math.sin(t*3+i))+')';c.beginPath();c.arc(bx+nx*h,by+ny*h,14,0,7);c.fill()}}
+function drawEnemies(c,z){var sm=S.sim;if(!sm||!sm.en)return;var tm=performance.now()/1000,k=Math.max(1,.2/z);
+  sm.bm.forEach(function(b){c.strokeStyle=b.c;c.globalAlpha=Math.min(1,b.l/7);c.lineWidth=Math.max(3,3/z);c.beginPath();c.moveTo(b.x1,b.y1);c.lineTo(b.x2,b.y2);c.stroke()});c.globalAlpha=1;
+  sm.en.forEach(function(e){c.save();c.translate(e.x,e.y+Math.sin(tm*3+e.ph)*4*k);c.rotate(-(S.cam.r||0));c.scale(k,k);var col=e.g?'255,60,90':'180,80,255';var gl=c.createRadialGradient(0,0,6,0,0,70);gl.addColorStop(0,'rgba('+col+',.5)');gl.addColorStop(1,'rgba('+col+',0)');c.fillStyle=gl;c.beginPath();c.arc(0,0,70,0,7);c.fill();
+    c.fillStyle=e.g?'#4a1830':'#2c1f4d';c.strokeStyle='rgb('+col+')';c.lineWidth=3;c.beginPath();c.ellipse(0,0,36,11,0,0,7);c.fill();c.stroke();c.fillStyle='rgba(120,255,220,.85)';c.beginPath();c.arc(0,-4,16,Math.PI,0);c.fill();c.stroke();
+    for(var i=-2;i<=2;i++){c.fillStyle=Math.sin(tm*8+i+e.ph)>0?'#ffe27a':'#7a6a2a';c.beginPath();c.arc(i*13,4,2.6,0,7);c.fill()}
+    if(e.hp<e.mhp){c.fillStyle='#000';c.fillRect(-26,-34,52,6);c.fillStyle='#ff4a6a';c.fillRect(-25,-33,50*Math.max(0,e.hp/e.mhp),4)}c.restore()})}
+// ── 👾 invaders from the Aether ─────────────────
+function beam(sm,x1,y1,x2,y2,col){sm.bm.push({x1:x1,y1:y1,x2:x2,y2:y2,l:7,c:col})}
+function spawnEn(sm,x,y,o){var e={x:x,y:y,vx:0,vy:0,hp:40,mhp:40,cd:40+Math.random()*50,ph:Math.random()*6.28};for(var q in o)e[q]=o[q];sm.en.push(e)}
+function hurt(sm,d){if(sm.failed)return;var before=sm.hull;sm.hull-=d;[75,50,25].forEach(function(t){if(before>t&&sm.hull<=t){var cand=mainBodies(sm).filter(function(b){return b.plugin.mat!=='capsule'&&!b.plugin.broken});if(cand.length){var b=cand[(Math.random()*cand.length)|0];b.plugin.broken=true;breakBody(sm,b,0);toast('👾 Hit! A part was shot off')}}});if(sm.hull<=0)failMission(sm,'👾 Shot down by invaders','Your ship was destroyed — resetting…')}
+function wreck(Q){var key=Q.baseKey||Q.k,m=CR.bases&&CR.bases[key];if(m&&m.length){var idx=[];m.forEach(function(x,i){if(x.k!=='core')idx.push(i)});if(!idx.length)m.forEach(function(x,i){idx.push(i)});var r=m.splice(idx[(Math.random()*idx.length)|0],1)[0],bm=BM.filter(function(b){return b.k===r.k})[0];if(bm)CR.credits+=Math.round(bm.cost/2);return true}
+  for(var i=0;i<FLEET.length;i++)if(FLEET[i].k===Q.k){FLEET.splice(i,1);return true}return false}
+function raidResolve(sm,Q,R){var key=Q.baseKey||Q.k,D=baseMods(key).filter(function(m){return m.k==='defense'}).length,lost=R.n-D*2;
+  if(lost<=0){CR.credits+=40*R.n;banner('🛡️ '+Q.n+' defences held!','Invaders were driven off while you were away (+💰'+40*R.n+')')}
+  else{var g=0;for(var i=0;i<lost&&g<4;i++)if(wreck(Q))g++;banner('👾 '+Q.n+' was raided!',g?('Lost '+g+' structure'+(g>1?'s':'')+'/ship — build 🔫 Defense turrets (50% refunded)'):'Nothing was left to destroy')}
+  saveCrew();saveFleet();updCredits()}
+function invStep(sm,wn,bs){if(!sm.en){sm.en=[];sm.bm=[];sm.kills=0}
+  var cx=sm.cx,cy=sm.cy,ae=planetBy('aeth'),da=Math.hypot(cx-ae.x,cy-ae.y),i;
+  if(wn.pl.k==='aeth'&&!CR.awake){CR.awake=1;saveCrew()}
+  if(da<ae.R*2.6&&!sm.guard){sm.guard=true;var ng=3+Math.min(3,Math.floor(Object.keys(CR.landed).length/4));var a0=Math.atan2(cy-ae.y,cx-ae.x);for(i=0;i<ng;i++){var a=a0+(i-(ng-1)/2)*.3;spawnEn(sm,ae.x+Math.cos(a)*ae.R*1.35,ae.y+Math.sin(a)*ae.R*1.35,{g:1,a:a,pk:'aeth',hp:60,mhp:60})}banner('👾 The Aether is guarded!','Invaders have spotted you — fit 🔫 Laser turrets');sm.speedMul=1}
+  if(da>ae.R*4.5&&sm.guard){sm.guard=false;sm.en=sm.en.filter(function(e){return!e.g})}
+  if(CR.awake||CR.landed.rift){if(sm.raidT==null)sm.raidT=sm.t+60*(60+Math.random()*40);
+    if(!sm.raid&&sm.t>=sm.raidT){var cand=[];WORLD.forEach(function(Q){if(!Q.land||Q.k==='earth'||Q.k==='aeth')return;if(baseMods(Q.baseKey||Q.k).length||FLEET.some(function(f){return f.k===Q.k}))cand.push(Q)});sm.raidT=sm.t+60*(150+Math.random()*100);
+      if(cand.length){var Q0=cand[(Math.random()*cand.length)|0];sm.raid={k:Q0.k,left:60*40,n:Math.min(7,2+Math.floor(Object.keys(CR.landed).length/3)),sp:false};sm.speedMul=1;banner('👾 INVADERS from the Aether!','Raiding '+Q0.n+' in 40s — fly there to defend it, or rely on its 🔫 turrets')}}}
+  var R=sm.raid;if(R){var Q=planetBy(R.k),key=Q.baseKey||Q.k,dq=Math.hypot(cx-Q.x,cy-Q.y),Sx=Q.x+Q.u.x*Q.Rf,Sy=Q.y+Q.u.y*Q.Rf;
+    if(!R.sp){if(dq<Q.R*2.4){R.sp=true;for(i=0;i<R.n;i++){var tg=(i-R.n/2)*500;spawnEn(sm,Sx+Q.u.x*(2600+i*140)-Q.u.y*tg,Sy+Q.u.y*(2600+i*140)+Q.u.x*tg,{r:1,pk:Q.k})}banner('👾 Invaders over '+Q.n+'!','Shoot them down!');sm.speedMul=1}
+      else{R.left--;if(R.left<=0){raidResolve(sm,Q,R);sm.raid=null}}}
+    else{var alive=sm.en.filter(function(e){return e.r}).length;
+      if(!alive){var rw=40*R.n;CR.credits+=rw;saveCrew();updCredits();banner('🛡️ '+Q.n+' defended!','All invaders destroyed (+💰'+rw+')');sm.raid=null}
+      else{var DM=baseMods(key).filter(function(m){return m.k==='defense'}).length;
+        if(DM){var tx_=null,td=1800;sm.en.forEach(function(e){if(!e.r)return;var d=Math.hypot(e.x-Sx,e.y-Sy);if(d<td){td=d;tx_=e}});if(tx_){tx_.hp-=.12*DM;sm.baseAim=Math.atan2(tx_.y-Sy,tx_.x-Sx)-Math.atan2(Q.u.x,-Q.u.y);if(sm.t%12===0)beam(sm,Sx+Q.u.x*60,Sy+Q.u.y*60,tx_.x,tx_.y,'#ffcf5a')}}}}}
+  for(i=sm.en.length-1;i>=0;i--){var e=sm.en[i];
+    if(e.hp<=0){for(var q=0;q<18;q++)fx.push({x:e.x,y:e.y,vx:(Math.random()-.5)*10,vy:(Math.random()-.5)*10,l:24,sm:q%2});CR.credits+=30;sm.kills++;updCredits();sm.en.splice(i,1);continue}
+    var dpx=cx-e.x,dpy=cy-e.y,dp=Math.hypot(dpx,dpy)||1,hunt=dp<(e.g?4200:1700),tx,ty,spd=3.2,P2=planetBy(e.pk);
+    if(e.g){e.a+=.004;tx=P2.x+Math.cos(e.a)*P2.R*1.4;ty=P2.y+Math.sin(e.a)*P2.R*1.4}
+    else{var Su=P2.x+P2.u.x*P2.Rf,Sv=P2.y+P2.u.y*P2.Rf,ph=e.ph+sm.t*.006;tx=Su+P2.u.x*600-P2.u.y*Math.cos(ph)*800;ty=Sv+P2.u.y*600+P2.u.x*Math.cos(ph)*800}
+    if(hunt){tx=cx-dpx/dp*650;ty=cy-dpy/dp*650;spd=4.4}
+    var dx=tx-e.x,dy=ty-e.y,dd=Math.hypot(dx,dy)||1,v=Math.min(spd,dd*.05+.2);e.vx+=(dx/dd*v-e.vx)*.06;e.vy+=(dy/dd*v-e.vy)*.06;e.x+=e.vx;e.y+=e.vy;
+    e.cd--;if(e.cd<=0){
+      if(hunt&&dp<1150&&!sm.failed){hurt(sm,e.g?4:5);beam(sm,e.x,e.y,cx,cy,'#ff5a8a');e.cd=70+Math.random()*30}
+      else if(e.r&&R&&R.sp){var Qd=planetBy(e.pk),sx=Qd.x+Qd.u.x*Qd.Rf,sy=Qd.y+Qd.u.y*Qd.Rf;if(Math.hypot(e.x-sx,e.y-sy)<1300){beam(sm,e.x,e.y,sx,sy,'#ff5a8a');R.dmg=(R.dmg||0)+1;e.cd=80;if(R.dmg%12===0){var gone=wreck(Qd);saveCrew();saveFleet();updCredits();if(gone)toast('💥 '+Qd.n+': a structure was destroyed!');else{sm.en.forEach(function(z){if(z.r)z.hp=0});}}}else e.cd=20}
+      else e.cd=20}}
+  bs.forEach(function(b){if(b.plugin.mat!=='turret'||b.plugin.dead)return;var best=null,bd=1700;sm.en.forEach(function(e){var d=Math.hypot(e.x-b.position.x,e.y-b.position.y);if(d<bd){bd=d;best=e}});
+    if(best){b.plugin.aim=Math.atan2(best.x-b.position.x,-(best.y-b.position.y));b.plugin.cd=(b.plugin.cd||0)-1;if(b.plugin.cd<=0){best.hp-=9;beam(sm,b.position.x,b.position.y,best.x,best.y,'#7dff9f');b.plugin.cd=16}}else b.plugin.aim=null});
+  for(i=sm.bm.length-1;i>=0;i--){if(--sm.bm[i].l<=0)sm.bm.splice(i,1)}}
+// ── 🛸 fleet: park rockets, build more, fly any of them ─
+var FLEET=[];
+function loadFleet(){try{var o=JSON.parse(localStorage.getItem('ares_ws_fleet')||'[]');if(Array.isArray(o))FLEET=o}catch(e){}}
+function saveFleet(){try{localStorage.setItem('ares_ws_fleet',JSON.stringify(FLEET))}catch(e){}}
+window.wsPark=function(){var sm=S.sim;if(!sm||!sm.world||!sm.stand){toast('⚓ Land and sit still on a planet first, then park (P)');return}
+  if(FLEET.length>=12){toast('Fleet is full (12) — scrap one first');return}
+  var P=planetBy(sm.stand),keep={};for(var id in sm.bodies){var b=sm.bodies[id];if(b.plugin.main!==false&&!b.plugin.dead)keep[b.plugin.pid]=1}
+  var parts=S.parts.filter(function(p){return keep[p.id]}),links=S.links.filter(function(l){return keep[l.a]&&keep[l.b]});if(!parts.length)return;
+  CR.fn=(CR.fn||0)+1;FLEET.push({id:CR.fn,nm:'🚀 Rocket '+CR.fn,k:P.k,parts:JSON.parse(JSON.stringify(parts)),links:JSON.parse(JSON.stringify(links)),nid:S.nid});saveFleet();saveCrew();
+  S.parts=[];S.links=[];S.nid=1;stopSim();autosave();S.cam=homeCam();toast('⚓ Parked on '+P.n+' — build another rocket, or open 🛸 Fleet')};
+function fleetCrew(e){var o=[];e.parts.forEach(function(p){if(p.t==='capsule'&&p.crew){var c=crewById(p.crew);if(c)o.push(face(c)+' '+c.name)}});return o.join(', ')}
+function renderFleet(){var h=FLEET.length?'':'<div style="padding:16px;opacity:.7;font-size:13px">No parked rockets yet. In 🌌 Solar System, land and sit still, then press ⚓ (or P) — the rocket stays on that world, you build another, and you can fly any of them later. Watch out for 👾 invaders!</div>';
+  FLEET.forEach(function(e){var P=planetBy(e.k)||{};h+='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 14px;border-top:1px solid rgba(255,255,255,.08)"><div style="font-size:13px"><b>'+e.nm+'</b><br><span style="opacity:.7;font-size:11px">'+(P.i||'')+' '+(P.n||e.k)+' · '+e.parts.length+' parts'+(fleetCrew(e)?' · '+fleetCrew(e):'')+'</span></div><div style="display:flex;gap:6px"><button class="ws-mb" onclick="wsFleetFly('+e.id+')">🚀 Fly</button><button class="ws-mb" onclick="wsFleetScrap('+e.id+')">🗑️</button></div></div>'});
+  $('ws-fleetlist').innerHTML=h}
+window.wsFleetOpen=function(){renderFleet();$('ws-fleetm').style.display='flex'};
+window.wsFleetClose=function(){$('ws-fleetm').style.display='none'};
+function fleetGet(id){for(var i=0;i<FLEET.length;i++)if(FLEET[i].id===id)return FLEET[i];return null}
+window.wsFleetScrap=function(id){var e=fleetGet(id);if(!e||!confirm('Scrap '+e.nm+'?'))return;FLEET=FLEET.filter(function(f){return f!==e});CR.credits+=e.parts.length*8;saveFleet();saveCrew();updCredits();renderFleet()};
+window.wsFleetFly=function(id){var e=fleetGet(id);if(!e)return;if(S.parts.length&&!confirm('Replace the build in your editor? (Press ⚓ Park in flight to keep a rocket.)'))return;
+  wsFleetClose();stopSim();S.parts=JSON.parse(JSON.stringify(e.parts));S.links=JSON.parse(JSON.stringify(e.links));S.nid=e.nid||(S.parts.reduce(function(m,p){return Math.max(m,p.id)},0)+1);
+  FLEET=FLEET.filter(function(f){return f!==e});saveFleet();setLevel(11);S.cam=homeCam();S.fly={k:e.k};startSim();toast('🚀 Launching from '+planetBy(e.k).n)};
 function drawWorld(c,z,W_,H_){var tm=performance.now()/1000,sm=S.sim,vw=Math.hypot(W_,H_)/2/z+200;
-  c.lineWidth=Math.max(2,3/z);WORBITS.forEach(function(o){var dd=Math.hypot(S.cam.x-o.x,S.cam.y-o.y);if(Math.abs(dd-o.r)>vw)return;c.strokeStyle='rgba(255,255,255,.14)';c.setLineDash([Math.max(20,60/z),Math.max(30,90/z)]);c.beginPath();c.arc(o.x,o.y,o.r,0,7);c.stroke()});c.setLineDash([]);
-  WORLD.forEach(function(P){var dd=Math.hypot(S.cam.x-P.x,S.cam.y-P.y);if(dd>P.R*(P.hot?2.2:1)+(P.atmH||0)+vw)return;var x=P.x,y=P.y,R=P.R,g;
+  c.lineWidth=Math.max(2,3/z);WORBITS.forEach(function(o){if(!o.r)return;var dd=Math.hypot(S.cam.x-o.x,S.cam.y-o.y);if(Math.abs(dd-o.r)>vw)return;c.strokeStyle='rgba(255,255,255,.14)';c.setLineDash([Math.max(20,60/z),Math.max(30,90/z)]);c.beginPath();c.arc(o.x,o.y,o.r,0,7);c.stroke()});c.setLineDash([]);
+  WORLD.forEach(function(P){var dd=Math.hypot(S.cam.x-P.x,S.cam.y-P.y);if(dd>P.R*(P.hot?2.2:P.rings?2.2:1)+(P.atmH||0)+vw)return;var x=P.x,y=P.y,R=P.R,g;
     if(P.hot){var gl=c.createRadialGradient(x,y,R*.6,x,y,R*2.1);gl.addColorStop(0,'rgba(255,190,70,.8)');gl.addColorStop(1,'rgba(255,120,30,0)');c.fillStyle=gl;c.beginPath();c.arc(x,y,R*2.1,0,7);c.fill();
       g=c.createRadialGradient(x,y,R*.2,x,y,R);g.addColorStop(0,P.c1);g.addColorStop(1,P.c2);c.fillStyle=g;c.beginPath();c.arc(x,y,R,0,7);c.fill()}
     else if(P.portal){for(var i=0;i<6;i++){c.strokeStyle='hsla('+(270+i*14)+',90%,'+(55+i*4)+'%,'+(.8-i*.1)+')';c.lineWidth=Math.max(3,R*.012)*(6-i*.6);c.beginPath();c.ellipse(x,y,R*(1-i*.14),R*(.62-i*.07),tm*.4*(i%2?1:-1)+i,0,Math.PI*1.7);c.stroke()}
       g=c.createRadialGradient(x,y,0,x,y,R*.4);g.addColorStop(0,'#000');g.addColorStop(1,'rgba(40,0,90,.6)');c.fillStyle=g;c.beginPath();c.arc(x,y,R*.4,0,7);c.fill()}
-    else{if(P.atmH){var ag=c.createRadialGradient(x,y,R,x,y,R+P.atmH);ag.addColorStop(0,P.k==='earth'?'rgba(110,180,255,.55)':P.k==='mars'?'rgba(255,150,100,.4)':'rgba(220,200,160,.4)');ag.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=ag;c.beginPath();c.arc(x,y,R+P.atmH,0,7);c.fill()}
-      g=c.createRadialGradient(x-R*.35,y-R*.35,R*.1,x,y,R);g.addColorStop(0,P.c1);g.addColorStop(1,P.c2);c.fillStyle=g;c.beginPath();c.arc(x,y,R,0,7);c.fill();
-      if(P.k==='earth'){var land=[[-2.5,-.62],[.9,1.6]];land.forEach(function(L,ix){var a0=ix?L[0]:-2.45,a1=ix?L[1]:-.69;c.fillStyle='#8a6a3a';c.beginPath();c.arc(x,y,R,a0,a1);c.arc(x,y,R*.88,a1,a0,true);c.closePath();c.fill();c.strokeStyle='#4caf50';c.lineWidth=Math.max(10,12);c.beginPath();c.arc(x,y,R-4,a0,a1);c.stroke()})}
-      else if(P.gas){c.save();c.beginPath();c.arc(x,y,R,0,7);c.clip();for(var b=-7;b<=7;b++){c.fillStyle='rgba(120,70,30,'+(.12+(b&1)*.1)+')';c.fillRect(x-R,y+b*R*.13,R*2,R*.065)}c.fillStyle='rgba(190,70,40,.7)';c.beginPath();c.ellipse(x+R*.3,y+R*.25,R*.16,R*.09,0,0,7);c.fill();c.restore()}
-      else{c.save();c.beginPath();c.arc(x,y,R,0,7);c.clip();c.fillStyle='rgba(0,0,0,.14)';[[.2,.1,.12],[-.3,.3,.09],[.4,.4,.07],[-.1,-.3,.1],[.1,-.6,.08],[-.5,-.1,.07]].forEach(function(q){c.beginPath();c.arc(x+q[0]*R,y+q[1]*R,q[2]*R,0,7);c.fill()});c.restore();c.strokeStyle='rgba(255,255,255,.35)';c.lineWidth=Math.max(6,6/z);c.beginPath();c.arc(x,y,R-3,0,7);c.stroke()}}
+    else{if(P.atmH){var ag=c.createRadialGradient(x,y,R,x,y,R+P.atmH);ag.addColorStop(0,P.k==='earth'?'rgba(110,180,255,.55)':P.k==='mars'?'rgba(255,150,100,.4)':P.k==='venus'?'rgba(255,220,120,.5)':P.k==='titan'?'rgba(230,150,60,.5)':'rgba(220,200,160,.4)');ag.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=ag;c.beginPath();c.arc(x,y,R+P.atmH,0,7);c.fill()}
+      g=c.createRadialGradient(x-R*.35,y-R*.35,R*.1,x,y,R);g.addColorStop(0,P.c1);g.addColorStop(1,P.c2);c.fillStyle=g;planetPath(c,P);c.fill();
+      c.save();planetPath(c,P);c.clip();
+      if(P.k==='earth'){[[-2.45,-.69],[.9,1.6]].forEach(function(L){c.fillStyle='#8a6a3a';c.beginPath();c.arc(x,y,R,L[0],L[1]);c.arc(x,y,R*.86,L[1],L[0],true);c.closePath();c.fill()})}
+      else if(P.gas){for(var b=-7;b<=7;b++){c.fillStyle='rgba(120,70,30,'+(.12+(b&1)*.1)+')';c.fillRect(x-R,y+b*R*.13,R*2,R*.065)}c.fillStyle='rgba(190,70,40,.7)';c.beginPath();c.ellipse(x+R*.3,y+R*.25,R*.16,R*.09,0,0,7);c.fill()}
+      else{c.fillStyle='rgba(0,0,0,.14)';[[.2,.1,.12],[-.3,.3,.09],[.4,.4,.07],[-.1,-.3,.1],[.1,-.6,.08],[-.5,-.1,.07],[.55,-.2,.06]].forEach(function(q){c.beginPath();c.arc(x+q[0]*R,y+q[1]*R,q[2]*R,0,7);c.fill()})}
+      c.restore();
+      if(P.u){var A1={x:x+Math.cos(P.a0+P.al)*R,y:y+Math.sin(P.a0+P.al)*R},A2={x:x+Math.cos(P.a0-P.al)*R,y:y+Math.sin(P.a0-P.al)*R};c.strokeStyle=P.k==='earth'?'#4caf50':'rgba(255,255,255,.5)';c.lineWidth=Math.max(10,8/z);c.beginPath();c.moveTo(A1.x,A1.y);c.lineTo(A2.x,A2.y);c.stroke();c.strokeStyle=P.k==='earth'?'rgba(76,175,80,.6)':'rgba(255,255,255,.3)';c.lineWidth=Math.max(6,5/z);c.beginPath();c.arc(x,y,R-3,P.a0+P.al,P.a0+Math.PI*2-P.al);c.stroke();drawPad(c,P)}
+      if(P.rings){c.save();c.translate(x,y);c.rotate(-.25);for(var rg=0;rg<4;rg++){c.strokeStyle='rgba(235,215,170,'+(.55-rg*.1)+')';c.lineWidth=R*(.12-rg*.02);c.beginPath();c.ellipse(0,0,R*(1.5+rg*.22),R*(.38+rg*.06),0,0,7);c.stroke()}c.restore()}}
     c.fillStyle='#fff';c.font='bold '+Math.min(Math.max(15/z,R*.1),46/z)+'px sans-serif';c.textAlign='center';c.fillText(P.i+' '+P.n,x,y-R-Math.max(24/z,R*.07)-(P.atmH||0)*.2);c.textAlign='left';
-    if(S.target===P.k){c.strokeStyle='#ffa03c';c.lineWidth=Math.max(4,4/z);c.setLineDash([Math.max(14,20/z),Math.max(14,20/z)]);c.beginPath();c.arc(x,y,R*1.12+(P.atmH||0)*.3+Math.sin(tm*3)*R*.01,0,7);c.stroke();c.setLineDash([])}});
+    if(S.target===P.k||(S.target==='rift'&&P.k==='aeth'&&false)){c.strokeStyle='#ffa03c';c.lineWidth=Math.max(4,4/z);c.setLineDash([Math.max(14,20/z),Math.max(14,20/z)]);c.beginPath();c.arc(x,y,R*1.12+(P.atmH||0)*.3+Math.sin(tm*3)*R*.01,0,7);c.stroke();c.setLineDash([])}
+    if(P.land&&dd<R+9000)drawBase(c,P);if(P.k==='aeth'&&dd<R+9000)drawHive(c,P,tm)});
+  drawFleet(c);drawEnemies(c,z);
   if(sm&&S.target&&S.nav&&sm.cx!==undefined){var tp=planetBy(S.target);c.strokeStyle='rgba(255,160,60,.6)';c.lineWidth=Math.max(2,2/z);c.setLineDash([20/z+10,20/z+10]);c.beginPath();c.moveTo(sm.cx,sm.cy);c.lineTo(tp.x,tp.y);c.stroke();c.setLineDash([])}}
 function drawRadar(){var sm=S.sim;if(!sm||!sm.world||sm.cx===undefined){S.radar=null;return}var dpr=window.devicePixelRatio||1,W_=cv.clientWidth,c=cx;c.setTransform(dpr,0,0,dpr,0,0);
   var r0=Math.min(66,W_/8),ox=W_-r0-12,oy=r0+78,blips=[];c.fillStyle='rgba(2,8,20,.72)';c.beginPath();c.arc(ox,oy,r0+4,0,7);c.fill();c.strokeStyle='rgba(111,168,255,.5)';c.lineWidth=1.5;c.stroke();
@@ -13481,38 +13585,42 @@ function drawRadar(){var sm=S.sim;if(!sm||!sm.world||sm.cx===undefined){S.radar=
   WORLD.forEach(function(P){var dx=P.x-sm.cx,dy=P.y-sm.cy,d=Math.hypot(dx,dy),rr=Math.min(r0-4,r0*Math.log(1+d/1500)/Math.log(1+1000000/1500)),ux0=d?dx/d:0,uy0=d?dy/d:0,cr_=Math.cos(S.cam.r||0),sr_=Math.sin(S.cam.r||0),ux=ux0*cr_-uy0*sr_,uy=ux0*sr_+uy0*cr_,x=ox+ux*rr,y=oy+uy*rr;blips.push({k:P.k,x:x,y:y});
     c.fillStyle=P.c1;c.beginPath();c.arc(x,y,P.hot?5:4,0,7);c.fill();if(S.target===P.k){c.strokeStyle='#ffa03c';c.lineWidth=2;c.beginPath();c.arc(x,y,8+Math.sin(performance.now()/200),0,7);c.stroke()}
     c.font='10px sans-serif';c.textAlign='center';c.fillText(P.i,x,y-7)});
+  if(sm.en)sm.en.forEach(function(e){var dx=e.x-sm.cx,dy=e.y-sm.cy,d=Math.hypot(dx,dy),rr=Math.min(r0-4,r0*Math.log(1+d/1500)/Math.log(1+1000000/1500)),ux0=d?dx/d:0,uy0=d?dy/d:0,cr_=Math.cos(S.cam.r||0),sr_=Math.sin(S.cam.r||0);c.fillStyle='#ff3b5c';c.fillRect(ox+(ux0*cr_-uy0*sr_)*rr-2,oy+(ux0*sr_+uy0*cr_)*rr-2,4,4)});
   c.fillStyle='#ffa03c';c.beginPath();c.moveTo(ox,oy-5);c.lineTo(ox-4,oy+4);c.lineTo(ox+4,oy+4);c.fill();c.fillStyle='rgba(255,255,255,.55)';c.font='9px sans-serif';c.textAlign='center';c.fillText('RADAR · click a planet',ox,oy+r0+16);c.textAlign='left';
   S.radar={x:ox,y:oy,r:r0,b:blips}}
 // ── space map & planetary bases ─────────────────────
-var BODIES=[{k:'earth',n:'Earth',i:'🌍',alt:0,lv:5,r:15,c:'#3d8bff',x:.04,mult:0},{k:'moon',n:'Moon',i:'🌙',alt:14000,lv:6,r:9,c:'#cfcfd6',x:.22,mult:1},{k:'mars',n:'Mars',i:'🔴',alt:40000,lv:7,r:11,c:'#e0613a',x:.42,mult:1.6},
- {k:'jup',n:'Jupiter',i:'🪐',alt:90000,lv:8,r:17,c:'#e3b983',x:.62,mult:2.5},{k:'prox',n:'Proxima Centauri',i:'⭐',alt:200000,lv:9,r:13,c:'#ffd96a',x:.81,mult:4},{k:'rift',n:'The Rift',i:'🌀',alt:400000,lv:10,r:14,c:'#b57cff',x:.96,mult:7}];
-var BM=[{k:'dome',n:'Habitat dome',i:'🏠',cost:150,lvl:1,inc:2},{k:'mine',n:'Mining rig',i:'⛏️',cost:250,lvl:2,inc:4},{k:'lab',n:'Research lab',i:'🔬',cost:400,lvl:3,inc:6},{k:'pad',n:'Launch pad',i:'🛰️',cost:600,lvl:4,inc:9},{k:'core',n:'Power core',i:'⚛️',cost:1000,lvl:6,inc:16}];
+var BODIES=[{k:'earth',n:'Earth',i:'🌍',alt:0,lv:5,c:'#3d8bff',mult:0},{k:'moon',n:'Moon',i:'🌙',alt:14000,lv:6,c:'#cfcfd6',mult:1},{k:'merc',n:'Mercury',i:'☿️',alt:1e12,lv:11,c:'#c9b8a8',mult:1.2},{k:'venus',n:'Venus',i:'💛',alt:1e12,lv:11,c:'#f5d98a',mult:1.4},
+ {k:'mars',n:'Mars',i:'🔴',alt:40000,lv:7,c:'#e0613a',mult:1.6},{k:'ceres',n:'Ceres',i:'🪨',alt:1e12,lv:11,c:'#b0a79a',mult:1.3},{k:'jup',n:'Jupiter',i:'🪐',alt:90000,lv:8,c:'#e3b983',mult:2.5},{k:'euro',n:'Europa',i:'🧊',alt:1e12,lv:11,c:'#bfe0f5',mult:1.8},
+ {k:'io',n:'Io',i:'🌋',alt:1e12,lv:11,c:'#ffe27a',mult:1.8},{k:'titan',n:'Titan',i:'🟠',alt:1e12,lv:11,c:'#e6a74a',mult:2.8},{k:'pluto',n:'Pluto',i:'🌑',alt:1e12,lv:11,c:'#e8d9cc',mult:3.2},{k:'prox',n:'Proxima b',i:'⭐',alt:200000,lv:9,c:'#ffd96a',mult:4},{k:'rift',n:'Aether',i:'🌀',alt:400000,lv:10,c:'#b57cff',mult:7}];
+var BM=[{k:'dome',n:'Habitat dome',i:'🏠',cost:150,lvl:1,inc:2},{k:'mine',n:'Mining rig',i:'⛏️',cost:250,lvl:2,inc:4},{k:'lab',n:'Research lab',i:'🔬',cost:400,lvl:3,inc:6},{k:'pad',n:'Launch pad',i:'🛰️',cost:600,lvl:4,inc:9},{k:'core',n:'Power core',i:'⚛️',cost:1000,lvl:6,inc:16},{k:'defense',n:'Defense turret',i:'🔫',cost:500,lvl:3,inc:0}];
 function bodyOf(k){for(var i=0;i<BODIES.length;i++)if(BODIES[i].k===k)return BODIES[i];return BODIES[0]}
 function bodyUnlocked(b){return b.k==='earth'||(CR.best||0)>=b.alt*.97||!!(CR.landed&&CR.landed[b.k])}
 function baseMods(k){return (CR.bases&&CR.bases[k])||[]}
 function baseCrew(k){return CR.crew.filter(function(c){return c.base===k})}
 function baseRate(){var t=0;BODIES.forEach(function(b){baseMods(b.k).forEach(function(m){var d=BM.filter(function(x){return x.k===m.k})[0];if(d)t+=d.inc*b.mult})});return t}
 var mapSel='moon',mapRaf=0;
-function altToX(a){for(var i=1;i<BODIES.length;i++)if(a<=BODIES[i].alt)return BODIES[i-1].x+(BODIES[i].x-BODIES[i-1].x)*Math.max(0,(a-BODIES[i-1].alt)/(BODIES[i].alt-BODIES[i-1].alt));return 1}
+var MINI=[{k:'earth',i:'🌍',alt:0,x:.04},{k:'moon',i:'🌙',alt:14000,x:.22},{k:'mars',i:'🔴',alt:40000,x:.42},{k:'jup',i:'🪐',alt:90000,x:.62},{k:'prox',i:'⭐',alt:200000,x:.81},{k:'rift',i:'🌀',alt:400000,x:.96}];
+function altToX(a){for(var i=1;i<MINI.length;i++)if(a<=MINI[i].alt)return MINI[i-1].x+(MINI[i].x-MINI[i-1].x)*Math.max(0,(a-MINI[i-1].alt)/(MINI[i].alt-MINI[i-1].alt));return 1}
 window.wsMapOpen=function(){tickEco();if(!bodyUnlocked(bodyOf(mapSel)))mapSel=BODIES.filter(bodyUnlocked).slice(-1)[0].k==='earth'?'moon':mapSel;renderMap();$('ws-mapm').style.display='flex';cancelAnimationFrame(mapRaf);(function lp(){if($('ws-mapm').style.display!=='flex')return;drawMap();mapRaf=requestAnimationFrame(lp)})()};
 window.wsMapClose=function(){$('ws-mapm').style.display='none'};
 function mapCur(){return S.sim?Math.max(0,S.sim.alt||0):(CR.best||0)}
+function mapXY(i,W,H){var N=BODIES.length,a=Math.PI/2+i*Math.PI*2/N;return{x:W/2+Math.cos(a)*(W/2-58),y:H/2+Math.sin(a)*(H/2-38)}}
 function drawMap(){var cv2=$('ws-mapcv'),c=cv2.getContext('2d'),W_=cv2.width,H_=cv2.height,t=performance.now()/1000;
-  c.fillStyle='#02030c';c.fillRect(0,0,W_,H_);c.fillStyle='#fff';for(var i=0;i<90;i++){c.globalAlpha=.25+(i%5)*.12;c.fillRect((i*131)%W_,(i*53)%H_,1.2,1.2)}c.globalAlpha=1;
-  var pad=34,span=W_-pad*2,cy=H_/2+6;function px(x){return pad+x*span}function py(x){return cy+Math.sin(x*6.3)*26}
-  c.lineWidth=2;for(var j=0;j<BODIES.length-1;j++){var a=BODIES[j],b=BODIES[j+1];c.strokeStyle=bodyUnlocked(b)?'rgba(111,168,255,.85)':'rgba(255,255,255,.18)';c.setLineDash(bodyUnlocked(b)?[]:[5,5]);c.beginPath();c.moveTo(px(a.x),py(a.x));
-    for(var q=1;q<=12;q++){var xx=a.x+(b.x-a.x)*q/12;c.lineTo(px(xx),py(xx))}c.stroke()}c.setLineDash([]);
-  BODIES.forEach(function(b){var u=bodyUnlocked(b),x=px(b.x),y=py(b.x),sel=b.k===mapSel;c.globalAlpha=u?1:.4;
-    var g=c.createRadialGradient(x-b.r*.3,y-b.r*.3,1,x,y,b.r);g.addColorStop(0,'#fff');g.addColorStop(.3,b.c);g.addColorStop(1,'#111');c.fillStyle=g;c.beginPath();c.arc(x,y,b.r,0,7);c.fill();
-    if(b.k==='jup'){c.strokeStyle='rgba(120,70,30,.5)';c.lineWidth=2;c.beginPath();c.moveTo(x-b.r+3,y-3);c.lineTo(x+b.r-3,y-3);c.moveTo(x-b.r+2,y+4);c.lineTo(x+b.r-2,y+4);c.stroke()}
-    if(sel){c.strokeStyle='#ffa03c';c.lineWidth=2;c.beginPath();c.arc(x,y,b.r+6+Math.sin(t*4)*1.5,0,7);c.stroke()}
-    var nb=baseMods(b.k).length;c.globalAlpha=1;c.fillStyle='#fff';c.font='10px sans-serif';c.textAlign='center';c.fillText(b.n.replace('Proxima Centauri','Proxima'),x,y+b.r+14);
-    if(!u){c.fillText('🔒',x,y+4)}else if(b.k!=='earth'&&nb){c.fillStyle='#7dff9f';c.fillText('🏗️'+nb,x,y-b.r-6)}});
-  var rx=px(altToX(mapCur())),ry=py(altToX(mapCur()));c.font='18px sans-serif';c.textAlign='center';c.fillText('🚀',rx,ry-12+Math.sin(t*5)*1.5);
-  c.fillStyle='rgba(255,255,255,.55)';c.font='10px sans-serif';c.textAlign='left';c.fillText('Tap a world · 🚀 = '+(S.sim?'your rocket now':'furthest you have flown'),8,H_-6)}
+  c.fillStyle='#02030c';c.fillRect(0,0,W_,H_);c.fillStyle='#fff';for(var i=0;i<110;i++){c.globalAlpha=.25+(i%5)*.12;c.fillRect((i*131)%W_,(i*53)%H_,1.2,1.2)}c.globalAlpha=1;
+  var sg=c.createRadialGradient(W_/2,H_/2,2,W_/2,H_/2,50);sg.addColorStop(0,'#fff6b0');sg.addColorStop(.35,'rgba(255,170,50,.6)');sg.addColorStop(1,'rgba(255,120,30,0)');c.fillStyle=sg;c.beginPath();c.arc(W_/2,H_/2,50,0,7);c.fill();
+  c.strokeStyle='rgba(255,255,255,.1)';c.lineWidth=1;c.beginPath();c.ellipse(W_/2,H_/2,W_/2-58,H_/2-38,0,0,7);c.stroke();
+  c.lineWidth=2;for(var j=0;j<BODIES.length-1;j++){var a=mapXY(j,W_,H_),b=mapXY(j+1,W_,H_),u=bodyUnlocked(BODIES[j+1]);c.strokeStyle=u?'rgba(111,168,255,.85)':'rgba(255,255,255,.18)';c.setLineDash(u?[]:[4,5]);c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.stroke()}c.setLineDash([]);
+  BODIES.forEach(function(b,i){var u=bodyUnlocked(b),p=mapXY(i,W_,H_),r=b.k==='earth'?13:b.k==='jup'?14:9,sel=b.k===mapSel;c.globalAlpha=u?1:.4;
+    var g=c.createRadialGradient(p.x-r*.3,p.y-r*.3,1,p.x,p.y,r);g.addColorStop(0,'#fff');g.addColorStop(.3,b.c);g.addColorStop(1,'#111');c.fillStyle=g;c.beginPath();c.arc(p.x,p.y,r,0,7);c.fill();
+    if(sel){c.strokeStyle='#ffa03c';c.lineWidth=2;c.beginPath();c.arc(p.x,p.y,r+5+Math.sin(t*4)*1.5,0,7);c.stroke()}
+    var nb=baseMods(b.k).length;c.globalAlpha=1;c.fillStyle='#fff';c.font='9px sans-serif';c.textAlign='center';c.fillText(b.n,p.x,p.y+r+11);
+    if(!u)c.fillText('🔒',p.x,p.y-r-4);else if(b.k!=='earth'&&nb){c.fillStyle='#7dff9f';c.fillText('🏗️'+nb,p.x,p.y-r-4)}});
+  var ri=-1;if(S.sim&&S.sim.world&&S.sim.near){var nk=S.sim.near.k==='aeth'?'rift':S.sim.near.k;BODIES.forEach(function(b,i){if(b.k===nk)ri=i})}else{var cur=mapCur();BODIES.forEach(function(b,i){if(b.alt<1e11&&cur>=b.alt*.97)ri=i});if(ri<0)ri=0}
+  if(ri>=0){var rp=mapXY(ri,W_,H_);c.font='16px sans-serif';c.textAlign='center';c.fillText('🚀',rp.x+14,rp.y-14+Math.sin(t*5)*1.5)}
+  c.fillStyle='rgba(255,255,255,.55)';c.font='10px sans-serif';c.textAlign='left';c.fillText('Tap a world · 🚀 = '+(S.sim?'your rocket':'furthest you have flown'),8,H_-6)}
 function renderMap(){var b=bodyOf(mapSel),u=bodyUnlocked(b),el=$('ws-mapinfo');var mg=$('ws-mapgo');if(mg){var wp=S.sim&&S.sim.world&&planetBy(b.k);mg.style.display=wp?'':'none';if(wp){mg.textContent='🧭 Auto-fly to '+wp.n;mg.onclick=function(){S.target=b.k;S.nav=true;wsMapClose();toast('🤖 Autopilot → '+wp.n+' (G to stop)')}}}var _x=0,h='<div style="padding:8px 14px;font-size:13px"><b style="font-size:15px">'+b.i+' '+b.n+'</b> ';
   if(b.k==='earth'){h+='· your home world. Orbit station: '+CR.station.length+' module(s).</div><div style="padding:0 14px 10px"><button class="ws-mb" onclick="wsMapClose();wsStationOpen()">🛰️ Open space station</button></div>';$('ws-mapinfo').innerHTML=h;wireMap();return}
-  if(!u){h+='· 🔒 not reached yet.<div style="font-size:11.5px;opacity:.7;margin-top:3px">Fly past altitude '+Math.round(b.alt*.97)+' (best so far: '+Math.floor(CR.best||0)+') to unlock a base here. Tip: pick the <b>'+LEVELS[b.lv].n+'</b> level.</div></div><div style="padding:0 14px 10px"><button class="ws-mb" data-lv="'+b.lv+'">🚀 Set course: '+LEVELS[b.lv].n+'</button></div>';el.innerHTML=h;wireMap();return}
+  if(!u){h+='· 🔒 not reached yet.<div style="font-size:11.5px;opacity:.7;margin-top:3px">'+(b.alt>1e11?'Land here in the <b>🌌 Solar System</b> level to unlock a base.':'Fly past altitude '+Math.round(b.alt*.97)+' (best so far: '+Math.floor(CR.best||0)+') — or land here in the <b>🌌 Solar System</b> — to unlock a base.')+'</div></div><div style="padding:0 14px 10px"><button class="ws-mb" data-lv="'+b.lv+'">🚀 Set course: '+LEVELS[b.lv].n+'</button></div>';el.innerHTML=h;wireMap();return}
   var crew=baseCrew(b.k),cap=2+2*crew.length,mods=baseMods(b.k),top=crew.reduce(function(m,c){return Math.max(m,clvl(c))},0);
   h+='· ✅ reached ·  <span style="opacity:.8">income ×'+b.mult+'</span><div style="font-size:11.5px;margin-top:4px">🏗️ <b>'+mods.length+'/'+cap+'</b> modules · 💰 +'+mods.reduce(function(t,m){return t+BM.filter(function(x){return x.k===m.k})[0].inc*b.mult},0).toFixed(1)+'/min · crew here: '+crew.length+' · top level '+top+'</div></div>';
   h+='<div style="padding:0 14px 6px;font-size:11px;opacity:.65">Base crew</div><div style="padding:0 14px;display:flex;flex-wrap:wrap;gap:6px">'+(crew.length?crew.map(function(c){return '<span style="background:rgba(255,255,255,.08);border-radius:8px;padding:4px 8px;font-size:12px">'+face(c)+' '+_esc(c.name)+' Lv'+clvl(c)+' <a data-rc="'+c.id+'" style="cursor:pointer;color:#6fa8ff">recall</a></span>'}).join(''):'<span style="font-size:12px;opacity:.6">Nobody yet — send someone who has been to space.</span>')+'</div>';
@@ -13528,10 +13636,10 @@ function wireMap(){var el=$('ws-mapinfo'),b=bodyOf(mapSel);
     if(!crew.length){toast('Send a crew member to the '+b.n+' base first');return}if(top<m.lvl){toast('A base crew member needs level '+m.lvl);return}if(mods.length>=cap){toast('Base full — send more crew for more room');return}if(CR.credits<m.cost){toast('Not enough credits');return}
     CR.credits-=m.cost;(CR.bases[b.k]=CR.bases[b.k]||[]).push({k:m.k});saveCrew();updCredits();renderMap();toast('🏗️ Built '+m.n+' on '+b.n+'!')}})}
 document.addEventListener('click',function(e){var c=e.target;if(c&&c.id==='ws-mapcv'){var r=c.getBoundingClientRect(),mx=(e.clientX-r.left)/r.width*c.width,my=(e.clientY-r.top)/r.height*c.height,best=null,bd=1e9;
-  BODIES.forEach(function(b){var x=34+b.x*(c.width-68),y=c.height/2+6+Math.sin(b.x*6.3)*26,d=Math.hypot(mx-x,my-y);if(d<bd){bd=d;best=b}});if(best&&bd<42){mapSel=best.k;renderMap()}}});
+  BODIES.forEach(function(b,i){var p=mapXY(i,c.width,c.height),d=Math.hypot(mx-p.x,my-p.y);if(d<bd){bd=d;best=b}});if(best&&bd<34){mapSel=best.k;renderMap()}}});
 function drawMini(){if(!S.sim||!LEVELS[S.level].space||(S.sim.alt||0)<5000)return;var dpr=window.devicePixelRatio||1,W_=cv.clientWidth,c=cx;c.setTransform(dpr,0,0,dpr,0,0);
   var w=Math.min(250,W_-24),x0=W_-w-12,y0=44;c.fillStyle='rgba(0,0,0,.45)';c.fillRect(x0-6,y0-16,w+12,38);c.strokeStyle='rgba(111,168,255,.6)';c.lineWidth=2;c.beginPath();c.moveTo(x0,y0+6);c.lineTo(x0+w,y0+6);c.stroke();
-  BODIES.forEach(function(b){var x=x0+b.x*w;c.font='13px sans-serif';c.textAlign='center';c.globalAlpha=bodyUnlocked(b)?1:.45;c.fillText(b.i,x,y0+4)});c.globalAlpha=1;
+  MINI.forEach(function(b){var x=x0+b.x*w;c.font='13px sans-serif';c.textAlign='center';c.globalAlpha=bodyUnlocked(bodyOf(b.k))?1:.45;c.fillText(b.i,x,y0+4)});c.globalAlpha=1;
   var rx=x0+altToX(S.sim.alt||0)*w;c.fillStyle='#ffa03c';c.beginPath();c.moveTo(rx,y0+10);c.lineTo(rx-4,y0+19);c.lineTo(rx+4,y0+19);c.fill();c.fillStyle='rgba(255,255,255,.6)';c.font='9px sans-serif';c.fillText('N = space map',x0+w/2,y0+30)}
 // ── persistence ─────────────────────────
 function snapshot(){return{v:1,level:S.level,parts:S.parts,links:S.links,nid:S.nid}}
@@ -13583,12 +13691,13 @@ function startSim(){
   for(var k in bodies)W.add(eng.world,bodies[k]);
   W.add(eng.world,cons);
   var lvw=LEVELS[S.level].world;if(lvw){W.add(eng.world,planetBodies());eng.gravity.scale=0;M.Events.on(eng,'collisionStart',wCrash)}
+  if(lvw&&S.fly){var FP=planetBy(S.fly.k);if(FP&&FP.u&&FP.k!=='earth'){var fth=Math.atan2(FP.u.x,-FP.u.y),fsn=Math.sin(fth),fcs=Math.cos(fth),fx0=FP.x+FP.u.x*FP.Rf,fy0=FP.y+FP.u.y*FP.Rf;for(var fk in bodies){var fb=bodies[fk],ox2=fb.position.x,oy2=fb.position.y;Bd.setPosition(fb,{x:fx0+ox2*fcs-oy2*fsn,y:fy0+ox2*fsn+oy2*fcs});Bd.setAngle(fb,fb.angle+fth)}}}
   var boost=1,pilot=false,caps=false;S.parts.forEach(function(p){if(p.t==='capsule'){caps=true;var c=p.crew&&crewById(p.crew);if(c){if(c.role==='engineer')boost+=.05*clvl(c);if(c.role==='pilot')pilot=true}}});
-  S.sim={eng:eng,bodies:bodies,cons:cons,t:0,thrust:0,maxX:-1e9,sh:{},boost:boost,pilot:pilot,caps:caps,world:!!lvw,pv:{},speedMul:1,maxH:0,dec:S.parts.filter(function(p){return p.t==='decoupler'}).sort(function(a,b){return b.y-a.y}).map(function(p){return p.id})};S.nav=false;
+  S.sim={eng:eng,bodies:bodies,cons:cons,t:0,thrust:0,maxX:-1e9,sh:{},boost:boost,pilot:pilot,caps:caps,world:!!lvw,pv:{},speedMul:1,maxH:0,hull:100,home:(S.fly&&S.fly.k)||'earth',left:false,dec:S.parts.filter(function(p){return p.t==='decoupler'}).sort(function(a,b){return b.y-a.y}).map(function(p){return p.id})};S.nav=false;
   S.mode='play';S.done=false;S.first=null;S.t0=performance.now();updHud();syncUi()
 }
 function homeCam(){var n=S.parts.length,H=(cv&&cv.clientHeight)||600;if(!n)return{x:200,y:-180,z:1};var x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;S.parts.forEach(function(p){var d=dims(p),r=Math.max(d.w,d.h)/2;x0=Math.min(x0,p.x-r);x1=Math.max(x1,p.x+r);y0=Math.min(y0,p.y-r);y1=Math.max(y1,p.y+r)});y1=Math.max(y1,0);var z=Math.max(.25,Math.min(1,H*.62/Math.max(120,y1-y0,(x1-x0)*.6)));return{x:(x0+x1)/2,y:(y0+y1)/2-30,z:z}}
-function stopSim(){try{if(S.sim&&S.sim.maxAlt>CR.best)CR.best=S.sim.maxAlt;saveCrew()}catch(e){}var was=!!S.sim;S.sim=null;S.mode='build';fx=[];if(was){S.cam=homeCam();S.follow=true;var st_=$('ws-stats'),bn_=$('ws-banner');if(st_)st_.textContent='';if(bn_){bn_.style.opacity=0}}updHud();syncUi()}
+function stopSim(){try{if(S.sim&&S.sim.maxAlt>CR.best)CR.best=S.sim.maxAlt;saveCrew()}catch(e){}var was=!!S.sim;S.sim=null;S.fly=null;S.mode='build';fx=[];if(was){S.cam=homeCam();S.follow=true;var st_=$('ws-stats'),bn_=$('ws-banner');if(st_)st_.textContent='';if(bn_){bn_.style.opacity=0}}updHud();syncUi()}
 function stepSim(){
   var sm=S.sim;if(!sm)return;var k=S.keys,dir=(k.ArrowRight||k.d?1:0)-(k.ArrowLeft||k.a?1:0),brake=k.ArrowDown||k.s,go=k[' ']||k.ArrowUp||k.w;
   if(S.pad){dir=S.pad.dir||dir;go=go||S.pad.go}
@@ -13642,6 +13751,7 @@ function drawPartShape(c,p,ghost,ang,active){
       c.beginPath();c.arc(0,-2,12,0,7);c.fillStyle='#0b2a52';c.fill();c.strokeStyle='#ffa03c';c.lineWidth=3;c.stroke();var cr=p.crew&&crewById(p.crew);c.font='15px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText(cr?face(cr):'🧑‍🚀',0,-1)}
     else if(d.mat==='nose'){c.beginPath();c.moveTo(-w/2,h/2);c.lineTo(w/2,h/2);c.quadraticCurveTo(w/4,-h/4,0,-h/2);c.quadraticCurveTo(-w/4,-h/4,-w/2,h/2);var ng=c.createLinearGradient(-w/2,0,w/2,0);ng.addColorStop(0,'#ff8a73');ng.addColorStop(1,'#c0392b');c.fillStyle=ng;c.fill();c.strokeStyle='#6e1d12';c.lineWidth=2;c.stroke()}
     else if(d.mat==='chute'){c.fillStyle='#d94a2b';c.fillRect(-w/2,-h/2,w,h);c.strokeStyle='#5a1a0c';c.lineWidth=2;c.strokeRect(-w/2,-h/2,w,h);c.fillStyle='#fff';c.fillRect(-w/2+3,-2,w-6,4)}
+    else if(d.mat==='turret'){c.fillStyle='#4b5361';c.fillRect(-w/2,h/2-12,w,12);c.strokeStyle='#000';c.lineWidth=2;c.strokeRect(-w/2,h/2-12,w,12);c.save();c.translate(0,h/2-12);c.rotate(p.aim!=null&&p.aim!==undefined?p.aim-ang:0);c.fillStyle='#2a3240';c.fillRect(-3.5,-24,7,24);c.strokeRect(-3.5,-24,7,24);c.fillStyle=p.aim!=null&&p.aim!==undefined?'#ff4a6a':'#7dff9f';c.beginPath();c.arc(0,0,9,0,7);c.fill();c.stroke();c.restore()}
     else if(d.mat==='decoupler'){c.fillStyle='#2b2f36';c.fillRect(-w/2,-h/2,w,h);c.fillStyle='#ffb020';for(var hz=-w/2;hz<w/2;hz+=12){c.beginPath();c.moveTo(hz,-h/2);c.lineTo(hz+6,-h/2);c.lineTo(hz+2,h/2);c.lineTo(hz-4,h/2);c.closePath();c.fill()}c.strokeStyle='#000';c.lineWidth=2;c.strokeRect(-w/2,-h/2,w,h)}
     else if(d.mat==='thruster'){c.fillStyle='#5a6270';c.fillRect(-w/2,-h/2,w,h*.7);c.strokeStyle='#222';c.lineWidth=2;c.strokeRect(-w/2,-h/2,w,h*.7);
       c.beginPath();c.moveTo(-w/2+5,h*.2);c.lineTo(w/2-5,h*.2);c.lineTo(w/2-9,h/2);c.lineTo(-w/2+9,h/2);c.closePath();c.fillStyle='#c0392b';c.fill();c.stroke();
@@ -13672,7 +13782,7 @@ function draw(){
     c.beginPath();for(var gx=x0;gx<=x1;gx+=50){c.moveTo(gx,y0);c.lineTo(gx,y1)}for(var gy=y0;gy<=y1;gy+=50){c.moveTo(x0,gy);c.lineTo(x1,gy)}c.stroke()}
   // parts
   var sm=S.sim;
-  S.parts.forEach(function(p){var b=sm&&sm.bodies[p.id],pp=b?{t:p.t,x:b.position.x,y:b.position.y}:p;drawPartShape(c,pp,false,b?b.angle:p.a,sm&&b?(sm.world?!!b.plugin.firing:(sm.thrust&&!b.plugin.dead)):0);if(b&&b.plugin.mat==='chute'&&b.plugin.open)drawCanopy(c,b,sm);
+  S.parts.forEach(function(p){var b=sm&&sm.bodies[p.id],pp=b?{t:p.t,x:b.position.x,y:b.position.y,aim:b.plugin.aim}:p;drawPartShape(c,pp,false,b?b.angle:p.a,sm&&b?(sm.world?!!b.plugin.firing:(sm.thrust&&!b.plugin.dead)):0);if(b&&b.plugin.mat==='chute'&&b.plugin.open)drawCanopy(c,b,sm);
     if(S.sel===p||(S.first&&S.first.p===p)){c.save();c.translate(pp.x,pp.y);c.rotate(b?b.angle:p.a);var dm=dims(p);c.strokeStyle='#ffd23f';c.lineWidth=3/z;c.setLineDash([6,4]);c.strokeRect(-dm.w/2-4,-dm.h/2-4,dm.w+8,dm.h+8);c.restore()}});
   // links
   var cons=sm?sm.cons:null;
@@ -13708,7 +13818,7 @@ function drawLink(c,k,A,Bp,z){
 }
 function fmtKm(k,lv){if(lv.rift)return '∞ km';if(lv.lyOut){return (k/9.461e12).toFixed(2)+' light-years'}return Math.round(k).toLocaleString()+' km'}
 function updHud(){var h=$('ws-hud');if(!h)return;var lv=LEVELS[S.level];h.innerHTML='<b>'+lv.n+'</b><span class="ws-d"> — '+lv.d+'</span><br><span style="opacity:.75">'+(S.mode==='build'?'🔨 BUILD · '+S.parts.length+' parts':'▶ SIMULATING')+'</span>'}
-function syncUi(){var hn=$('ws-hint');if(hn)hn.textContent=S.mode==='play'?(LEVELS[S.level].world?'A/D rotate · ↑ thrust · S retro · Q/E side thrusters · C chutes · X stage · F speed · G autopilot · click a planet!':'← → / A D drive · ↑ / W / Space thrust · ↓ / S brake · C chutes · X stage · R reset'):'R rotate · right-drag / ✋ pan · scroll zoom · Enter play';var b=$('ws-play');if(b){b.textContent=S.mode==='build'?'▶ Play':'■ Stop';b.style.background=S.mode==='build'?'#22c55e':'#ef4444'}
+function syncUi(){var hn=$('ws-hint');if(hn)hn.textContent=S.mode==='play'?(LEVELS[S.level].world?'A/D rotate · ↑ thrust · S retro · Q/E side thrusters · C chutes · X stage · F speed · P park · G autopilot · click a planet!':'← → / A D drive · ↑ / W / Space thrust · ↓ / S brake · C chutes · X stage · R reset'):'R rotate · right-drag / ✋ pan · scroll zoom · Enter play';var b=$('ws-play');if(b){b.textContent=S.mode==='build'?'▶ Play':'■ Stop';b.style.background=S.mode==='build'?'#22c55e':'#ef4444'}
   var pad=$('ws-pad');if(pad)pad.style.display=S.mode==='play'?'flex':'none';
   document.querySelectorAll('#ws-tools button').forEach(function(x){x.classList.toggle('on',x.dataset.k===S.tool)})}
 // ── main loop ──────────────────────────
@@ -13748,12 +13858,12 @@ function kd(e){if(!open)return;var k=e.key.length===1?e.key.toLowerCase():e.key;
   if(k==='n'){var mm=$('ws-mapm');if(mm&&mm.style.display==='flex')wsMapClose();else wsMapOpen();return}
   if(k==='Escape'){var mm2=$('ws-mapm');if(mm2&&mm2.style.display==='flex'){wsMapClose();return}if(S.first){S.first=null}else if(S.sel)S.sel=null;return}
   S.keys[k]=true;
-  if(S.mode==='play'&&!e.repeat){if(k==='c')wsChutes();else if(k==='x')wsStage();else if(k==='g')wsNav();else if(k==='f')wsSpeed()}
+  if(S.mode==='play'&&!e.repeat){if(k==='c')wsChutes();else if(k==='x')wsStage();else if(k==='g')wsNav();else if(k==='f')wsSpeed();else if(k==='p')wsPark()}
   if(S.mode==='build'){if(k==='r'){if(S.sel){S.sel.a+=e.shiftKey?-deg(15):deg(15);autosave()}else S.rot+=e.shiftKey?-deg(15):deg(15)}
     if((k==='Delete'||k==='Backspace')&&S.sel){removePart(S.sel);S.sel=null;updHud()}}
   var ae=document.activeElement;if(k==='Enter'&&(!ae||ae===document.body||ae.tagName==='CANVAS'))wsTogglePlay();if(k==='r'&&S.mode==='play')wsReset()}
 function ku(e){var k=e.key.length===1?e.key.toLowerCase():e.key;if(open&&k===' ')e.preventDefault();S.keys[k]=false}
-window.wsReset=function(){if(S.mode==='play'){stopSim();startSim()}else{S.cam=homeCam();S.sel=null;S.first=null;toast('↺ View reset')}};
+window.wsReset=function(){if(S.mode==='play'){var fl=S.fly;stopSim();S.fly=fl;startSim()}else{S.cam=homeCam();S.sel=null;S.first=null;toast('↺ View reset')}};
 window.wsStab=function(){S.stab=!S.stab;toast(S.stab?'🧭 Auto-stabiliser ON — thrusters keep you upright':'🧭 Auto-stabiliser off')};
 window.wsRocket=function(){if(S.parts.length&&!confirm('Replace your build with the starter rocket?'))return;stopSim();S.parts=[];S.links=[];S.nid=1;S.auto=false;S.stab=true;
   var en=place('engine',0,-31,0),b1=place('beam',0,-130,deg(90)),b2=place('beam',0,-250,deg(90)),cp=place('capsule',0,-345,0),ns=place('nose',0,-392,0),ch=place('chute',0,-421,0);
@@ -13775,7 +13885,7 @@ window.workshopOpen=function(){
   if(!cv){cv=$('ws-canvas');cx=cv.getContext('2d');cv.addEventListener('pointerdown',pdown);cv.addEventListener('pointermove',pmove);cv.addEventListener('pointerup',pup);cv.addEventListener('pointercancel',pup);
     cv.addEventListener('pointerleave',function(){S.ptr.over=false});cv.addEventListener('wheel',wheel,{passive:false});cv.addEventListener('contextmenu',function(e){e.preventDefault()});
     $('ws-level').innerHTML=LEVELS.map(function(l,i){var dn={};try{dn=JSON.parse(localStorage.getItem('ares_ws_done')||'{}')}catch(e){}return '<option value="'+i+'">'+(dn[i]?'✅ ':'')+l.n+'</option>'}).join('');
-    buildTools();loadCrew();updCredits();setInterval(tickEco,10000);
+    buildTools();loadCrew();loadFleet();updCredits();setInterval(tickEco,10000);
     var a=null;try{a=JSON.parse(localStorage.getItem('ares_ws_auto')||'null')}catch(e){}
     if(a&&a.parts&&a.parts.length)applySnap(a);else starter();}
   document.addEventListener('keydown',kd);document.addEventListener('keyup',ku);
