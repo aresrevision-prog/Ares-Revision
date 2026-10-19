@@ -12700,7 +12700,7 @@ function _aresUpdateArenaButton(){
 #workshop-overlay .ws-top button:hover{background:rgba(255,160,60,.25)}
 #workshop-overlay .ws-title{font-family:'Courier New',monospace;font-weight:900;letter-spacing:.2em;color:#ffa03c;margin-right:4px}
 #workshop-overlay .ws-main{flex:1;display:flex;min-height:0}
-#ws-tools{flex-shrink:0;width:74px;overflow-y:auto;background:#0f0a04;border-right:1px solid rgba(255,160,60,.25);padding:6px 4px;display:flex;flex-direction:column;gap:4px}
+#ws-tools{flex-shrink:0;width:136px;overflow-y:auto;background:#0f0a04;border-right:1px solid rgba(255,160,60,.25);padding:6px 5px;display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:min-content;align-content:start;gap:4px}#ws-mapm .ws-mb,#ws-mapm [data-bm]{background:rgba(111,168,255,.2);border:1px solid #6fa8ff;color:#fff;border-radius:8px;padding:6px 10px;cursor:pointer;font-family:inherit;font-size:12px}#ws-mapbtn.pulse{animation:wsPulse 1s infinite;border-color:#6fa8ff}@keyframes wsPulse{50%{box-shadow:0 0 14px #6fa8ff}}
 #ws-tools button{background:rgba(255,255,255,.05);border:1.5px solid transparent;border-radius:9px;color:#fff;cursor:pointer;padding:5px 2px;display:flex;flex-direction:column;align-items:center;font-family:inherit}
 #ws-tools button span{font-size:22px;line-height:1.1}#ws-tools button i{font-style:normal;font-size:9px;opacity:.7;text-align:center;line-height:1.1}
 #ws-tools button:hover{background:rgba(255,160,60,.18)}#ws-tools button.on{border-color:#ffa03c;background:rgba(255,160,60,.28)}
@@ -12719,7 +12719,7 @@ function _aresUpdateArenaButton(){
 #ws-load .box{background:#140d05;border:1.5px solid #ffa03c;border-radius:14px;max-width:420px;width:100%;max-height:75vh;display:flex;flex-direction:column}
 .ws-saverow{display:flex;gap:8px;align-items:center;padding:9px 12px;border-bottom:1px solid rgba(255,255,255,.08)}
 .ws-saverow button{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#fff;border-radius:7px;padding:5px 11px;cursor:pointer}
-@media(max-width:640px){#ws-tools{width:58px}#ws-tools button i{display:none}#ws-hint{display:none}}
+@media(max-width:640px){#ws-tools{width:112px;padding:4px 3px}#ws-tools button span{font-size:19px}#ws-hint{display:none}}
 </style>
 <div id="workshop-overlay" style="display:none;position:fixed;inset:0;z-index:99500;background:#0b1220;flex-direction:column;">
   <div class="ws-top">
@@ -12733,7 +12733,7 @@ function _aresUpdateArenaButton(){
     <button onclick="wsSave()">💾 Save</button><button onclick="wsLoadOpen()">📂 Load</button>
     <button onclick="wsShare()">📋 Share</button><button onclick="wsImport()">📥 Import</button>
     <button onclick="wsSnap()" title="Grid snap">🧲</button><button onclick="wsAuto()" title="Auto-attach">🔗auto</button><button onclick="wsFollow()" title="Camera follow">🎥</button>
-    <button onclick="wsCrewOpen()">👩‍🚀 Crew</button><button onclick="wsStationOpen()">🛰️ Station</button><span id="ws-credits" style="font-weight:800;color:#ffd23f;font-size:13px">💰 150</span>
+    <button id="ws-mapbtn" onclick="wsMapOpen()" title="Space map (N)">🗺️ Map</button><button onclick="wsCrewOpen()">👩‍🚀 Crew</button><button onclick="wsStationOpen()">🛰️ Station</button><span id="ws-credits" style="font-weight:800;color:#ffd23f;font-size:13px">💰 150</span>
     <button onclick="wsClear()" style="color:#f87171">🗑 Clear</button>
   </div>
   <div class="ws-main">
@@ -12750,6 +12750,7 @@ function _aresUpdateArenaButton(){
       <div id="ws-banner" style="position:absolute;left:50%;top:18%;transform:translateX(-50%) scale(.92);opacity:0;transition:opacity .5s,transform .5s;text-align:center;color:#fff;text-shadow:0 2px 14px #000,0 0 30px rgba(120,180,255,.6);pointer-events:none;max-width:90%;z-index:6"></div>
       <div id="ws-toast"></div>
 <div id="ws-crewm" onclick="if(event.target===this)this.style.display='none'" style="display:none;position:absolute;inset:0;z-index:30;background:rgba(0,0,0,.72);align-items:center;justify-content:center;padding:16px"><div class="box" style="background:#140d05;border:1.5px solid #ffa03c;border-radius:14px;max-width:460px;width:100%;max-height:80vh;display:flex;flex-direction:column"><div style="padding:12px 14px;font-weight:800;color:#ffa03c;border-bottom:1px solid rgba(255,255,255,.1);display:flex;justify-content:space-between"><span>👩‍🚀 Your crew</span><span id="ws-crewcr" style="color:#ffd23f"></span></div><div style="font-size:11px;opacity:.65;padding:8px 14px">Place a 🧑‍🚀 Crew capsule on your rocket to carry crew. Fly it to orbit or beyond to earn XP and credits. Level up crew by training them.</div><div id="ws-crewlist" style="overflow-y:auto"></div></div></div>
+<div id="ws-mapm" onclick="if(event.target===this)wsMapClose()" style="display:none;position:absolute;inset:0;z-index:31;background:rgba(0,0,0,.78);align-items:center;justify-content:center;padding:12px"><div class="box" style="background:#070b18;border:1.5px solid #6fa8ff;border-radius:14px;max-width:560px;width:100%;max-height:92vh;display:flex;flex-direction:column"><div style="padding:10px 14px;font-weight:800;color:#6fa8ff;border-bottom:1px solid rgba(255,255,255,.1);display:flex;justify-content:space-between"><span>🗺️ Space Map</span><span onclick="wsMapClose()" style="cursor:pointer;opacity:.7">✕</span></div><canvas id="ws-mapcv" width="540" height="190" style="width:100%;display:block;cursor:pointer"></canvas><div id="ws-mapinfo" style="overflow-y:auto;padding:4px 0"></div></div></div>
 <div id="ws-stnm" onclick="if(event.target===this)this.style.display='none'" style="display:none;position:absolute;inset:0;z-index:30;background:rgba(0,0,0,.72);align-items:center;justify-content:center;padding:16px"><div class="box" style="background:#140d05;border:1.5px solid #6fa8ff;border-radius:14px;max-width:460px;width:100%;max-height:86vh;display:flex;flex-direction:column"><div style="padding:12px 14px;font-weight:800;color:#6fa8ff;border-bottom:1px solid rgba(255,255,255,.1)">🛰️ Space Station</div><canvas id="ws-stncv" width="440" height="230" style="width:100%;display:block"></canvas><div id="ws-stninfo" style="padding:8px 14px;font-size:12px"></div><div id="ws-stnlist" style="overflow-y:auto"></div></div></div>
       <div id="ws-load" onclick="if(event.target===this)this.style.display='none'"><div class="box"><div style="padding:12px 14px;font-weight:800;color:#ffa03c;border-bottom:1px solid rgba(255,255,255,.1)">📂 Your saved builds</div><div id="ws-saves" style="overflow-y:auto"></div></div></div>
     </div>
@@ -13269,7 +13270,7 @@ function addLink(a,b,k,wx,wy,qx,qy){
 function place(t,x,y,a){
   if(S.parts.length>=250){toast('Part limit reached (250)');return null}
   var p={id:S.nid++,t:t,x:x,y:y,a:a};
-  if(t==='capsule'){var used=crewInRockets(),cc=CR.crew.filter(function(c){return !c.stationed&&!used[c.id]})[0];
+  if(t==='capsule'){var used=crewInRockets(),cc=CR.crew.filter(function(c){return !c.stationed&&!c.base&&!used[c.id]})[0];
     if(!cc){toast('No free crew — hire more in 👩‍🚀 Crew');return null}p.crew=cc.id;toast(face(cc)+' '+cc.name+' boards the capsule')}
   var d=PD[t];
   if(d.shape==='box'||d.shape==='circle'){ // keep above ground visually only; physics decides
@@ -13302,7 +13303,7 @@ var STN=[{k:'hab',n:'Habitat',i:'🏠',cost:100,lvl:1,inc:1},{k:'solar',n:'Solar
 var MISSION=[[50,100],[120,250],[250,500],[400,800],[700,1500],[1000,3000]];
 var CR={credits:150,crew:[],station:[],nid:1,last:Date.now()};
 function loadCrew(){try{var o=JSON.parse(localStorage.getItem('ares_ws_crew')||'null');if(o&&o.crew)CR=o}catch(e){}
-  if(!CR.crew.length){newCrew('pilot','Ava');newCrew('engineer','Kai')}CR.last=CR.last||Date.now()}
+  CR.bases=CR.bases||{};CR.best=CR.best||0;if(!CR.crew.length){newCrew('pilot','Ava');newCrew('engineer','Kai')}CR.last=CR.last||Date.now()}
 function saveCrew(){try{localStorage.setItem('ares_ws_crew',JSON.stringify(CR))}catch(e){}}
 function newCrew(role,name){var c={id:CR.nid++,name:name||NAMES[Math.floor(Math.random()*NAMES.length)],role:role||['pilot','engineer','scientist'][Math.floor(Math.random()*3)],xp:0,visited:false,stationed:false};CR.crew.push(c);return c}
 function crewById(id){for(var i=0;i<CR.crew.length;i++)if(CR.crew[i].id===id)return CR.crew[i];return null}
@@ -13311,7 +13312,7 @@ function face(c){return c.id%2?'👩‍🚀':'👨‍🚀'}
 function stnRate(){return CR.station.reduce(function(t,m){return t+STN.filter(function(x){return x.k===m.k})[0].inc},0)}
 function maxStnLvl(){return CR.crew.filter(function(c){return c.stationed}).reduce(function(m,c){return Math.max(m,clvl(c))},0)}
 function tickEco(){var now=Date.now(),dt=Math.min(1440,(now-(CR.last||now))/60000);if(dt<.02)return;CR.last=now;
-  if(CR.station.length){CR.credits+=dt*stnRate();CR.crew.forEach(function(c){if(c.stationed)c.xp+=dt*2})}saveCrew();updCredits()}
+  if(CR.station.length){CR.credits+=dt*stnRate();CR.crew.forEach(function(c){if(c.stationed)c.xp+=dt*2})}CR.credits+=dt*baseRate();CR.crew.forEach(function(c){if(c.base)c.xp+=dt*3});saveCrew();updCredits()}
 function updCredits(){var e=$('ws-credits');if(e)e.textContent='💰 '+Math.floor(CR.credits)}
 function crewInRockets(){var ids={};S.parts.forEach(function(p){if(p.t==='capsule'&&p.crew)ids[p.crew]=1});return ids}
 function missionReward(){
@@ -13326,8 +13327,8 @@ function renderCrew(){var inR=crewInRockets(),el=$('ws-crewlist');
   el.innerHTML=CR.crew.map(function(c){var L=clvl(c),lo=40*(L-1)*(L-1),hi=40*L*L,pc=Math.round((c.xp-lo)/(hi-lo)*100),R=ROLES[c.role];
     return '<div class="ws-saverow" style="align-items:flex-start"><div style="font-size:30px">'+face(c)+'</div><div style="flex:1"><b>'+_esc(c.name)+'</b> · '+R.i+' '+R.n+' · <span style="color:#ffa03c">Lv '+L+'</span>'
       +'<div style="height:6px;border-radius:3px;background:rgba(255,255,255,.12);margin:4px 0"><div style="height:100%;width:'+pc+'%;background:#ffa03c;border-radius:3px"></div></div>'
-      +'<div style="font-size:10.5px;opacity:.6">'+R.d+(inR[c.id]?' · 🚀 on your rocket':'')+(c.stationed?' · 🛰️ on station':'')+(c.visited&&!c.stationed?' · ✅ been to space':'')+'</div></div>'
-      +'<div style="display:flex;flex-direction:column;gap:4px"><button data-t="'+c.id+'">Train 💰'+(50*L)+'</button>'+(c.stationed?'<button data-r="'+c.id+'">Recall</button>':(c.visited?'<button data-s="'+c.id+'">To station</button>':''))+'</div></div>'}).join('')
+      +'<div style="font-size:10.5px;opacity:.6">'+R.d+(inR[c.id]?' · 🚀 on your rocket':'')+(c.stationed?' · 🛰️ on station':'')+(c.base?' · 🏗️ at '+bodyOf(c.base).n+' base':'')+(c.visited&&!c.stationed?' · ✅ been to space':'')+'</div></div>'
+      +'<div style="display:flex;flex-direction:column;gap:4px"><button data-t="'+c.id+'">Train 💰'+(50*L)+'</button>'+(c.stationed?'<button data-r="'+c.id+'">Recall</button>':(c.visited&&!c.base?'<button data-s="'+c.id+'">To station</button>':''))+'</div></div>'}).join('')
     +'<div style="padding:10px 12px"><button id="ws-hire" style="width:100%;padding:9px;border-radius:9px;background:#ffa03c;border:none;color:#111;font-weight:800;cursor:pointer">➕ Hire crew member · 💰'+(150+100*(CR.crew.length-2<0?0:CR.crew.length-2))+'</button></div>';
   $('ws-crewcr').textContent='💰 '+Math.floor(CR.credits);
   el.querySelectorAll('button[data-t]').forEach(function(b){b.onclick=function(){var c=crewById(+b.dataset.t),cost=50*clvl(c);if(CR.credits<cost){toast('Not enough credits');return}CR.credits-=cost;var o=clvl(c);c.xp+=40;saveCrew();updCredits();renderCrew();if(clvl(c)>o)toast(face(c)+' '+c.name+' leveled up to '+clvl(c)+'!')}});
@@ -13356,6 +13357,57 @@ function drawStation(){var cv2=$('ws-stncv'),c=cv2.getContext('2d'),W_=cv2.width
     if(m.k==='solar'){c.fillStyle='#2f6fd8';c.fillRect(x-34,y-5,16,10);c.fillRect(x+18,y-5,16,10)}});
   c.restore();
   if(!CR.station.length){c.fillStyle='rgba(255,255,255,.7)';c.font='13px sans-serif';c.textAlign='center';c.fillText('Your station is empty — send a crew member to orbit, then build!',W_/2,H_-18)}}
+
+// ── space map & planetary bases ─────────────────────
+var BODIES=[{k:'earth',n:'Earth',i:'🌍',alt:0,lv:5,r:15,c:'#3d8bff',x:.04,mult:0},{k:'moon',n:'Moon',i:'🌙',alt:14000,lv:6,r:9,c:'#cfcfd6',x:.22,mult:1},{k:'mars',n:'Mars',i:'🔴',alt:40000,lv:7,r:11,c:'#e0613a',x:.42,mult:1.6},
+ {k:'jup',n:'Jupiter',i:'🪐',alt:90000,lv:8,r:17,c:'#e3b983',x:.62,mult:2.5},{k:'prox',n:'Proxima Centauri',i:'⭐',alt:200000,lv:9,r:13,c:'#ffd96a',x:.81,mult:4},{k:'rift',n:'The Rift',i:'🌀',alt:400000,lv:10,r:14,c:'#b57cff',x:.96,mult:7}];
+var BM=[{k:'dome',n:'Habitat dome',i:'🏠',cost:150,lvl:1,inc:2},{k:'mine',n:'Mining rig',i:'⛏️',cost:250,lvl:2,inc:4},{k:'lab',n:'Research lab',i:'🔬',cost:400,lvl:3,inc:6},{k:'pad',n:'Launch pad',i:'🛰️',cost:600,lvl:4,inc:9},{k:'core',n:'Power core',i:'⚛️',cost:1000,lvl:6,inc:16}];
+function bodyOf(k){for(var i=0;i<BODIES.length;i++)if(BODIES[i].k===k)return BODIES[i];return BODIES[0]}
+function bodyUnlocked(b){return b.k==='earth'||(CR.best||0)>=b.alt*.97}
+function baseMods(k){return (CR.bases&&CR.bases[k])||[]}
+function baseCrew(k){return CR.crew.filter(function(c){return c.base===k})}
+function baseRate(){var t=0;BODIES.forEach(function(b){baseMods(b.k).forEach(function(m){var d=BM.filter(function(x){return x.k===m.k})[0];if(d)t+=d.inc*b.mult})});return t}
+var mapSel='moon',mapRaf=0;
+function altToX(a){for(var i=1;i<BODIES.length;i++)if(a<=BODIES[i].alt)return BODIES[i-1].x+(BODIES[i].x-BODIES[i-1].x)*Math.max(0,(a-BODIES[i-1].alt)/(BODIES[i].alt-BODIES[i-1].alt));return 1}
+window.wsMapOpen=function(){tickEco();if(!bodyUnlocked(bodyOf(mapSel)))mapSel=BODIES.filter(bodyUnlocked).slice(-1)[0].k==='earth'?'moon':mapSel;renderMap();$('ws-mapm').style.display='flex';cancelAnimationFrame(mapRaf);(function lp(){if($('ws-mapm').style.display!=='flex')return;drawMap();mapRaf=requestAnimationFrame(lp)})()};
+window.wsMapClose=function(){$('ws-mapm').style.display='none'};
+function mapCur(){return S.sim?Math.max(0,S.sim.alt||0):(CR.best||0)}
+function drawMap(){var cv2=$('ws-mapcv'),c=cv2.getContext('2d'),W_=cv2.width,H_=cv2.height,t=performance.now()/1000;
+  c.fillStyle='#02030c';c.fillRect(0,0,W_,H_);c.fillStyle='#fff';for(var i=0;i<90;i++){c.globalAlpha=.25+(i%5)*.12;c.fillRect((i*131)%W_,(i*53)%H_,1.2,1.2)}c.globalAlpha=1;
+  var pad=34,span=W_-pad*2,cy=H_/2+6;function px(x){return pad+x*span}function py(x){return cy+Math.sin(x*6.3)*26}
+  c.lineWidth=2;for(var j=0;j<BODIES.length-1;j++){var a=BODIES[j],b=BODIES[j+1];c.strokeStyle=bodyUnlocked(b)?'rgba(111,168,255,.85)':'rgba(255,255,255,.18)';c.setLineDash(bodyUnlocked(b)?[]:[5,5]);c.beginPath();c.moveTo(px(a.x),py(a.x));
+    for(var q=1;q<=12;q++){var xx=a.x+(b.x-a.x)*q/12;c.lineTo(px(xx),py(xx))}c.stroke()}c.setLineDash([]);
+  BODIES.forEach(function(b){var u=bodyUnlocked(b),x=px(b.x),y=py(b.x),sel=b.k===mapSel;c.globalAlpha=u?1:.4;
+    var g=c.createRadialGradient(x-b.r*.3,y-b.r*.3,1,x,y,b.r);g.addColorStop(0,'#fff');g.addColorStop(.3,b.c);g.addColorStop(1,'#111');c.fillStyle=g;c.beginPath();c.arc(x,y,b.r,0,7);c.fill();
+    if(b.k==='jup'){c.strokeStyle='rgba(120,70,30,.5)';c.lineWidth=2;c.beginPath();c.moveTo(x-b.r+3,y-3);c.lineTo(x+b.r-3,y-3);c.moveTo(x-b.r+2,y+4);c.lineTo(x+b.r-2,y+4);c.stroke()}
+    if(sel){c.strokeStyle='#ffa03c';c.lineWidth=2;c.beginPath();c.arc(x,y,b.r+6+Math.sin(t*4)*1.5,0,7);c.stroke()}
+    var nb=baseMods(b.k).length;c.globalAlpha=1;c.fillStyle='#fff';c.font='10px sans-serif';c.textAlign='center';c.fillText(b.n.replace('Proxima Centauri','Proxima'),x,y+b.r+14);
+    if(!u){c.fillText('🔒',x,y+4)}else if(b.k!=='earth'&&nb){c.fillStyle='#7dff9f';c.fillText('🏗️'+nb,x,y-b.r-6)}});
+  var rx=px(altToX(mapCur())),ry=py(altToX(mapCur()));c.font='18px sans-serif';c.textAlign='center';c.fillText('🚀',rx,ry-12+Math.sin(t*5)*1.5);
+  c.fillStyle='rgba(255,255,255,.55)';c.font='10px sans-serif';c.textAlign='left';c.fillText('Tap a world · 🚀 = '+(S.sim?'your rocket now':'furthest you have flown'),8,H_-6)}
+function renderMap(){var b=bodyOf(mapSel),u=bodyUnlocked(b),el=$('ws-mapinfo'),h='<div style="padding:8px 14px;font-size:13px"><b style="font-size:15px">'+b.i+' '+b.n+'</b> ';
+  if(b.k==='earth'){h+='· your home world. Orbit station: '+CR.station.length+' module(s).</div><div style="padding:0 14px 10px"><button class="ws-mb" onclick="wsMapClose();wsStationOpen()">🛰️ Open space station</button></div>';$('ws-mapinfo').innerHTML=h;wireMap();return}
+  if(!u){h+='· 🔒 not reached yet.<div style="font-size:11.5px;opacity:.7;margin-top:3px">Fly past altitude '+Math.round(b.alt*.97)+' (best so far: '+Math.floor(CR.best||0)+') to unlock a base here. Tip: pick the <b>'+LEVELS[b.lv].n+'</b> level.</div></div><div style="padding:0 14px 10px"><button class="ws-mb" data-lv="'+b.lv+'">🚀 Set course: '+LEVELS[b.lv].n+'</button></div>';el.innerHTML=h;wireMap();return}
+  var crew=baseCrew(b.k),cap=2+2*crew.length,mods=baseMods(b.k),top=crew.reduce(function(m,c){return Math.max(m,clvl(c))},0);
+  h+='· ✅ reached ·  <span style="opacity:.8">income ×'+b.mult+'</span><div style="font-size:11.5px;margin-top:4px">🏗️ <b>'+mods.length+'/'+cap+'</b> modules · 💰 +'+mods.reduce(function(t,m){return t+BM.filter(function(x){return x.k===m.k})[0].inc*b.mult},0).toFixed(1)+'/min · crew here: '+crew.length+' · top level '+top+'</div></div>';
+  h+='<div style="padding:0 14px 6px;font-size:11px;opacity:.65">Base crew</div><div style="padding:0 14px;display:flex;flex-wrap:wrap;gap:6px">'+(crew.length?crew.map(function(c){return '<span style="background:rgba(255,255,255,.08);border-radius:8px;padding:4px 8px;font-size:12px">'+face(c)+' '+_esc(c.name)+' Lv'+clvl(c)+' <a data-rc="'+c.id+'" style="cursor:pointer;color:#6fa8ff">recall</a></span>'}).join(''):'<span style="font-size:12px;opacity:.6">Nobody yet — send someone who has been to space.</span>')+'</div>';
+  var avail=CR.crew.filter(function(c){return c.visited&&!c.stationed&&!c.base});
+  h+='<div style="padding:6px 14px;display:flex;flex-wrap:wrap;gap:6px">'+(avail.length?avail.map(function(c){return '<button class="ws-mb" data-sd="'+c.id+'">'+face(c)+' Send '+_esc(c.name)+'</button>'}).join(''):'<span style="font-size:11.5px;opacity:.55">No crew available to send — fly a 🧑‍🚀 capsule crew to space first.</span>')+'</div>';
+  h+='<div style="padding:4px 14px 2px;font-size:11px;opacity:.65">Build modules</div>'+BM.map(function(m){var ok=top>=m.lvl&&mods.length<cap&&CR.credits>=m.cost;return '<div class="ws-saverow"><div style="font-size:22px">'+m.i+'</div><div style="flex:1"><b>'+m.n+'</b><div style="font-size:10.5px;opacity:.6">Needs crew Lv '+m.lvl+' · +'+(m.inc*b.mult).toFixed(1)+' 💰/min</div></div><button data-bm="'+m.k+'" style="opacity:'+(ok?1:.45)+'">Build 💰'+m.cost+'</button></div>'}).join('');
+  h+='<div style="padding:8px 14px 12px"><button class="ws-mb" data-lv="'+b.lv+'">🚀 Fly to '+b.n+' again</button></div>';el.innerHTML=h;wireMap()}
+function wireMap(){var el=$('ws-mapinfo'),b=bodyOf(mapSel);
+  el.querySelectorAll('[data-lv]').forEach(function(x){x.onclick=function(){wsLevel(+x.dataset.lv);wsMapClose();toast('Course set: '+LEVELS[S.level].n+' — press ▶ Play')}});
+  el.querySelectorAll('[data-rc]').forEach(function(x){x.onclick=function(){crewById(+x.dataset.rc).base=null;saveCrew();renderMap()}});
+  el.querySelectorAll('[data-sd]').forEach(function(x){x.onclick=function(){var c=crewById(+x.dataset.sd);c.base=b.k;S.parts.forEach(function(p){if(p.crew===c.id)delete p.crew});saveCrew();autosave();renderMap();toast('🏗️ '+c.name+' moved to the '+b.n+' base')}});
+  el.querySelectorAll('[data-bm]').forEach(function(x){x.onclick=function(){var m=BM.filter(function(d){return d.k===x.dataset.bm})[0],crew=baseCrew(b.k),cap=2+2*crew.length,mods=baseMods(b.k),top=crew.reduce(function(t,c){return Math.max(t,clvl(c))},0);
+    if(!crew.length){toast('Send a crew member to the '+b.n+' base first');return}if(top<m.lvl){toast('A base crew member needs level '+m.lvl);return}if(mods.length>=cap){toast('Base full — send more crew for more room');return}if(CR.credits<m.cost){toast('Not enough credits');return}
+    CR.credits-=m.cost;(CR.bases[b.k]=CR.bases[b.k]||[]).push({k:m.k});saveCrew();updCredits();renderMap();toast('🏗️ Built '+m.n+' on '+b.n+'!')}})}
+document.addEventListener('click',function(e){var c=e.target;if(c&&c.id==='ws-mapcv'){var r=c.getBoundingClientRect(),mx=(e.clientX-r.left)/r.width*c.width,my=(e.clientY-r.top)/r.height*c.height,best=null,bd=1e9;
+  BODIES.forEach(function(b){var x=34+b.x*(c.width-68),y=c.height/2+6+Math.sin(b.x*6.3)*26,d=Math.hypot(mx-x,my-y);if(d<bd){bd=d;best=b}});if(best&&bd<42){mapSel=best.k;renderMap()}}});
+function drawMini(){if(!S.sim||!LEVELS[S.level].space||(S.sim.alt||0)<5000)return;var dpr=window.devicePixelRatio||1,W_=cv.clientWidth,c=cx;c.setTransform(dpr,0,0,dpr,0,0);
+  var w=Math.min(250,W_-24),x0=W_-w-12,y0=44;c.fillStyle='rgba(0,0,0,.45)';c.fillRect(x0-6,y0-16,w+12,38);c.strokeStyle='rgba(111,168,255,.6)';c.lineWidth=2;c.beginPath();c.moveTo(x0,y0+6);c.lineTo(x0+w,y0+6);c.stroke();
+  BODIES.forEach(function(b){var x=x0+b.x*w;c.font='13px sans-serif';c.textAlign='center';c.globalAlpha=bodyUnlocked(b)?1:.45;c.fillText(b.i,x,y0+4)});c.globalAlpha=1;
+  var rx=x0+altToX(S.sim.alt||0)*w;c.fillStyle='#ffa03c';c.beginPath();c.moveTo(rx,y0+10);c.lineTo(rx-4,y0+19);c.lineTo(rx+4,y0+19);c.fill();c.fillStyle='rgba(255,255,255,.6)';c.font='9px sans-serif';c.fillText('N = space map',x0+w/2,y0+30)}
 // ── persistence ─────────────────────────
 function snapshot(){return{v:1,level:S.level,parts:S.parts,links:S.links,nid:S.nid}}
 function applySnap(o){S.parts=o.parts||[];S.links=o.links||[];S.nid=o.nid||(S.parts.reduce(function(m,p){return Math.max(m,p.id)},0)+1);if(typeof o.level==='number')setLevel(o.level,true)}
@@ -13409,7 +13461,7 @@ function startSim(){
   S.sim={eng:eng,bodies:bodies,cons:cons,t:0,thrust:0,maxX:-1e9,sh:{},boost:boost,pilot:pilot,caps:caps};
   S.mode='play';S.done=false;S.first=null;S.t0=performance.now();updHud();syncUi()
 }
-function stopSim(){S.sim=null;S.mode='build';fx=[];updHud();syncUi()}
+function stopSim(){try{if(S.sim&&S.sim.maxAlt>CR.best)CR.best=S.sim.maxAlt;saveCrew()}catch(e){}S.sim=null;S.mode='build';fx=[];updHud();syncUi()}
 function stepSim(){
   var sm=S.sim;if(!sm)return;var k=S.keys,dir=(k.ArrowRight||k.d?1:0)-(k.ArrowLeft||k.a?1:0),brake=k.ArrowDown||k.s,go=k[' ']||k.ArrowUp||k.w;
   if(S.pad){dir=S.pad.dir||dir;go=go||S.pad.go}
@@ -13422,10 +13474,10 @@ function stepSim(){
     else if(m==='thruster'&&go){var f=rotp(0,-.032*sm.boost,b.angle);Bd.applyForce(b,b.position,f);if(Math.random()<.7)fx.push({x:b.position.x-f.x*600,y:b.position.y-f.y*600,vx:-f.x*400+(Math.random()-.5)*2,vy:-f.y*400+(Math.random()-.5)*2,l:14})}}
   var ay=0,nb=0,sp=0;for(var i3 in sm.bodies){var q3=sm.bodies[i3];ay+=q3.position.y;nb++;sp+=Math.hypot(q3.velocity.x,q3.velocity.y)}
   ay=nb?-ay/nb:0;sm.alt=ay;sm.speed=nb?sp/nb:0;
-  sm.maxAlt=Math.max(sm.maxAlt||0,ay);
+  sm.maxAlt=Math.max(sm.maxAlt||0,ay);if(ay>CR.best){CR.best=ay;if(sm.t%90===0)saveCrew()}
   var lowest=1e9;for(var i5 in sm.bodies)lowest=Math.min(lowest,-sm.bodies[i5].position.y);
   if(sm.maxAlt>800&&lowest<90&&sm.speed<1.4&&!sm.landed&&sm.t>60){sm.landed=true;banner('🛬 Touchdown! Safe landing','Your build came back in one piece (+💰100)');CR.credits+=100;saveCrew();updCredits()}
-  MILES.forEach(function(m){if(ay>=m.a&&!sm.sh['m'+m.a]){sm.sh['m'+m.a]=1;banner(m.t,m.s)}});
+  MILES.forEach(function(m){if(ay>=m.a&&!sm.sh['m'+m.a]){sm.sh['m'+m.a]=1;banner(m.t,m.s);if(m.a===6000){var mb=$('ws-mapbtn');if(mb){mb.classList.add('pulse');setTimeout(function(){mb.classList.remove('pulse')},12000)}setTimeout(function(){toast('🗺️ Space map unlocked — tap 🗺️ Map or press N')},3300)}}});
   sm.eng.gravity.scale=.001*Math.max(0,1-Math.max(0,ay)/(LEVELS[S.level].space?9000:1e9));
   var thin=Math.max(0,1-Math.max(0,ay)/4000);
   for(var i4 in sm.bodies){var q4=sm.bodies[i4];if(q4.plugin.mat!=='balloon')q4.frictionAir=.01*thin;
@@ -13535,7 +13587,7 @@ function frame(t){
     var elapsed=((performance.now()-S.t0)/1000).toFixed(1);var h=$('ws-stats'),lv=LEVELS[S.level];if(h){if(!S.sim)h.textContent='';else if(lv.goal.t==='h'){var fr=Math.max(0,Math.min(1,(S.sim.alt||0)/lv.goal.v));h.textContent='⏱ '+elapsed+'s · 🚀 '+Math.round(fr*100)+'% · '+(lv.rift?'toward the rift':fmtKm(lv.km*fr,lv))}else h.textContent='⏱ '+elapsed+'s · 📏 '+Math.max(0,Math.round(S.sim.maxX/10))+' m'}
     if(lv.space&&S.sim){var sk=S.sim.speed||0;S.cam.z+=(Math.max(.2,Math.min(1,1/(1+sk/14)))-S.cam.z)*.05}}
   else acc=0;
-  draw();
+  draw();drawMini();
 }
 // ── input ──────────────────────────────
 function pdown(e){
@@ -13557,7 +13609,8 @@ function pmove(e){var r=cv.getBoundingClientRect();S.ptr.x=e.clientX-r.left;S.pt
 function pup(){if(S.drag){autosave();S.drag=null}S.pan=null}
 function wheel(e){e.preventDefault();var w=s2w(e.offsetX,e.offsetY),z=S.cam.z*(e.deltaY<0?1.1:.9);z=Math.max(.2,Math.min(3,z));S.cam.z=z;var w2=s2w(e.offsetX,e.offsetY);S.cam.x+=w.x-w2.x;S.cam.y+=w.y-w2.y}
 function kd(e){if(!open)return;var k=e.key.length===1?e.key.toLowerCase():e.key;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].indexOf(k)>-1)e.preventDefault();
-  if(k==='Escape'){if(S.first){S.first=null}else if(S.sel)S.sel=null;return}
+  if(k==='n'){var mm=$('ws-mapm');if(mm&&mm.style.display==='flex')wsMapClose();else wsMapOpen();return}
+  if(k==='Escape'){var mm2=$('ws-mapm');if(mm2&&mm2.style.display==='flex'){wsMapClose();return}if(S.first){S.first=null}else if(S.sel)S.sel=null;return}
   S.keys[k]=true;
   if(S.mode==='build'){if(k==='r'){if(S.sel){S.sel.a+=e.shiftKey?-deg(15):deg(15);autosave()}else S.rot+=e.shiftKey?-deg(15):deg(15)}
     if((k==='Delete'||k==='Backspace')&&S.sel){removePart(S.sel);S.sel=null;updHud()}}
