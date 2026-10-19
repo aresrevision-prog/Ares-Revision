@@ -12719,7 +12719,7 @@ function _aresUpdateArenaButton(){
 #ws-load .box{background:#140d05;border:1.5px solid #ffa03c;border-radius:14px;max-width:420px;width:100%;max-height:75vh;display:flex;flex-direction:column}
 .ws-saverow{display:flex;gap:8px;align-items:center;padding:9px 12px;border-bottom:1px solid rgba(255,255,255,.08)}
 .ws-saverow button{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#fff;border-radius:7px;padding:5px 11px;cursor:pointer}
-@media(max-width:640px){#ws-tools{width:112px;padding:4px 3px}#ws-tools button span{font-size:19px}#ws-hint{display:none}}
+@media(max-width:640px){#ws-hud .ws-d{display:none}#ws-pad2{right:auto;left:50%;transform:translateX(-50%);bottom:74px}#ws-pad{bottom:6px}#ws-hud{font-size:11px;padding:4px 8px}#ws-stats{font-size:10px;max-width:58%}#ws-tools{width:112px;padding:4px 3px}#ws-tools button span{font-size:19px}#ws-hint{display:none}}
 </style>
 <div id="workshop-overlay" style="display:none;position:fixed;inset:0;z-index:99500;background:#0b1220;flex-direction:column;">
   <div class="ws-top">
@@ -13424,19 +13424,20 @@ function worldStep(sm,k,dir,brake,go0){
   var wn=worldNear(cxm,cym);sm.cx=cxm;sm.cy=cym;sm.near=wn.pl;sm.alt=wn.h;sm.speed=Math.hypot(vxm,vym);sm.maxH=Math.max(sm.maxH,wn.pl.k==='earth'?wn.h:sm.maxH);
   var q=k.q,e=k.e,manual=go0||dir||brake||q||e,go=go0,apTheta=null,thr=1,capv=60*(warp?2.2:1);sm.ap=false;
   if(S.nav&&S.target&&!manual&&!sm.failed&&F>0&&ref){var tp=planetBy(S.target),dx=tp.x-cxm,dy=tp.y-cym,d=Math.hypot(dx,dy)||1,nx=dx/d,ny=dy/d,Rt=tp.portal?tp.R*.3:tp.R,h=d-Rt,A=F/Mt*DT2,gg=wGrav(cxm,cym),gpx=gg.x*DT2,gpy=gg.y*DT2,gT=Math.max(0,gpx*nx+gpy*ny),bd=Math.max(A*.25,A-gT),cap=capv*.9;
-    var vd=tp.portal?cap:Math.min(cap,.55*Math.sqrt(2*bd*Math.max(h-30-sm.speed*45,0))+.6);if(!tp.portal&&h<45)vd=.4;
+    var vd=tp.portal?cap:Math.min(cap,.55*Math.sqrt(2*bd*Math.max(h-30-sm.speed*80,0))+.6);if(!tp.portal){vd=Math.min(vd,.5+Math.max(0,h)*.02);if(h<45)vd=.4}
     var avx=0,avy=0;WORLD.forEach(function(P){if(P===tp||P.portal)return;var px_=P.x-cxm,py_=P.y-cym,al=px_*nx+py_*ny;if(al<0||al>d)return;var qx=px_-nx*al,qy=py_-ny*al,pr=Math.hypot(qx,qy),lim=P.R*1.6+3000;if(pr<lim){var ox_=-qx,oy_=-qy,L=Math.hypot(ox_,oy_);if(L<1){ox_=-ny;oy_=nx;L=1}var wg=(1-pr/lim)*2;avx+=ox_/L*wg;avy+=oy_/L*wg}});
     var dxn=nx+avx,dyn=ny+avy,dl=Math.hypot(dxn,dyn)||1;dxn/=dl;dyn/=dl;
-    var adx=(dxn*vd-vxm)*.12-gpx,ady=(dyn*vd-vym)*.12-gpy,am=Math.hypot(adx,ady);apTheta=Math.atan2(adx,-ady);thr=Math.min(1,am/A);sm.ap=true}
+    var adx=(dxn*vd-vxm)*.12-gpx,ady=(dyn*vd-vym)*.12-gpy,am=Math.hypot(adx,ady);apTheta=Math.atan2(adx,-ady);if(!tp.portal&&h<700){apTheta=Math.atan2(-nx,ny)}var ac=Math.min(am,A*.95);sm.apA={x:adx/(am||1)*ac,y:ady/(am||1)*ac};thr=am/A;sm.ap=true}
   var wav=0;bs.forEach(function(b){wav+=b.angularVelocity});wav/=n;var wt=0,act=false;
-  if(apTheta!==null){var dth=apTheta-ref.angle;dth=Math.atan2(Math.sin(dth),Math.cos(dth));wt=Math.max(-.035,Math.min(.035,dth*.06));act=true;go=Math.abs(dth)<.5&&Math.random()<thr}
+  if(apTheta!==null){var dth=apTheta-ref.angle;dth=Math.atan2(Math.sin(dth),Math.cos(dth));wt=Math.max(-.06,Math.min(.06,dth*.08));act=true;go=thr>.08}
   else if(dir){wt=dir*.03;act=true}
   var dw=(wt-wav)*(act?.3:.12);if(Math.abs(dw)>1e-5)bs.forEach(function(b){Bd.setAngularVelocity(b,b.angularVelocity+dw);var rx=b.position.x-cxm,ry=b.position.y-cym;Bd.setVelocity(b,{x:b.velocity.x-dw*ry,y:b.velocity.y+dw*rx})});
   sm.thrust=go?1:0;
   all.forEach(function(i){var b=sm.bodies[i],m=b.plugin.mat;b.plugin.firing=false;if(m!=='engine'&&m!=='thruster'&&m!=='warp')return;if(b.plugin.dead)return;
     var g=b.plugin.grp,on=g==='U'?go:g==='D'?brake:g==='L'?q:e;if(!on)return;
-    var mag=(m==='engine'?.06:m==='warp'?.12:.032)*sm.boost,ff=rotp(0,-mag,b.angle);Bd.applyForce(b,b.position,ff);b.plugin.firing=true;
+    var mag=(m==='engine'?.06:m==='warp'?.12:.032)*sm.boost,ff=rotp(0,-mag,b.angle);if(!sm.ap)Bd.applyForce(b,b.position,ff);b.plugin.firing=true;
     for(var z=0;z<(m==='thruster'?1:2);z++)fx.push({x:b.position.x-ff.x*(m==='thruster'?600:500)+(Math.random()-.5)*6,y:b.position.y-ff.y*(m==='thruster'?600:500)+(Math.random()-.5)*6,vx:-ff.x*300+(Math.random()-.5)*3,vy:-ff.y*300+(Math.random()-.5)*3,l:15,w:m==='warp'})});
+  if(sm.ap&&sm.apA)bs.forEach(function(b){Bd.applyForce(b,b.position,{x:sm.apA.x*b.mass/DT2,y:sm.apA.y*b.mass/DT2})});
   // gravity, air, speed cap, collisions
   all.forEach(function(i){var b=sm.bodies[i],px=b.position.x,py=b.position.y,g=wGrav(px,py);Bd.applyForce(b,b.position,{x:b.mass*g.x,y:b.mass*g.y});
     var nb=worldNear(px,py),dens=0;if(nb.atmH&&nb.h<nb.atmH)dens=nb.pl.atm*Math.pow(1-Math.max(0,nb.h)/nb.atmH,2);b.plugin.dens=dens;
@@ -13447,7 +13448,7 @@ function worldStep(sm,k,dir,brake,go0){
     var P=nb.pl,r=nb.h+P.R;
     if(P.hot&&r<P.R*1.03)failMission(sm,'🔥 Your ship melted','Don’t fly into a star — resetting…');
     else if(P.gas&&r<P.R*.94)failMission(sm,'🪐 Crushed by Jupiter','No surface here, just crushing pressure — resetting…');
-    else if(P.land&&r<P.R-6){var ux=(px-P.x)/r,uy=(py-P.y)/r;Bd.setPosition(b,{x:P.x+ux*(P.R+1),y:P.y+uy*(P.R+1)});var vn=b.velocity.x*ux+b.velocity.y*uy;if(vn<0)Bd.setVelocity(b,{x:b.velocity.x-ux*vn,y:b.velocity.y-uy*vn})}});
+    else if(P.land&&r<P.R-6){var ux=(px-P.x)/r,uy=(py-P.y)/r;Bd.setPosition(b,{x:P.x+ux*(P.R+1),y:P.y+uy*(P.R+1)});var vn=b.velocity.x*ux+b.velocity.y*uy;if(vn<-9)failMission(sm,'💥 Crashed into '+P.n,'Too fast — resetting…');if(vn<0)Bd.setVelocity(b,{x:b.velocity.x-ux*vn,y:b.velocity.y-uy*vn})}});
   // zone banners
   var zone=wn.pl.atmH?wn.pl.atmH:wn.pl.R*1.5;if(!wn.pl.hot&&wn.h<zone&&sm.zone!==wn.pl.k&&sm.t>60){sm.zone=wn.pl.k;banner('🌐 Entering '+wn.pl.n+'’s '+(wn.pl.atmH?'atmosphere':'orbit'),wn.pl.atmH?'Air resistance — parachutes work here (C)':'No air — brake with your engines')}
   else if(sm.zone&&wn.pl.k!==sm.zone||(sm.zone&&wn.h>zone*1.6)){if(sm.zone!==wn.pl.k||wn.h>zone*1.6){var zp=planetBy(sm.zone);if(zp&&sm.t>60)banner('🚀 You have left '+zp.n+'’s '+(zp.atmH?'atmosphere':'orbit'),'Deep space — click a planet to auto-fly');sm.zone=null}}
@@ -13471,11 +13472,11 @@ function drawWorld(c,z,W_,H_){var tm=performance.now()/1000,sm=S.sim,vw=Math.hyp
       if(P.k==='earth'){var land=[[-2.5,-.62],[.9,1.6]];land.forEach(function(L,ix){var a0=ix?L[0]:-2.45,a1=ix?L[1]:-.69;c.fillStyle='#8a6a3a';c.beginPath();c.arc(x,y,R,a0,a1);c.arc(x,y,R*.88,a1,a0,true);c.closePath();c.fill();c.strokeStyle='#4caf50';c.lineWidth=Math.max(10,12);c.beginPath();c.arc(x,y,R-4,a0,a1);c.stroke()})}
       else if(P.gas){c.save();c.beginPath();c.arc(x,y,R,0,7);c.clip();for(var b=-7;b<=7;b++){c.fillStyle='rgba(120,70,30,'+(.12+(b&1)*.1)+')';c.fillRect(x-R,y+b*R*.13,R*2,R*.065)}c.fillStyle='rgba(190,70,40,.7)';c.beginPath();c.ellipse(x+R*.3,y+R*.25,R*.16,R*.09,0,0,7);c.fill();c.restore()}
       else{c.save();c.beginPath();c.arc(x,y,R,0,7);c.clip();c.fillStyle='rgba(0,0,0,.14)';[[.2,.1,.12],[-.3,.3,.09],[.4,.4,.07],[-.1,-.3,.1],[.1,-.6,.08],[-.5,-.1,.07]].forEach(function(q){c.beginPath();c.arc(x+q[0]*R,y+q[1]*R,q[2]*R,0,7);c.fill()});c.restore();c.strokeStyle='rgba(255,255,255,.35)';c.lineWidth=Math.max(6,6/z);c.beginPath();c.arc(x,y,R-3,0,7);c.stroke()}}
-    c.fillStyle='#fff';c.font='bold '+Math.max(15/z,R*.1)+'px sans-serif';c.textAlign='center';c.fillText(P.i+' '+P.n,x,y-R-Math.max(24/z,R*.07)-(P.atmH||0)*.2);c.textAlign='left';
+    c.fillStyle='#fff';c.font='bold '+Math.min(Math.max(15/z,R*.1),46/z)+'px sans-serif';c.textAlign='center';c.fillText(P.i+' '+P.n,x,y-R-Math.max(24/z,R*.07)-(P.atmH||0)*.2);c.textAlign='left';
     if(S.target===P.k){c.strokeStyle='#ffa03c';c.lineWidth=Math.max(4,4/z);c.setLineDash([Math.max(14,20/z),Math.max(14,20/z)]);c.beginPath();c.arc(x,y,R*1.12+(P.atmH||0)*.3+Math.sin(tm*3)*R*.01,0,7);c.stroke();c.setLineDash([])}});
   if(sm&&S.target&&S.nav&&sm.cx!==undefined){var tp=planetBy(S.target);c.strokeStyle='rgba(255,160,60,.6)';c.lineWidth=Math.max(2,2/z);c.setLineDash([20/z+10,20/z+10]);c.beginPath();c.moveTo(sm.cx,sm.cy);c.lineTo(tp.x,tp.y);c.stroke();c.setLineDash([])}}
 function drawRadar(){var sm=S.sim;if(!sm||!sm.world||sm.cx===undefined){S.radar=null;return}var dpr=window.devicePixelRatio||1,W_=cv.clientWidth,c=cx;c.setTransform(dpr,0,0,dpr,0,0);
-  var r0=Math.min(66,W_/6),ox=W_-r0-12,oy=r0+78,blips=[];c.fillStyle='rgba(2,8,20,.72)';c.beginPath();c.arc(ox,oy,r0+4,0,7);c.fill();c.strokeStyle='rgba(111,168,255,.5)';c.lineWidth=1.5;c.stroke();
+  var r0=Math.min(66,W_/8),ox=W_-r0-12,oy=r0+78,blips=[];c.fillStyle='rgba(2,8,20,.72)';c.beginPath();c.arc(ox,oy,r0+4,0,7);c.fill();c.strokeStyle='rgba(111,168,255,.5)';c.lineWidth=1.5;c.stroke();
   c.strokeStyle='rgba(111,168,255,.18)';[.33,.66].forEach(function(f){c.beginPath();c.arc(ox,oy,r0*f,0,7);c.stroke()});
   WORLD.forEach(function(P){var dx=P.x-sm.cx,dy=P.y-sm.cy,d=Math.hypot(dx,dy),rr=Math.min(r0-4,r0*Math.log(1+d/1500)/Math.log(1+1000000/1500)),ux0=d?dx/d:0,uy0=d?dy/d:0,cr_=Math.cos(S.cam.r||0),sr_=Math.sin(S.cam.r||0),ux=ux0*cr_-uy0*sr_,uy=ux0*sr_+uy0*cr_,x=ox+ux*rr,y=oy+uy*rr;blips.push({k:P.k,x:x,y:y});
     c.fillStyle=P.c1;c.beginPath();c.arc(x,y,P.hot?5:4,0,7);c.fill();if(S.target===P.k){c.strokeStyle='#ffa03c';c.lineWidth=2;c.beginPath();c.arc(x,y,8+Math.sin(performance.now()/200),0,7);c.stroke()}
@@ -13706,7 +13707,7 @@ function drawLink(c,k,A,Bp,z){
   c.beginPath();if(k==='weld'){c.rect(A.x-4,A.y-4,8,8);c.fillStyle='#7d8794'}else{c.arc(A.x,A.y,5,0,7);c.fillStyle='#fff'}c.fill();c.strokeStyle='#222';c.lineWidth=1.5;c.stroke()
 }
 function fmtKm(k,lv){if(lv.rift)return '∞ km';if(lv.lyOut){return (k/9.461e12).toFixed(2)+' light-years'}return Math.round(k).toLocaleString()+' km'}
-function updHud(){var h=$('ws-hud');if(!h)return;var lv=LEVELS[S.level];h.innerHTML='<b>'+lv.n+'</b> — '+lv.d+'<br><span style="opacity:.75">'+(S.mode==='build'?'🔨 BUILD · '+S.parts.length+' parts':'▶ SIMULATING')+'</span>'}
+function updHud(){var h=$('ws-hud');if(!h)return;var lv=LEVELS[S.level];h.innerHTML='<b>'+lv.n+'</b><span class="ws-d"> — '+lv.d+'</span><br><span style="opacity:.75">'+(S.mode==='build'?'🔨 BUILD · '+S.parts.length+' parts':'▶ SIMULATING')+'</span>'}
 function syncUi(){var hn=$('ws-hint');if(hn)hn.textContent=S.mode==='play'?(LEVELS[S.level].world?'A/D rotate · ↑ thrust · S retro · Q/E side thrusters · C chutes · X stage · F speed · G autopilot · click a planet!':'← → / A D drive · ↑ / W / Space thrust · ↓ / S brake · C chutes · X stage · R reset'):'R rotate · right-drag / ✋ pan · scroll zoom · Enter play';var b=$('ws-play');if(b){b.textContent=S.mode==='build'?'▶ Play':'■ Stop';b.style.background=S.mode==='build'?'#22c55e':'#ef4444'}
   var pad=$('ws-pad');if(pad)pad.style.display=S.mode==='play'?'flex':'none';
   document.querySelectorAll('#ws-tools button').forEach(function(x){x.classList.toggle('on',x.dataset.k===S.tool)})}
