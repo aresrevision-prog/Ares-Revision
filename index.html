@@ -13463,7 +13463,7 @@ function worldStep(sm,k,dir,brake,go0){
   var wn=worldNear(cxm,cym);sm.cx=cxm;sm.cy=cym;sm.vx=vxm;sm.vy=vym;sm.near=wn.pl;sm.alt=wn.h;sm.speed=Math.hypot(vxm,vym);sm.maxH=Math.max(sm.maxH,wn.pl.k==='earth'?wn.h:sm.maxH);
   var q=k.q,e=k.e,kon=false;bs.forEach(function(b){if(b.plugin.key&&k[b.plugin.key])kon=true});
   var wheels=bs.filter(function(b){return b.plugin.mat==='wheel'&&!b.plugin.dead}),gr=false;if(wheels.length&&wn.pl.land)wheels.forEach(function(b){if(surfH(wn.pl,b.position.x,b.position.y)<b.plugin.spec.r+22)gr=true});sm.gr=gr;sm.grP=wn.pl;
-  var wheelDrive=wheels.some(function(b){return !b.plugin.key&&!b.plugin.key2}),manual=go0||dir||brake||q||e||kon,go=go0,apTheta=null,thr=1,capv=60*(warp?2.2:1);sm.ap=false;
+  var wheelDrive=wheels.some(function(b){return !b.plugin.key&&!b.plugin.key2}),manual=go0||dir||brake||q||e||kon||sm.wdir||sm.wbrake,go=go0,apTheta=null,thr=1,capv=60*(warp?2.2:1);sm.ap=false;
   if(S.nav&&S.target&&!manual&&!sm.failed&&F>0&&ref){var tp=planetBy(S.target),tx=tp.x,ty=tp.y,Rt=tp.portal?tp.R*.3:tp.R,upT=null;
     if(tp.u){var Sx=tp.x+tp.u.x*tp.Rf,Sy=tp.y+tp.u.y*tp.Rf,Wx=Sx+tp.u.x*1500,Wy=Sy+tp.u.y*1500,dW=Math.hypot(Wx-cxm,Wy-cym),lat=Math.abs((cxm-Sx)*-tp.u.y+(cym-Sy)*tp.u.x);
       if(sm.desc&&lat>1500)sm.desc=false;if(!sm.desc&&dW<450&&sm.speed<3)sm.desc=true;if(sm.desc){tx=Sx;ty=Sy}else{tx=Wx;ty=Wy}Rt=0;upT=(sm.desc||dW<3500)?Math.atan2(tp.u.x,-tp.u.y):null}
@@ -13472,7 +13472,7 @@ function worldStep(sm,k,dir,brake,go0){
     var avx=0,avy=0;WORLD.forEach(function(P){if(P===tp||P.portal)return;var px_=P.x-cxm,py_=P.y-cym,al=px_*nx+py_*ny;if(al<0||al>d)return;var qx=px_-nx*al,qy=py_-ny*al,pr=Math.hypot(qx,qy),lim=P.R*1.6+3000;if(pr<lim){var ox_=-qx,oy_=-qy,L=Math.hypot(ox_,oy_);if(L<1){ox_=-ny;oy_=nx;L=1}var wg=(1-pr/lim)*2;avx+=ox_/L*wg;avy+=oy_/L*wg}});
     var dxn=nx+avx,dyn=ny+avy,dl=Math.hypot(dxn,dyn)||1;dxn/=dl;dyn/=dl;
     var adx=(dxn*vd+(tp.vx||0)-vxm)*.12-gpx,ady=(dyn*vd+(tp.vy||0)-vym)*.12-gpy,am=Math.hypot(adx,ady);apTheta=Math.atan2(adx,-ady);if(upT!==null)apTheta=upT;else if(!tp.portal&&!tp.u&&h<700){apTheta=Math.atan2(-nx,ny)}var ac=Math.min(am,A*.95);sm.apA={x:adx/(am||1)*ac,y:ady/(am||1)*ac};thr=am/A;sm.ap=true}
-  wheels.forEach(function(b){var pk=b.plugin,kk=pk.key||pk.key2,wd=kk?((k[pk.key]?1:0)-(k[pk.key2]?1:0)):dir;if(brake&&!kk)Bd.setAngularVelocity(b,b.angularVelocity*.7);else if(wd){Bd.setAngularVelocity(b,b.angularVelocity+(wd*pk.spec.speed-b.angularVelocity)*.25)}});
+  wheels.forEach(function(b){var pk=b.plugin,kk=pk.key||pk.key2,wd=kk?((k[pk.key]?1:0)-(k[pk.key2]?1:0)):(sm.wdir||0);if(sm.wbrake&&!kk)Bd.setAngularVelocity(b,b.angularVelocity*.7);else if(wd){Bd.setAngularVelocity(b,b.angularVelocity+(wd*pk.spec.speed-b.angularVelocity)*.25)}});
   var wav=0;bs.forEach(function(b){wav+=b.angularVelocity});wav/=n;var wt=0,act=false;
   if(apTheta!==null){var dth=apTheta-ref.angle;dth=Math.atan2(Math.sin(dth),Math.cos(dth));wt=Math.max(-.06,Math.min(.06,dth*.08));act=true;go=thr>.08}
   else if(dir&&!(gr&&wheels.length)){wt=dir*.03;act=true}
@@ -13764,12 +13764,13 @@ function stopSim(noPark){var sm0=S.sim;
     else if(fy0&&fy0.k!=='earth'){doPark(fy0.k,fy0.id,fy0.nm,true);toast('↩️ Mission aborted — rocket returned to '+planetBy(fy0.k).n)}}
   try{if(S.sim&&S.sim.maxAlt>CR.best)CR.best=S.sim.maxAlt;saveCrew()}catch(e){}var was=!!S.sim;S.sim=null;S.fly=null;S.mode='build';fx=[];if(was){S.cam=homeCam();S.follow=true;var st_=$('ws-stats'),bn_=$('ws-banner');if(st_)st_.textContent='';if(bn_){bn_.style.opacity=0}}updHud();syncUi()}
 function stepSim(){
-  var sm=S.sim;if(!sm)return;var k=S.keys,dir=(k.ArrowRight||k.d?1:0)-(k.ArrowLeft||k.a?1:0),brake=k.ArrowDown||k.s,go=k[' ']||k.ArrowUp||k.w;
-  if(S.pad){dir=S.pad.dir||dir;go=go||S.pad.go}
+  var sm=S.sim;if(!sm)return;var k=S.keys,dir=(k.ArrowRight?1:0)-(k.ArrowLeft?1:0),brake=k.ArrowDown,go=k[' ']||k.ArrowUp,wdir=(k.d?1:0)-(k.a?1:0),wbrake=k.s;
+  if(S.pad){dir=S.pad.dir||dir;wdir=S.pad.dir||wdir;go=go||S.pad.go}
+  sm.wdir=wdir;sm.wbrake=wbrake;
   if(sm.world){worldStep(sm,k,dir,brake,go);return}
   sm.thrust=go?1:0;
   for(var id in sm.bodies){var b=sm.bodies[id],m=b.plugin.mat;
-    if(m==='wheel'){var kk=b.plugin.key||b.plugin.key2,wdr=kk?((S.keys[b.plugin.key]?1:0)-(S.keys[b.plugin.key2]?1:0)):dir;if(brake&&!kk)Bd.setAngularVelocity(b,b.angularVelocity*.7);else if(wdr){var tgt=wdr*b.plugin.spec.speed;Bd.setAngularVelocity(b,b.angularVelocity+(tgt-b.angularVelocity)*.25)}}
+    if(m==='wheel'){var kk=b.plugin.key||b.plugin.key2,wdr=kk?((S.keys[b.plugin.key]?1:0)-(S.keys[b.plugin.key2]?1:0)):wdir;if(wbrake&&!kk)Bd.setAngularVelocity(b,b.angularVelocity*.7);else if(wdr){var tgt=wdr*b.plugin.spec.speed;Bd.setAngularVelocity(b,b.angularVelocity+(tgt-b.angularVelocity)*.25)}}
     else if(m==='magnet'&&!b.plugin.dead){if(!b.plugin.key||S.keys[b.plugin.key])magPull(sm,b,null)}
     else if(m==='balloon'){Bd.applyForce(b,b.position,{x:0,y:-.0034*(b.mass/.36)*1})}
     else if(m==='warp'&&(b.plugin.key?S.keys[b.plugin.key]:go)&&!b.plugin.dead){var f2=rotp(0,-.12*sm.boost,b.angle);Bd.applyForce(b,b.position,f2);for(var q=0;q<2;q++)fx.push({x:b.position.x-f2.x*100,y:b.position.y-f2.y*100,vx:-f2.x*160+(Math.random()-.5)*4,vy:-f2.y*160+(Math.random()-.5)*4,l:14,w:1});}
@@ -13889,7 +13890,7 @@ function drawLink(c,k,A,Bp,z){
 }
 function fmtKm(k,lv){if(lv.rift)return '∞ km';if(lv.lyOut){return (k/9.461e12).toFixed(2)+' light-years'}return Math.round(k).toLocaleString()+' km'}
 function updHud(){var h=$('ws-hud');if(!h)return;var lv=LEVELS[S.level];h.innerHTML='<b>'+lv.n+'</b><span class="ws-d"> — '+lv.d+'</span><br><span style="opacity:.75">'+(S.mode==='build'?'🔨 BUILD · '+S.parts.length+' parts':'▶ SIMULATING')+'</span>'}
-function syncUi(){var hn=$('ws-hint');if(hn)hn.textContent=S.mode==='play'?(LEVELS[S.level].world?'A/D rotate · ↑ thrust · S retro · Q/E side thrusters · C chutes · X stage · F speed · P park · U crew · G autopilot · click a planet!':'← → / A D drive · ↑ / W / Space thrust · ↓ / S brake · C chutes · X stage · R reset'):'R rotate · right-drag / ✋ pan · scroll zoom · ⌨️ Keybind tool: click a part then press a key · Enter play';var b=$('ws-play');if(b){b.textContent=S.mode==='build'?'▶ Play':'■ Stop';b.style.background=S.mode==='build'?'#22c55e':'#ef4444'}
+function syncUi(){var hn=$('ws-hint');if(hn)hn.textContent=S.mode==='play'?(LEVELS[S.level].world?'← → rotate · ↑/Space thrust · ↓ retro · A/D drive wheels · S wheel brake · Q/E side thrusters · C chutes · X stage · F speed · P park · U crew · G autopilot · click a planet!':'A / D drive wheels · S brake · ↑ / Space thrust · C chutes · X stage · R reset'):'R rotate · right-drag / ✋ pan · scroll zoom · ⌨️ Keybind tool: click a part then press a key · Enter play';var b=$('ws-play');if(b){b.textContent=S.mode==='build'?'▶ Play':'■ Stop';b.style.background=S.mode==='build'?'#22c55e':'#ef4444'}
   var pad=$('ws-pad');if(pad)pad.style.display=S.mode==='play'?'flex':'none';
   document.querySelectorAll('#ws-tools button').forEach(function(x){x.classList.toggle('on',x.dataset.k===S.tool)})}
 // ── main loop ──────────────────────────
