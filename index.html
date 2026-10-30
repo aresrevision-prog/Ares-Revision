@@ -806,7 +806,7 @@ html,html,body{height:100%}body{min-height:100%;background:var(--bg);color:var(-
 </div>
 <div id="page-frontline" style="display:none;position:fixed;inset:0;z-index:99600;background:#000;">
   <div style="display:flex;align-items:center;gap:12px;padding:8px 14px;background:#0b0e08;border-bottom:2px solid #2a3418;">
-    <button onclick="closeFrontline()" style="background:#141a0c;color:#f2c14e;border:1px solid #2a3418;border-radius:6px;padding:6px 14px;cursor:pointer;font-family:inherit;font-size:13px;">← Back to Ares</button>
+    <button onclick="closeFrontline()" style="background:#141a0c;color:#f2c14e;border:1px solid #2a3418;border-radius:6px;padding:6px 14px;cursor:pointer;font-family:inherit;font-size:13px;">← Back to Test</button>
     <span style="color:#f2c14e;letter-spacing:2px;font-weight:700;">🪖 FRONTLINE WARZONE</span>
   </div>
   <iframe id="fl-frame" title="Frontline Warzone" style="width:100%;height:calc(100% - 41px);border:0;display:block;background:#000;" allow="autoplay; fullscreen; pointer-lock"></iframe>
@@ -823,7 +823,12 @@ html,html,body{height:100%}body{min-height:100%;background:var(--bg);color:var(-
   </div>
   <div id="at-room" style="display:none;width:min(520px,92vw);text-align:center;">
     <div style="font-size:22px;font-weight:800;letter-spacing:.2em;">TEST AREA</div>
-    <div style="font-size:14px;opacity:.75;margin:10px 0 18px;">Unlocked. Nothing has been added here yet — this space is ready for test builds.</div>
+    <div style="font-size:14px;opacity:.75;margin:10px 0 18px;">Test builds</div>
+    <button onclick="openFrontline()" style="width:100%;text-align:left;display:flex;gap:14px;align-items:center;padding:16px 18px;border-radius:12px;border:1px solid rgba(242,193,78,.45);background:linear-gradient(135deg,#141a0c,#2a3418);color:#e8ece4;cursor:pointer;font-family:inherit;">
+      <span style="font-size:30px;">🪖</span>
+      <span style="flex:1;"><b style="display:block;font-size:17px;letter-spacing:.12em;color:#f2c14e;">FRONTLINE WARZONE</b><span style="font-size:13px;opacity:.8;">3D war shooter · squads, tanks, helicopters, sabotage, ranks and an armory</span></span>
+      <span style="font-weight:900;letter-spacing:.15em;color:#f2c14e;">▶ PLAY</span>
+    </button>
   </div>
 </div>
 <div id="page-nightshift" style="display:none;position:fixed;inset:0;z-index:99600;background:#050506;">
@@ -12714,13 +12719,6 @@ function _aresUpdateArenaButton(){
       <div class="ac-desc">Watch the cameras, guard the doors, survive until 6 AM.</div>
       <div class="ac-play">▶ PLAY</div>
     </button>
-    <button class="arena-card" onclick="openFrontline()" style="--c1:#141a0c;--c2:#2a3418;--rgb:242,193,78;">
-      <div class="ac-emoji">🪖</div>
-      <div class="ac-name">FRONTLINE WARZONE</div>
-      <div class="ac-tag">3D WAR SHOOTER</div>
-      <div class="ac-desc">Push the front line through a shattered forest. Squads, tanks, helicopters, sabotage, ranks and an armory.</div>
-      <div class="ac-play">▶ PLAY</div>
-    </button>
     <button class="arena-card" onclick="openArenaTest()" style="--c1:#101418;--c2:#1c2630;--rgb:150,170,190;">
       <div class="ac-emoji">🔒</div>
       <div class="ac-name">TEST</div>
@@ -14140,6 +14138,8 @@ window.openNightShift=openNightShift;window.closeNightShift=closeNightShift;
 function _arenaGameBlocked(){ try{ if(currentUser){ var a=getAccounts()[currentUser]; if(a&&a.accountType==='parent'){ if(typeof showXpPop==='function')showXpPop('🔒 Games are not available on parent accounts'); return true; } } }catch(e){} return false; }
 function openFrontline(){
   if(_arenaGameBlocked())return; var page=document.getElementById('page-frontline'); if(!page)return;
+  var ok=false; try{ ok=sessionStorage.getItem('ares_test_ok')==='1'; }catch(e){} if(!ok){ openArenaTest(); return; }
+  try{ var t=document.getElementById('page-arenatest'); if(t)t.style.display='none'; }catch(e){}
   try{ var hub=document.getElementById('arena-hub'); if(hub)hub.style.display='none'; }catch(e){}
   if(page.parentNode!==document.body)document.body.appendChild(page);
   page.style.cssText='display:block !important;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:2147483647;background:#000;';
@@ -14150,7 +14150,7 @@ function closeFrontline(){
   var page=document.getElementById('page-frontline'); if(page)page.style.display='none';
   var f=document.getElementById('fl-frame'); if(f)f.src='about:blank';
   try{ document.exitPointerLock&&document.exitPointerLock(); }catch(e){}
-  try{ var hub=document.getElementById('arena-hub'); if(hub)hub.style.display='flex'; }catch(e){}
+  var t=document.getElementById('page-arenatest'); if(t){ t.style.display='flex'; } else { try{ var hub=document.getElementById('arena-hub'); if(hub)hub.style.display='flex'; }catch(e){} }
 }
 var _AT_HASH='fe2592b42a727e977f055947385b709cc82b16b9a87f88c6abf3900d65d0cdc3';
 function openArenaTest(){
