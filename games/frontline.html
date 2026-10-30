@@ -192,7 +192,7 @@ svg.rk{vertical-align:middle;flex:none;filter:drop-shadow(0 1px 1px #000)}
 <div id="cine" class="hide"><div class="bar top"></div><div class="bar bot"></div><div id="cineText"><div id="cineT"></div><div id="cineS"></div></div><div id="skip">Space to skip</div></div>
 <div id="fade"></div><div id="rankup" class="hide"></div>
 <div id="shop" class="hide"><div class="wrap"><div class="top"><h2>Armory</h2><div class="coinrow"><span id="shcoins"></span><button class="pri" id="shopclose">Done</button></div></div>
-  <div id="shoptabs"><button data-t="weapons">Weapons</button><button data-t="upgrades">Upgrades</button><button data-t="passes">Gamepasses</button></div><div id="shopbody"></div></div></div>
+  <div id="shoptabs"><button data-t="weapons">Weapons</button><button data-t="upgrades">Upgrades</button><button data-t="passes">Gamepasses</button><button data-t="honors">Honors</button></div><div id="shopbody"></div></div></div>
 <div id="stats" class="screen hide"><div class="card"><span class="kick">Battle report</span><h1 id="stT">Victory</h1><p id="stS"></p><div id="stXP"></div><div id="stGrid"></div><div id="stFront"></div>
   <div class="row"><button class="pri" id="nextb">Next battle</button><button id="menub">Main menu</button></div><div class="coinrow"><span id="scoins"></span><button id="sshop">Armory</button></div></div></div>
 <div id="pause" class="screen hide">
@@ -1046,16 +1046,37 @@ function botAirstrike(bot) { if (DOWN[bot.team] && DOWN[bot.team].radio) return;
 const vehicles = [];
 function vmesh(g, geo, mat, x, y, z, rx = 0, ry = 0, rz = 0) { const o = new THREE.Mesh(geo, mat); o.position.set(x, y, z); o.rotation.set(rx, ry, rz); o.castShadow = o.receiveShadow = true; g.add(o); return o; }
 function hitBox(g, w, h, d, y) { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshBasicMaterial({ visible: false })); m.position.y = y; g.add(m); return m; }
+const VTX = (() => { const S = 128, c = document.createElement('canvas'), h = document.createElement('canvas'); c.width = h.width = 64; c.height = h.height = S; const g = c.getContext('2d'), q = h.getContext('2d');
+  g.fillStyle = '#1d1d1b'; g.fillRect(0, 0, 64, S); q.fillStyle = '#606060'; q.fillRect(0, 0, 64, S);
+  for (let y = 0; y < S; y += 16) { g.fillStyle = '#2c2b28'; g.fillRect(2, y + 2, 60, 11); g.fillStyle = '#3a3833'; g.fillRect(26, y + 4, 12, 7); q.fillStyle = '#b0b0b0'; q.fillRect(2, y + 2, 60, 11); q.fillStyle = '#f0f0f0'; q.fillRect(26, y + 4, 12, 7); q.fillStyle = '#202020'; q.fillRect(0, y + 13, 64, 3); }
+  const map = new THREE.CanvasTexture(c); map.wrapS = map.wrapT = THREE.RepeatWrapping; map.repeat.set(1, 14); const nm = hToN(h, 4); nm.repeat.set(1, 14);
+  const tread = M({ map, normalMap: nm, roughness: .85, metalness: .35 });
+  const lamp = M({ color: 0xfff2c0, emissive: 0xfff2c0, emissiveIntensity: 1.6 }), tail = M({ color: 0x400000, emissive: 0xff2010, emissiveIntensity: 1.2 });
+  const navR = M({ color: 0x300000, emissive: 0xff2020, emissiveIntensity: 2 }), navG = M({ color: 0x003000, emissive: 0x20ff40, emissiveIntensity: 2 });
+  const rim = M({ color: LIN(0x3a3d34), roughness: .6, metalness: .5 }), steel = M({ color: LIN(0x2c2e2c), roughness: .5, metalness: .6 }), seat = M({ color: LIN(0x2a2620), roughness: .9 });
+  return { tread, lamp, tail, navR, navG, rim, steel, seat }; })();
+function wheelMesh(g, r, w, x, y, z, segs = 20) { const t = vmesh(g, new THREE.CylinderGeometry(r, r, w, segs), MAT.tire, x, y, z, 0, 0, Math.PI / 2); const hb = new THREE.Mesh(new THREE.CylinderGeometry(r * .55, r * .6, w * 1.04, 12), VTX.rim); t.add(hb); const cap = new THREE.Mesh(new THREE.CylinderGeometry(r * .18, r * .18, w * 1.12, 8), VTX.steel); t.add(cap);
+  for (let k = 0; k < 6; k++) { const nut = new THREE.Mesh(new THREE.CylinderGeometry(.025, .025, w * 1.1, 6), VTX.steel); const a = k / 6 * 6.283; nut.position.set(Math.cos(a) * r * .34, 0, Math.sin(a) * r * .34); t.add(nut); }
+  const tr = new THREE.Mesh(new THREE.TorusGeometry(r * .96, w * .2, 6, segs), MAT.tire); tr.rotation.x = Math.PI / 2; tr.scale.set(1, 1, 2.2); t.add(tr); return t; }
 function makeJeep(x, z, yaw, team, armed, ai) {
   const g = new THREE.Group(); scene.add(g); const paint = team === 'B' ? MAT.armorB : MAT.armorA;
-  vmesh(g, new THREE.BoxGeometry(2, .55, 4), paint, 0, .75, 0); vmesh(g, new THREE.BoxGeometry(1.9, .35, 1.3), paint, 0, 1.15, 1.25);
-  vmesh(g, new THREE.BoxGeometry(1.95, .5, .08), MAT.glass, 0, 1.55, .55, -.3);
-  for (const s of [-1, 1]) vmesh(g, new THREE.BoxGeometry(.1, .9, .1), MAT.dark, s * .92, 1.5, -.4); vmesh(g, new THREE.BoxGeometry(1.94, .1, .1), MAT.dark, 0, 1.95, -.4);
-  vmesh(g, new THREE.BoxGeometry(.7, .5, .6), MAT.tent, -.45, 1.25, -.1); vmesh(g, new THREE.BoxGeometry(.7, .5, .6), MAT.tent, .45, 1.25, -.1);
-  for (const s of [-1, 1]) vmesh(g, new THREE.CylinderGeometry(.1, .1, .05, 12), new THREE.MeshStandardMaterial({ color: 0xfff2c0, emissive: 0xfff2c0, emissiveIntensity: 1.5 }), s * .7, .95, 2.01, Math.PI / 2);
-  const wheels = []; for (const [wx, wz] of [[-1.05, 1.3], [1.05, 1.3], [-1.05, -1.3], [1.05, -1.3]]) wheels.push(vmesh(g, new THREE.CylinderGeometry(.45, .45, .35, 18), MAT.tire, wx, .45, wz, 0, 0, Math.PI / 2));
-  vmesh(g, new THREE.CylinderGeometry(.42, .42, .3, 16), MAT.tire, 0, 1.2, -2.12, Math.PI / 2);
-  let turret = null; if (armed) { turret = new THREE.Group(); turret.position.set(0, 1.6, -1.2); g.add(turret); vmesh(turret, new THREE.BoxGeometry(.3, .25, .9), MAT.dark, 0, 0, 0); vmesh(turret, new THREE.CylinderGeometry(.05, .05, 1.1, 8), MAT.dark, 0, 0, .9, Math.PI / 2); vmesh(turret, new THREE.BoxGeometry(.9, .55, .06), MAT.dark, 0, .15, .35); vmesh(g, new THREE.CylinderGeometry(.08, .1, .45, 8), MAT.dark, 0, 1.3, -1.2); }
+  vmesh(g, rbox(1.9, .5, 4.1, .12, 3), paint, 0, .82, 0); vmesh(g, rbox(1.78, .3, 1.35, .12, 3), paint, 0, 1.2, 1.3, .04);
+  for (let k = 0; k < 5; k++) vmesh(g, new THREE.BoxGeometry(1.2, .02, .06), MAT.dark, 0, 1.36, .95 + k * .17, .04);
+  vmesh(g, rbox(1.6, .42, .1, .03), MAT.dark, 0, .98, 2.06); for (let k = -3; k <= 3; k++) vmesh(g, new THREE.BoxGeometry(.05, .34, .04), MAT.black, k * .2, .98, 2.12);
+  vmesh(g, rbox(2.06, .16, .2, .04), VTX.steel, 0, .62, 2.12); vmesh(g, rbox(2.0, .14, .18, .04), VTX.steel, 0, .62, -2.1);
+  for (const s of [-1, 1]) { vmesh(g, CY(.12, .12, .07, 14), VTX.lamp, s * .66, 1.02, 2.1, Math.PI / 2); vmesh(g, rbox(.12, .1, .03, .01), VTX.tail, s * .82, .92, -2.06);
+    for (const wz of [1.3, -1.3]) vmesh(g, rbox(.42, .1, 1.15, .05), paint, s * 1.0, 1.1, wz);
+    vmesh(g, rbox(.06, .14, .1, .02), MAT.black, s * 1.02, 1.45, .62); }
+  vmesh(g, rbox(1.84, .52, .05, .02), MAT.glass, 0, 1.6, .56, -.28); vmesh(g, rbox(1.92, .06, .08, .02), MAT.dark, 0, 1.86, .5, -.28);
+  for (const s of [-1, 1]) vmesh(g, rbox(.07, .58, .07, .02), MAT.dark, s * .94, 1.6, .56, -.28);
+  for (const s of [-1, 1]) { vmesh(g, CY(.04, .04, 1.0, 8), VTX.steel, s * .9, 1.55, -.55); vmesh(g, CY(.04, .04, 1.25, 8), VTX.steel, s * .9, 2.04, -.05, Math.PI / 2 - .25); }
+  vmesh(g, CY(.04, .04, 1.84, 8), VTX.steel, 0, 2.05, -.55, 0, 0, Math.PI / 2);
+  for (const s of [-1, 1]) { vmesh(g, rbox(.62, .14, .58, .05), VTX.seat, s * .45, 1.12, -.05); vmesh(g, rbox(.6, .58, .12, .05), VTX.seat, s * .45, 1.42, -.35, -.12); }
+  vmesh(g, rbox(1.8, .1, 1.3, .03), MAT.dark, 0, 1.08, -1.35); for (const s of [-1, 1]) vmesh(g, rbox(.2, .36, .34, .03), M({ color: LIN(0x3e4a2c), roughness: .7 }), s * .62, 1.3, -1.8);
+  vmesh(g, CY(.012, .006, 2.4, 4), MAT.black, -.85, 2.2, -1.9);
+  const wheels = []; for (const [wx, wz] of [[-1.03, 1.3], [1.03, 1.3], [-1.03, -1.3], [1.03, -1.3]]) wheels.push(wheelMesh(g, .45, .36, wx, .45, wz));
+  wheelMesh(g, .42, .3, 0, 1.2, -2.22).rotation.set(Math.PI / 2, 0, 0);
+  let turret = null; if (armed) { turret = new THREE.Group(); turret.position.set(0, 1.6, -1.2); g.add(turret); vmesh(turret, rbox(.26, .24, .85, .04), MAT.dark, 0, 0, 0); vmesh(turret, CY(.05, .05, 1.1, 10), MAT.dark, 0, 0, .9, Math.PI / 2); vmesh(turret, CY(.075, .075, .55, 10), MAT.black, 0, 0, .55, Math.PI / 2); vmesh(turret, rbox(.18, .22, .3, .03), MAT.dark, .2, -.05, .05); vmesh(turret, rbox(.9, .55, .05, .03), paint, 0, .16, .36); vmesh(g, CY(.08, .1, .45, 10), MAT.dark, 0, 1.3, -1.2); }
   const v = { type: 'jeep', g, wheels, turret, team, armed, ai, pos: new V(x, th(x, z), z), yaw, speed: 0, steer: 0, hp: 450, max: 450, driver: null, dead: false, home: [x, z, yaw], respawnT: 0, cool: 0, think: 0, repath: 0, stuck: 0, reverse: 0 };
   v.hit = hitBox(g, 2.2, 1.7, 4.3, .95); v.hit.userData.veh = v;
   if (ai) { v.gunner = makeSoldier('', team, isTeam() && team === me.team); v.gunner.tag.visible = false; }
@@ -1063,28 +1084,44 @@ function makeJeep(x, z, yaw, team, armed, ai) {
 }
 function makeTank(x, z, yaw, team, ai) { const heavy = !ai && team === me.team && hasPass('heavy');
   const g = new THREE.Group(); scene.add(g); const paint = team === 'B' ? MAT.armorB : MAT.armorA;
-  vmesh(g, new THREE.BoxGeometry(3.1, .9, 6.2), paint, 0, 1.05, 0); vmesh(g, new THREE.BoxGeometry(2.9, .5, 1.2), paint, 0, .95, 3.2, .5);
-  vmesh(g, new THREE.BoxGeometry(2.6, .4, 5), paint, 0, 1.6, -.2);
-  const wheels = []; for (const s of [-1, 1]) { vmesh(g, new THREE.BoxGeometry(.75, .95, 6.6), MAT.tire, s * 1.62, .5, 0); vmesh(g, new THREE.BoxGeometry(.8, .1, 6.7), paint, s * 1.62, 1.02, 0); for (let i = 0; i < 6; i++) wheels.push(vmesh(g, new THREE.CylinderGeometry(.38, .38, .2, 14), MAT.dark, s * 2.0, .45, -2.5 + i, 0, 0, Math.PI / 2)); }
+  vmesh(g, rbox(2.7, .85, 6.0, .1, 3), paint, 0, 1.05, -.1); vmesh(g, rbox(2.7, .12, 1.5, .05), paint, 0, 1.25, 3.05, .42); vmesh(g, rbox(2.7, .5, .6, .08), paint, 0, .82, 3.2, -.3);
+  vmesh(g, rbox(2.5, .3, 4.4, .08), paint, 0, 1.6, -.5); for (let k = 0; k < 6; k++) vmesh(g, new THREE.BoxGeometry(1.6, .03, .08), MAT.dark, 0, 1.76, -2.2 + k * .14);
+  for (const s of [-1, 1]) { vmesh(g, rbox(.24, .1, .5, .03), VTX.lamp, s * 1.1, 1.3, 3.15); vmesh(g, rbox(.14, .08, .04, .01), VTX.tail, s * 1.1, 1.2, -3.12);
+    vmesh(g, CY(.04, .04, 3.6, 6), VTX.steel, s * 1.28, 1.58, -.4, Math.PI / 2); vmesh(g, rbox(.5, .35, 1.1, .05), MAT.tent, s * .8, 1.92, -2.2); }
+  const wheels = []; for (const s of [-1, 1]) {
+    vmesh(g, rbox(.62, .92, 6.5, .38, 4), VTX.tread, s * 1.62, .52, 0);
+    vmesh(g, rbox(.72, .06, 6.6, .02), paint, s * 1.64, 1.06, 0); vmesh(g, rbox(.08, .5, 5.6, .03), paint, s * 2.0, .82, -.1); for (let k = 0; k < 8; k++) vmesh(g, CY(.03, .03, .03, 6), VTX.steel, s * 2.045, 1.0, -2.6 + k * .72, 0, 0, Math.PI / 2);
+    for (let i = 0; i < 6; i++) { const w = vmesh(g, CY(.38, .38, .16, 16), MAT.dark, s * 1.62, .45, -2.45 + i * .98, 0, 0, Math.PI / 2); const hbx = new THREE.Mesh(CY(.18, .2, .2, 10), VTX.rim); w.add(hbx); wheels.push(w); }
+    for (const zz of [2.95, -2.95]) { const sp = vmesh(g, CY(.36, .36, .22, 12), VTX.steel, s * 1.62, .62, zz, 0, 0, Math.PI / 2); wheels.push(sp); }
+    for (const zz of [-1.6, 0, 1.6]) vmesh(g, CY(.11, .11, .14, 10), VTX.rim, s * 1.62, .95, zz, 0, 0, Math.PI / 2); }
   const turret = new THREE.Group(); turret.position.set(0, 1.85, -.3); g.add(turret);
-  vmesh(turret, new THREE.CylinderGeometry(1.25, 1.45, .75, 10), paint, 0, .35, 0); vmesh(turret, new THREE.BoxGeometry(2.2, .7, 1.6), paint, 0, .35, -.6);
-  vmesh(turret, new THREE.CylinderGeometry(.35, .35, .3, 10), MAT.dark, .55, .85, -.3); vmesh(turret, new THREE.BoxGeometry(.5, .35, .5), MAT.tent, -.7, .78, -.9);
-  const gun = new THREE.Group(); gun.position.set(0, .4, 1.1); turret.add(gun); vmesh(gun, new THREE.CylinderGeometry(.11, .14, 4.2, 12), MAT.dark, 0, 0, 2.1, Math.PI / 2); vmesh(gun, new THREE.CylinderGeometry(.18, .18, .5, 12), MAT.dark, 0, 0, 4.05, Math.PI / 2); vmesh(gun, new THREE.BoxGeometry(.7, .55, .6), paint, 0, 0, .1);
+  vmesh(turret, rbox(2.3, .66, 2.8, .14, 3), paint, 0, .33, -.15); for (const s of [-1, 1]) vmesh(turret, rbox(.75, .6, 1.0, .1), paint, s * .8, .3, 1.1, 0, s * -.35); vmesh(turret, rbox(2.0, .5, .9, .08), paint, 0, .3, -1.85);
+  for (let k = 0; k < 4; k++) vmesh(turret, CY(.025, .025, 2.1, 5), VTX.steel, 0, .62 - k * .0, -2.35 - k * 0, 0, 0, Math.PI / 2).position.set(0, .3 + k * .14, -2.34);
+  vmesh(turret, CY(.32, .36, .3, 14), MAT.dark, .55, .82, -.4); vmesh(turret, CY(.33, .33, .06, 14), paint, .55, 1.0, -.4, 0, 0, .9); vmesh(turret, rbox(.12, .1, .5, .02), MAT.black, .55, 1.08, -.05);
+  vmesh(turret, CY(.025, .025, .7, 6), MAT.black, .55, 1.12, .25, Math.PI / 2); vmesh(turret, CY(.26, .26, .2, 12), MAT.dark, -.6, .74, -.6); vmesh(turret, rbox(.45, .3, .35, .05), VTX.rim, -.55, .8, .55);
+  for (const s of [-1, 1]) { for (let k = 0; k < 3; k++) vmesh(turret, CY(.06, .06, .3, 8), MAT.dark, s * (1.12 - k * .02), .5 + k * .1, .55 - k * .02, Math.PI / 2 - .5, 0, s * .4); vmesh(turret, CY(.008, .004, 2.2, 4), MAT.black, s * .7, 1.65, -1.9); vmesh(turret, rbox(.12, .3, .9, .03), MAT.tent, s * 1.2, .35, -.6); }
+  const gun = new THREE.Group(); gun.position.set(0, .4, 1.1); turret.add(gun);
+  vmesh(gun, rbox(.9, .6, .7, .1), paint, 0, 0, .15); vmesh(gun, CY(.11, .13, 4.2, 16), MAT.dark, 0, 0, 2.1, Math.PI / 2); vmesh(gun, CY(.19, .19, .7, 14), MAT.dark, 0, 0, 2.3, Math.PI / 2);
+  vmesh(gun, CY(.17, .17, .4, 14), MAT.dark, 0, 0, 4.05, Math.PI / 2); for (const s of [-1, 1]) vmesh(gun, rbox(.08, .1, .3, .02), MAT.black, s * .17, 0, 4.1); vmesh(gun, CY(.035, .035, .5, 8), MAT.black, .3, -.05, .5, Math.PI / 2);
   const v = { type: 'tank', g, wheels, turret, gun, team, armed: true, ai, heavy, pos: new V(x, th(x, z), z), yaw, speed: 0, steer: 0, hp: heavy ? 3600 : 1800, max: heavy ? 3600 : 1800, driver: null, dead: false, home: [x, z, yaw], respawnT: 0, cool: 0, mg: 0, think: 0, repath: 0, stuck: 0, reverse: 0, tYaw: 0, tPitch: 0 };
   v.hit = hitBox(g, 3.6, 2.6, 6.8, 1.3); v.hit.userData.veh = v; vehicles.push(v); placeVeh(v); return v;
 }
 function makeTransport(x, z, yaw, team, gunship) {
   const g = new THREE.Group(); scene.add(g); const paint = team === 'B' ? MAT.armorB : MAT.armorA;
-  vmesh(g, new THREE.CapsuleGeometry(1.15, 3.2, 8, 16), paint, 0, 1.9, .2, Math.PI / 2).scale.set(1, 1, .85);
-  vmesh(g, new THREE.SphereGeometry(1.0, 16, 12), MAT.glass, 0, 2.15, 2.1).scale.set(.95, .7, .7);
-  vmesh(g, new THREE.CylinderGeometry(.22, .45, 5.4, 10), paint, 0, 2.3, -4, Math.PI / 2 + .06); vmesh(g, new THREE.BoxGeometry(.12, 1.5, .9), paint, 0, 3.0, -6.6, -.3);
-  vmesh(g, new THREE.BoxGeometry(2.2, .08, .6), paint, 0, 2.3, -6.1);
-  for (const s of [-1, 1]) { vmesh(g, new THREE.BoxGeometry(.1, .1, 3.6), MAT.dark, s * 1.05, .25, .3); for (const zz of [-.8, 1.2]) vmesh(g, new THREE.BoxGeometry(.08, .7, .08), MAT.dark, s * .95, .6, zz, 0, 0, s * .3); vmesh(g, new THREE.BoxGeometry(.05, .9, 1.3), MAT.black, s * 1.13, 1.9, -.2); }
-  vmesh(g, new THREE.CylinderGeometry(.5, .6, .45, 12), MAT.dark, 0, 3.25, .2);
-  const rotor = new THREE.Group(); rotor.position.set(0, 3.55, .2); g.add(rotor); for (let i = 0; i < 2; i++) { const b = vmesh(rotor, new THREE.BoxGeometry(.32, .04, 7.6), MAT.dark, 0, 0, 0); b.rotation.y = i * Math.PI / 2; }
-  const tail = new THREE.Group(); tail.position.set(.18, 3.0, -6.6); g.add(tail); for (let i = 0; i < 2; i++) { const b = vmesh(tail, new THREE.BoxGeometry(.03, 1.4, .14), MAT.dark, 0, 0, 0); b.rotation.x = i * Math.PI / 2; }
+  vmesh(g, new THREE.CapsuleGeometry(1.15, 3.2, 10, 24), paint, 0, 1.9, .2, Math.PI / 2).scale.set(1, 1, .85);
+  vmesh(g, new THREE.SphereGeometry(1.0, 24, 16, 0, Math.PI * 2, 0, Math.PI * .62), M({ color: LIN(0x3a5060), roughness: .08, metalness: .7 }), 0, 2.0, 1.95, 1.25).scale.set(.9, .7, .8);
+  for (const s of [-1, 1]) for (const a of [-.35, .35]) vmesh(g, rbox(.05, .05, 1.2, .02), MAT.dark, s * .55 * Math.cos(a), 2.55, 2.0, .7, 0, 0);
+  vmesh(g, rbox(1.5, .55, 1.9, .2), paint, 0, 3.0, -.2); for (const s of [-1, 1]) { vmesh(g, CY(.22, .26, .6, 12), MAT.dark, s * .55, 3.1, -1.25, Math.PI / 2); vmesh(g, CY(.17, .17, .05, 12), MAT.black, s * .55, 3.1, -1.56, Math.PI / 2); }
+  vmesh(g, CY(.22, .45, 5.4, 14), paint, 0, 2.3, -4, Math.PI / 2 + .06); vmesh(g, rbox(.14, 1.6, 1.0, .06), paint, 0, 3.05, -6.6, -.3);
+  vmesh(g, rbox(2.2, .08, .6, .03), paint, 0, 2.3, -6.1); vmesh(g, rbox(.08, .08, .12, .02), VTX.navR, -1.12, 2.3, -6.1); vmesh(g, rbox(.08, .08, .12, .02), VTX.navG, 1.12, 2.3, -6.1);
+  for (const s of [-1, 1]) { vmesh(g, CY(.06, .06, 3.8, 10), VTX.steel, s * 1.05, .22, .3, Math.PI / 2); vmesh(g, new THREE.SphereGeometry(.06, 8, 6), VTX.steel, s * 1.05, .22, 2.2); for (const zz of [-.8, 1.2]) vmesh(g, CY(.045, .045, .75, 8), VTX.steel, s * .92, .58, zz, 0, 0, s * .32);
+    vmesh(g, rbox(.05, .85, 1.35, .04), MAT.black, s * 1.12, 1.95, -.2); vmesh(g, rbox(.04, .4, .5, .03), MAT.glass, s * 1.1, 2.15, 1.1); vmesh(g, CY(.25, .25, .02, 18), M({ color: team === 'B' ? LIN(0x9a3a2a) : LIN(0x3a5a8a), roughness: .7 }), s * 1.0, 1.8, -2.1, 0, 0, Math.PI / 2 - s * .15); }
+  vmesh(g, CY(.5, .6, .45, 16), MAT.dark, 0, 3.4, .2); vmesh(g, CY(.12, .12, .5, 10), VTX.steel, 0, 3.55, .2);
+  const rotor = new THREE.Group(); rotor.position.set(0, 3.75, .2); g.add(rotor); vmesh(rotor, CY(.22, .22, .14, 12), VTX.steel, 0, 0, 0);
+  for (let i = 0; i < 4; i++) { const b = new THREE.Mesh(rbox(.3, .04, 3.9, .015), MAT.dark); b.geometry.translate(0, 0, 2.0); b.rotation.y = i * Math.PI / 2; b.castShadow = true; rotor.add(b); }
+  const tail = new THREE.Group(); tail.position.set(.2, 3.0, -6.6); g.add(tail); vmesh(tail, CY(.08, .08, .12, 10), VTX.steel, 0, 0, 0, 0, 0, Math.PI / 2); for (let i = 0; i < 2; i++) { const b = vmesh(tail, rbox(.03, 1.4, .13, .01), MAT.dark, .06, 0, 0); b.rotation.x = i * Math.PI / 2; }
   const crates = []; for (let i = 0; i < 4; i++) crates.push(vmesh(g, new THREE.BoxGeometry(.6, .5, .6), MAT.crate, (i % 2 - .5) * .7, 1.2, (i < 2 ? -.6 : .2)));
-  if (gunship) { crates.forEach(c => c.visible = false); for (const sd of [-1, 1]) { vmesh(g, new THREE.BoxGeometry(1.4, .08, .3), paint, sd * 1.5, 1.4, .4); vmesh(g, CY(.14, .14, 1.2), MAT.dark, sd * 2.1, 1.25, .5, Math.PI / 2); } vmesh(g, CY(.05, .05, .9), MAT.dark, 0, .9, 2.8, Math.PI / 2); }
+  if (gunship) { crates.forEach(c => c.visible = false); for (const sd of [-1, 1]) { vmesh(g, rbox(1.4, .1, .4, .04), paint, sd * 1.5, 1.4, .4); const pod = vmesh(g, CY(.17, .17, 1.2, 14), MAT.dark, sd * 2.1, 1.22, .5, Math.PI / 2); for (let k = 0; k < 7; k++) { const a = k / 7 * 6.283, h = new THREE.Mesh(CY(.035, .035, .02, 8), MAT.black); h.position.set(k ? Math.cos(a) * .1 : 0, .6, k ? Math.sin(a) * .1 : 0); pod.add(h); } } vmesh(g, CY(.18, .18, .25, 12), MAT.dark, 0, .95, 2.6); vmesh(g, CY(.04, .04, .9, 8), MAT.black, 0, .9, 3.0, Math.PI / 2); }
   const v = { type: 'heli', gunship: !!gunship, g, rotor, tail, crates, team, armed: false, ai: false, pos: new V(x, th(x, z), z), vel: new V(), yaw, speed: 0, hp: gunship ? 1400 : 900, max: gunship ? 1400 : 900, driver: null, dead: false, home: [x, z, yaw], respawnT: 0, cargo: 4, spin: 0, alt: 0, wheels: [], landed: true, tilt: new V() };
   v.hit = hitBox(g, 2.6, 2.6, 6.5, 1.9); v.hit.userData.veh = v; vehicles.push(v); placeVeh(v); return v;
 }
@@ -1302,13 +1339,14 @@ const UPG = {
   reload: { name: 'Sleight of hand', desc: 'Reload 30% faster.', price: 1000 },
   boots: { name: 'Light boots', desc: 'Move and sprint 8% faster.', price: 700 }
 };
+const HONOR_PACKS = [{ n: 100, price: '£1.00', note: 'Enough for Elite Camo.' }, { n: 500, price: '£4.50', note: '10% better value than the small pack.', tag: 'Popular' }, { n: 1000, price: '£9.00', note: 'Enough for every Gamepass.', tag: 'Best value', best: true }];
 const PASSES = {
-  gunship: { name: 'Attack Helicopter', desc: 'Your own armed helicopter on the helipad: rockets and a chin gun.', credits: 450 },
-  heavy: { name: 'Heavy Tank', desc: 'Your team tank gets double armour and a faster-loading main gun.', credits: 300 },
-  ammo: { name: 'Ammo Crate', desc: 'Double reserve ammo for every weapon, plus one extra rocket.', credits: 150 },
-  camo: { name: 'Elite Camo', desc: 'Black ops camo for your soldier and weapons.', credits: 100 }
+  gunship: { name: 'Attack Helicopter', desc: 'Your own armed helicopter on the helipad: rockets and a chin gun.', honors: 450 },
+  heavy: { name: 'Heavy Tank', desc: 'Your team tank gets double armour and a faster-loading main gun.', honors: 300 },
+  ammo: { name: 'Ammo Crate', desc: 'Double reserve ammo for every weapon, plus one extra rocket.', honors: 150 },
+  camo: { name: 'Elite Camo', desc: 'Black ops camo for your soldier and weapons.', honors: 100 }
 };
-const PROFILE = (() => { const d = { coins: 0, owned: ['m4', 'l96', 'rpg'], equip: ['m4', 'l96', 'rpg'], upg: [], passes: [], credits: null, earned: 0 }; try { return Object.assign(d, JSON.parse(localStorage.getItem('fl_profile')) || {}); } catch (e) { return d; } })();
+const PROFILE = (() => { const d = { coins: 0, owned: ['m4', 'l96', 'rpg'], equip: ['m4', 'l96', 'rpg'], upg: [], passes: [], honors: 0, earned: 0 }; try { return Object.assign(d, JSON.parse(localStorage.getItem('fl_profile')) || {}); } catch (e) { return d; } })();
 const saveProfile = () => { try { localStorage.setItem('fl_profile', JSON.stringify(PROFILE)); } catch (e) { } };
 const hasUpg = k => PROFILE.upg.includes(k), hasPass = k => PROFILE.passes.includes(k);
 // ── Ranks, XP and daily missions ──
@@ -1968,12 +2006,14 @@ function weaponCard(k, d) { const own = PROFILE.owned.includes(k), eq = PROFILE.
 function renderShop(tab = shopTab) { shopTab = tab; document.querySelectorAll('#shoptabs button').forEach(b => b.classList.toggle('on', b.dataset.t === tab)); updCoins(); let h = '';
   if (tab === 'weapons') for (const [slot, label] of [[0, 'Primary · key 1'], [1, 'Marksman and sniper · key 2'], [2, 'Launcher · key 3']]) { h += `<h4>${label}</h4><div class="cards">`; for (const [k, d] of Object.entries(WDB)) if (d.slot === slot) h += weaponCard(k, d); h += '</div>'; }
   if (tab === 'upgrades') { h += '<div class="cards">'; for (const [k, u] of Object.entries(UPG)) { const own = hasUpg(k); h += `<div class="card2 ${own ? 'on' : ''}"><div class="ch"><b>${u.name}</b><span>Upgrade</span></div><p class="dsc">${u.desc}</p>${own ? '<button class="eq" disabled>Owned</button>' : `<button class="buy" data-a="upg" data-k="${k}" ${PROFILE.coins < u.price ? 'disabled' : ''}><i class="coin"></i>${u.price.toLocaleString('en-GB')}</button>`}</div>`; } h += '</div>'; }
-  if (tab === 'passes') { h += '<p class="note">Gamepasses are bought with Credits, a separate currency from coins. Credits aren\'t available yet, so Gamepasses can\'t be bought right now.</p><div class="cards">'; for (const [k, p] of Object.entries(PASSES)) h += `<div class="card2 pass ${hasPass(k) ? 'on' : ''}"><div class="ch"><b>${p.name}</b><span>Gamepass</span></div><p class="dsc">${p.desc}</p><div class="cr"><i class="credit"></i>${p.credits} Credits</div>${hasPass(k) ? '<button class="eq" disabled>Owned</button>' : '<button disabled>Coming soon</button>'}</div>`; h += '</div>'; }
+  if (tab === 'passes') { h += `<p class="note">Gamepasses are bought with Honors, a separate currency from coins. You have <b><i class="credit"></i>${PROFILE.honors || 0} Honors</b>.</p><div class="cards">`; for (const [k, p] of Object.entries(PASSES)) { const can = (PROFILE.honors || 0) >= p.honors; h += `<div class="card2 pass ${hasPass(k) ? 'on' : ''}"><div class="ch"><b>${p.name}</b><span>Gamepass</span></div><p class="dsc">${p.desc}</p><div class="cr"><i class="credit"></i>${p.honors} Honors</div>${hasPass(k) ? '<button class="eq" disabled>Owned</button>' : `<button class="buy" data-a="pass" data-k="${k}" ${can ? '' : 'disabled'}>${can ? 'Unlock' : 'Not enough Honors'}</button>`}</div>`; } h += '</div>'; }
+  if (tab === 'honors') { h += '<p class="note">Honors unlock Gamepasses. Card payments aren\'t set up yet, so these packs can\'t be bought right now.</p><div class="cards">'; for (const pk of HONOR_PACKS) h += `<div class="card2 pass ${pk.best ? 'on' : ''}"><div class="ch"><b><i class="credit"></i>${pk.n.toLocaleString('en-GB')} Honors</b><span>${pk.tag || 'Pack'}</span></div><p class="dsc">${pk.note}</p><div class="cr">${pk.price}</div><button disabled>Coming soon</button></div>`; h += '</div>'; }
   $('shopbody').innerHTML = h; }
 function openShop() { $('shop').classList.remove('hide'); renderShop(); }
 $('shopbody').onclick = e => { const b = e.target.closest('button[data-a]'); if (!b) return; const k = b.dataset.k, a = b.dataset.a;
   if (a === 'buy' && PROFILE.coins >= WDB[k].price && (WDB[k].req || 0) <= myRank()) { PROFILE.coins -= WDB[k].price; PROFILE.owned.push(k); PROFILE.equip[WDB[k].slot] = k; snd('ready'); }
   if (a === 'equip') PROFILE.equip[WDB[k].slot] = k;
+  if (a === 'pass' && !hasPass(k) && (PROFILE.honors || 0) >= PASSES[k].honors) { PROFILE.honors -= PASSES[k].honors; PROFILE.passes.push(k); snd('ready'); }
   if (a === 'upg' && PROFILE.coins >= UPG[k].price) { PROFILE.coins -= UPG[k].price; PROFILE.upg.push(k); snd('ready'); }
   saveProfile(); applyLoadout(); if (playing && !me.dead) { if (a === 'upg' && k === 'armor') { me.hp = maxHp(); updHp(); } if (a === 'upg' && k === 'nades') me.nades = maxNades(); updAmmo(); } renderShop(); };
 document.querySelectorAll('#shoptabs button').forEach(b => b.onclick = () => renderShop(b.dataset.t));
