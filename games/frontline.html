@@ -161,6 +161,14 @@ svg.rk{vertical-align:middle;flex:none;filter:drop-shadow(0 1px 1px #000)}
 #ipadview{position:fixed;inset:0;z-index:35;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(0,0,0,.55);pointer-events:none;font-family:var(--cond);letter-spacing:.08em;text-transform:uppercase;color:var(--hud)}
 .ipf{position:relative;height:min(70vh,640px);aspect-ratio:9/16;background:#0a0b0d;border:14px solid #1e2024;border-radius:28px;box-shadow:0 20px 60px #000;overflow:hidden;display:flex;align-items:center;justify-content:center}
 .ipf video{width:100%;height:100%;object-fit:cover}#ipadnone{padding:20px;text-align:center;font-size:15px}
+#inv{position:fixed;inset:0;z-index:34;background:rgba(4,7,5,.82);display:flex;align-items:center;justify-content:center;padding:16px}
+.iwrap{width:min(640px,100%);background:rgba(12,16,12,.92);border:1px solid rgba(207,217,200,.2);padding:18px 20px}
+.itop{display:flex;justify-content:space-between;align-items:center}.iwrap h2{font-family:var(--cond);font-size:30px;margin:0;text-transform:uppercase;letter-spacing:.06em}
+.iwrap h4{font-family:var(--cond);text-transform:uppercase;letter-spacing:.12em;color:var(--dim);margin:16px 0 8px;font-size:14px}
+.igrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.islot{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:12px;text-align:left;font-size:14px;letter-spacing:.04em;text-transform:none}
+.islot .iic{font-size:28px}.islot b{font-family:var(--cond);font-size:17px;text-transform:uppercase}.islot small{color:var(--dim);font-family:var(--body);font-size:12px}
+.islot.on{border-color:var(--acc)}.islot.tro{border-color:var(--blu);background:rgba(111,178,255,.08)}.islot.tro:hover{background:rgba(111,178,255,.18)}.islot.lock{opacity:.5}
 </style>
 
 <canvas id="c"></canvas>
@@ -200,7 +208,7 @@ svg.rk{vertical-align:middle;flex:none;filter:drop-shadow(0 1px 1px #000)}
   <aside id="profile"></aside>
 </div>
 <div id="cine" class="hide"><div class="bar top"></div><div class="bar bot"></div><div id="cineText"><div id="cineT"></div><div id="cineS"></div></div><div id="skip">Space to skip</div></div>
-<div id="fade"></div><div id="ipadview" class="hide"><div class="ipf"><video id="ipadvid" muted loop playsinline></video><div id="ipadnone" class="hide">No video on this device yet. Add one in My face → iPad video.</div></div><span>Press I to put the iPad away</span></div><div id="rankup" class="hide"></div>
+<div id="fade"></div><div id="inv" class="hide"><div class="iwrap"><div class="itop"><h2>Inventory</h2><button id="invclose">Close (I)</button></div><div id="invbody"></div></div></div><div id="ipadview" class="hide" onclick="toggleIpadView(false)"><div class="ipf"><video id="ipadvid" muted loop playsinline></video><div id="ipadnone" class="hide">No video on this device yet. Add one in My face → iPad video.</div></div><span>Click to put the iPad away</span></div><div id="rankup" class="hide"></div>
 <div id="faceui" class="hide"><div class="fwrap"><h2>Faces</h2>
   <p class="note">Your photo stays on this device. It is saved only in this browser and is never uploaded. Use a front-facing photo in good light.</p>
   <div class="frow"><div class="fcrop"><canvas id="fcv" width="272" height="400"></canvas><div class="fov"></div><div class="feye"><span>eyes</span></div></div>
@@ -1606,7 +1614,7 @@ addEventListener('keydown', e => {
   if (e.code === 'KeyR') startReload(); if (e.code === 'Digit1') swap(0); if (e.code === 'Digit2') swap(1); if (e.code === 'Digit3') swap(2);
   if (e.code === 'KeyC' || e.code === 'ControlLeft') { if (sprinting()) startSlide(); else me.crouch = !me.crouch; }
   if (e.code === 'KeyT' && !e.repeat) squadKey();
-  if (e.code === 'KeyI' && !e.repeat) toggleIpadView();
+  if (e.code === 'KeyI' && !e.repeat) toggleInventory();
   if (e.code === 'KeyG' && me.nades > 0) { me.nades--; const d = new V(0, 0, -1).applyQuaternion(cam.quaternion); throwNade(cam.position.clone().addScaledVector(d, .6), d.multiplyScalar(17).add(new V(0, 3, 0)).add(me.vel), me.id); updAmmo(); }
   if (e.code === 'Digit4') useStreak(0); if (e.code === 'Digit5') useStreak(1); if (e.code === 'Digit6') useStreak(2); if (e.code === 'Digit7') useStreak(3);
 });
@@ -1618,7 +1626,7 @@ addEventListener('mouseup', e => { if (e.button === 0) mouseDown = false; if (e.
 addEventListener('contextmenu', e => e.preventDefault());
 addEventListener('mousemove', e => { if (document.pointerLockElement !== cv || me.dead || paused || cine) return; const k = .0022 * sens * (aiming() ? cam.fov / 75 : 1); me.yaw -= e.movementX * k; me.pitch = clamp(me.pitch - e.movementY * k, me.veh ? -1.2 : -1.45, me.veh ? .6 : 1.45); });
 function lockPointer() { try { const r = cv.requestPointerLock(); if (r && r.catch) r.catch(() => { }); } catch (e) { } }
-document.addEventListener('pointerlockchange', () => { if (playing && document.pointerLockElement !== cv && !over && !cine && $('stats').classList.contains('hide')) showPause(true); });
+document.addEventListener('pointerlockchange', () => { if (playing && document.pointerLockElement !== cv && !over && !cine && !invOpen && $('stats').classList.contains('hide')) showPause(true); });
 function tryMantleOrJump() { if (!me.ground || me.dead || me.mantle) return; const f = new V(-Math.sin(me.yaw), 0, -Math.cos(me.yaw));
   for (const dd of [.55, .85]) { const ax = me.pos.x + f.x * dd, az = me.pos.z + f.z * dd; let top = th(ax, az), above = false; for (const o of boxesNear(ax, az, 1)) { const b = o.b; if (ax > b.min.x - .2 && ax < b.max.x + .2 && az > b.min.z - .2 && az < b.max.z + .2) { if (b.max.y <= me.pos.y + 1.9) top = Math.max(top, b.max.y); else if (b.min.y < me.pos.y + 2.2) above = true; } }
     const rise = top - me.pos.y; if (rise > .55 && rise < 1.9 && !above) { const tx = me.pos.x + f.x * (dd + .4), tz = me.pos.z + f.z * (dd + .4); me.mantle = { from: me.pos.clone(), to: new V(tx, Math.max(top, th(tx, tz)), tz), t: 0 }; me.vel.set(0, 0, 0); me.crouch = false; snd('mantle'); return; } }
@@ -1782,12 +1790,20 @@ function updIpad(dt) { if (IPAD.video && IPAD.video.paused && IPAD.video.readySt
   const p = IPAD.tab.getWorldPosition(new V()); if (Math.hypot(p.x - me.pos.x, p.z - me.pos.z) > 2.4) { if (mode !== 'front') xp.classList.add('hide'); ipadHold = 0; return; }
   ipadHold = keys.KeyX ? ipadHold + dt : 0; xp.classList.remove('hide'); xp.innerHTML = `Hold <b>X</b> to pick up the iPad<i><b style="width:${Math.min(100, ipadHold / 1.2 * 100)}%"></b></i>`;
   if (ipadHold >= 1.2) { ipadHold = 0; xp.classList.add('hide'); PROFILE.trophies = (PROFILE.trophies || []).concat('ipad'); saveProfile(); IPAD.tab.visible = false; snd('ready'); later(.2, () => snd('ready'));
-    const b = $('rankup'); b.innerHTML = `<div class="ri" style="font-size:64px">📱</div><small>Easter egg found</small><b>The iPad</b><span>Added to your backpack as a trophy · press I to watch it</span>`; b.classList.remove('hide', 'go'); void b.offsetWidth; b.classList.add('go'); clearTimeout(b._t); b._t = setTimeout(() => b.classList.add('hide'), 4200);
+    const b = $('rankup'); b.innerHTML = `<div class="ri" style="font-size:64px">📱</div><small>Easter egg found</small><b>The iPad</b><span>Added to your inventory as a trophy · press I to open it</span>`; b.classList.remove('hide', 'go'); void b.offsetWidth; b.classList.add('go'); clearTimeout(b._t); b._t = setTimeout(() => b.classList.add('hide'), 4200);
     giveCoins(500, 'Easter egg', 1000); if (pModel) packIpad(pModel); renderProfile(); } }
 function packIpad(s) { if (!s || s.ipadPacked || !s.bones.Spine2) return; s.ipadPacked = true; const sp = s.bones.Spine2.getWorldPosition(new V()); const t = new THREE.Mesh(rbox(.2, .26, .012, .01), M({ color: LIN(0x2a2c30), roughness: .35, metalness: .6 })); const sc = new THREE.Mesh(new THREE.PlaneGeometry(.17, .23), IPAD.scr.material); sc.position.z = .007; t.add(sc);
   t.position.set(sp.x + .15, sp.y - .02, sp.z + .3); t.rotation.set(0, -.25, -.12); t.castShadow = true; scene.add(t); t.updateMatrixWorld(true); s.bones.Spine2.attach(t); }
 ['pointerdown', 'keydown', 'touchstart'].forEach(ev => addEventListener(ev, () => { if (IPAD.video && IPAD.video.paused && IPAD.video.src) IPAD.video.play().catch(() => { }); }, { passive: true }));
-function toggleIpadView(on) { const v = $('ipadview'); if (on === undefined) on = v.classList.contains('hide'); if (on && !hasTrophy('ipad')) return; v.classList.toggle('hide', !on); const vid = $('ipadvid'); if (on) { if (IPAD.url) { vid.src = IPAD.url; vid.play().catch(() => { }); $('ipadnone').classList.add('hide'); } else $('ipadnone').classList.remove('hide'); } else { vid.pause(); vid.removeAttribute('src'); vid.load(); } }
+let invOpen = false;
+function invHTML() { const slot = (icon, name, sub, act, cls = '') => `<button class="islot ${cls}" ${act ? `data-act="${act}"` : 'disabled'}><span class="iic">${icon}</span><b>${name}</b><small>${sub}</small></button>`;
+  let h = '<h4>Weapons</h4><div class="igrid">'; WEAPONS.forEach((w, i) => { h += slot(['🔫', '🎯', '🚀'][i] || '🔫', w.name, `${wstate[i].mag} / ${wstate[i].res}${i === wi ? ' · in hand' : ''}`, 'w' + i, i === wi ? 'on' : ''); }); h += slot('💣', 'Grenades', `${me.nades} left`, null) + '</div>';
+  h += '<h4>Trophies</h4><div class="igrid">'; h += hasTrophy('ipad') ? slot('📱', 'iPad', 'Click to watch', 'ipad', 'tro') : slot('❔', 'Hidden', 'Find the easter egg', null, 'lock'); h += '</div>'; return h; }
+function toggleInventory(on) { if (!playing || cine) return; if (on === undefined) on = !invOpen; if (!on && !$('ipadview').classList.contains('hide')) toggleIpadView(false); invOpen = on; $('inv').classList.toggle('hide', !on);
+  if (on) { $('invbody').innerHTML = invHTML(); mouseDown = rmb = eFire = false; for (const k in keys) keys[k] = false; try { document.exitPointerLock(); } catch (e) { } } else lockPointer(); }
+$('invbody').onclick = e => { const b = e.target.closest('button[data-act]'); if (!b) return; const a = b.dataset.act; if (a === 'ipad') toggleIpadView(true); else if (a[0] === 'w') { swap(+a.slice(1)); $('invbody').innerHTML = invHTML(); } };
+$('invclose').onclick = () => toggleInventory(false);
+function toggleIpadView(on) { const v = $('ipadview'); if (on === undefined) on = v.classList.contains('hide'); if (on && !hasTrophy('ipad')) return; v.classList.toggle('hide', !on); v.style.pointerEvents = on ? 'auto' : 'none'; const vid = $('ipadvid'); if (on) { if (IPAD.url) { vid.src = IPAD.url; vid.play().catch(() => { }); $('ipadnone').classList.add('hide'); } else $('ipadnone').classList.remove('hide'); } else { vid.pause(); vid.removeAttribute('src'); vid.load(); } }
 async function loadIpadVideo() { if (!IPAD.scr) return; let blob = await mediaGet('ipad'); if (!blob && window.BAKED && BAKED.video) { try { const useWebm = BAKED.videoWebm && !document.createElement('video').canPlayType('video/mp4; codecs="avc1.42E01E"'); const src = useWebm ? BAKED.videoWebm : BAKED.video; const b64 = src.split(',')[1], bin = atob(b64), u8 = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i); blob = new Blob([u8], { type: useWebm ? 'video/webm' : 'video/mp4' }); } catch (e) { } } if (IPAD.video) { IPAD.video.pause(); IPAD.video.removeAttribute('src'); IPAD.video.load(); } if (IPAD.url) URL.revokeObjectURL(IPAD.url); IPAD.url = null;
   if (!blob) { IPAD.scr.material.map = null; IPAD.scr.material.color.setHex(0x06080a); IPAD.scr.material.needsUpdate = true; return; }
   const v = IPAD.video || (IPAD.video = Object.assign(document.createElement('video'), { muted: true, loop: true, playsInline: true, autoplay: true, crossOrigin: 'anonymous' })); v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); if (!v.isConnected) { v.style.cssText = 'position:fixed;left:0;top:0;width:2px;height:2px;opacity:0;pointer-events:none'; document.body.appendChild(v); }
