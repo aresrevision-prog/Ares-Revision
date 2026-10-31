@@ -397,7 +397,20 @@ T.plank = hdTex(512, (cg, hg, rg, S) => { const rows = 5, rh = S / rows; for (le
   const n = mkCanvas(S, S); fbm(n.getContext('2d'), S, [4, 8, 16, 32], .55); cg.save(); cg.globalCompositeOperation = 'overlay'; cg.globalAlpha = .45; cg.drawImage(n, 0, 0); cg.restore();
   const gr = cg.createLinearGradient(0, S * .6, 0, S); gr.addColorStop(0, 'rgba(40,28,18,0)'); gr.addColorStop(1, 'rgba(40,28,18,.6)'); cg.fillStyle = gr; cg.fillRect(0, 0, S, S); }, 3, .9);
 function armorTex(base) { return texFrom(256, (g, w, h) => { g.fillStyle = base; g.fillRect(0, 0, w, h); blobs(g, w, h, 40, 15, 50, .25, .5, '30,32,22'); blobs(g, w, h, 40, 10, 40, .1, .25, '150,140,110'); blobs(g, w, h, 200, 1, 3, .3, .6, '25,20,15'); g.strokeStyle = 'rgba(20,20,15,.6)'; g.lineWidth = 2; for (let y = 32; y < h; y += 64) { g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); } for (let x = 16; x < w; x += 32) for (let y = 8; y < h; y += 32) { g.fillStyle = 'rgba(15,15,10,.55)'; g.beginPath(); g.arc(x, y, 1.6, 0, 7); g.fill(); } const gr = g.createLinearGradient(0, h * .7, 0, h); gr.addColorStop(0, 'rgba(60,45,30,0)'); gr.addColorStop(1, 'rgba(60,45,30,.6)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); }, 1.6); }
-T.armorA = armorTex('#56603e'); T.armorB = armorTex('#7a6a4a');
+function armorHD(base, stripe) { return hdTex(512, (cg, hg, rg, S) => { fbm(hg, S, [16, 32, 64, 128, 256], .18); cg.fillStyle = base; cg.fillRect(0, 0, S, S);
+  const n = mkCanvas(S, S); fbm(n.getContext('2d'), S, [3, 6, 12, 24, 48], .65); cg.save(); cg.globalCompositeOperation = 'overlay'; cg.globalAlpha = .5; cg.drawImage(n, 0, 0); cg.restore();
+  blobs(cg, S, S, 26, 30, 90, .18, .35, stripe);
+  for (let y = 0; y <= S; y += S / 2) { cg.fillStyle = 'rgba(10,10,6,.6)'; cg.fillRect(0, y - 2, S, 4); hg.fillStyle = '#303030'; hg.fillRect(0, y - 3, S, 6); cg.fillStyle = 'rgba(255,250,230,.08)'; cg.fillRect(0, y + 3, S, 2); }
+  for (let x = S / 4; x < S; x += S / 2) { cg.fillStyle = 'rgba(10,10,6,.5)'; cg.fillRect(x - 1.5, 0, 3, S); hg.fillStyle = '#383838'; hg.fillRect(x - 2, 0, 4, S); }
+  for (let y = 14; y < S; y += S / 2) for (let x = 10; x < S; x += 24) { for (const yy of [y, y + S / 2 - 28]) { cg.fillStyle = 'rgba(20,18,12,.7)'; cg.beginPath(); cg.arc(x, yy, 3, 0, 7); cg.fill(); cg.fillStyle = 'rgba(255,250,230,.18)'; cg.beginPath(); cg.arc(x - .8, yy - .8, 1.4, 0, 7); cg.fill(); hg.fillStyle = '#e8e8e8'; hg.beginPath(); hg.arc(x, yy, 3, 0, 7); hg.fill(); } }
+  for (let i = 0; i < 160; i++) { const x = rnd(0, S), y = rnd(0, S), w = rnd(2, 12); cg.fillStyle = `rgba(${rnd(120, 170) | 0},${rnd(115, 160) | 0},${rnd(100, 140) | 0},.45)`; cg.fillRect(x, y, w, rnd(1, 3)); rg.fillStyle = 'rgb(0,140,0)'; rg.fillRect(x, y, w, 2); }
+  stains(cg, S, 22, a => `rgba(40,32,20,${.35 * a})`, 3, 14);
+  const gr = cg.createLinearGradient(0, S * .62, 0, S); gr.addColorStop(0, 'rgba(70,52,32,0)'); gr.addColorStop(.6, 'rgba(70,52,32,.45)'); gr.addColorStop(1, 'rgba(60,44,28,.8)'); cg.fillStyle = gr; cg.fillRect(0, 0, S, S);
+  for (let i = 0; i < 120; i++) { const x = rnd(0, S), y = S - Math.pow(Math.random(), 2) * S * .4, r = rnd(2, 9); cg.fillStyle = `rgba(${rnd(55, 85) | 0},${rnd(42, 62) | 0},${rnd(26, 38) | 0},${rnd(.4, .8)})`; cg.beginPath(); cg.arc(x, y, r, 0, 7); cg.fill(); hg.fillStyle = '#9a9a9a'; hg.beginPath(); hg.arc(x, y, r, 0, 7); hg.fill(); rg.fillStyle = 'rgb(0,250,0)'; rg.beginPath(); rg.arc(x, y, r, 0, 7); rg.fill(); } }, 3, .62); }
+T.armorA = armorHD('#5a6440', '34,38,24'); T.armorB = armorHD('#7c6c4c', '96,84,60');
+// surface detail for guns: parkerized metal grain and stippled polymer (normal + roughness only)
+T.gunMetal = hdTex(256, (cg, hg, rg, S) => { fbm(hg, S, [32, 64, 128, 256], .35); for (let i = 0; i < 90; i++) { const x = rnd(0, S), y = rnd(0, S); rg.strokeStyle = 'rgb(0,90,0)'; rg.lineWidth = rnd(.5, 1.2); rg.beginPath(); rg.moveTo(x, y); rg.lineTo(x + rnd(-30, 30), y + rnd(-4, 4)); rg.stroke(); } const n = mkCanvas(S, S); fbm(n.getContext('2d'), S, [4, 8, 16], .6); rg.save(); rg.globalCompositeOperation = 'overlay'; rg.globalAlpha = .4; rg.drawImage(n, 0, 0); rg.restore(); }, 1.5, .55);
+T.gunPoly = hdTex(256, (cg, hg, rg, S) => { for (let i = 0; i < 9000; i++) { const x = rnd(0, S), y = rnd(0, S), c = rnd(70, 190) | 0; hg.fillStyle = `rgb(${c},${c},${c})`; hg.beginPath(); hg.arc(x, y, rnd(.6, 1.6), 0, 7); hg.fill(); } }, 2.5, .82);
 const netTex = tex(mkCanvas(128, 128, (g, w, h) => { for (let i = 0; i < 70; i++) { g.fillStyle = ['#4b5136', '#5d5838', '#353a28'][i % 3]; g.beginPath(); g.ellipse(rnd(0, w), rnd(0, h), rnd(4, 12), rnd(3, 8), rnd(0, 3), 0, 7); g.fill(); } g.strokeStyle = '#2c2c20'; g.lineWidth = 1.5; for (let i = -w; i < w * 2; i += 10) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i + h, h); g.stroke(); g.beginPath(); g.moveTo(i, h); g.lineTo(i + h, 0); g.stroke(); } }), [3, 3]);
 const grassTex = tex(mkCanvas(128, 128, (g, w, h) => { for (let i = 0; i < 40; i++) { const x = rnd(10, w - 10), b = rnd(140, 200); g.strokeStyle = `rgb(${b * .62 | 0},${b * .55 | 0},${b * .32 | 0})`; g.lineWidth = rnd(1.5, 3); g.beginPath(); g.moveTo(x, h); g.quadraticCurveTo(x + rnd(-10, 10), h * .5, x + rnd(-25, 25), rnd(10, 60)); g.stroke(); } }));
 const scorchTex = (() => { const t = new THREE.CanvasTexture(mkCanvas(128, 128, (g) => { const gr = g.createRadialGradient(64, 64, 4, 64, 64, 62); gr.addColorStop(0, 'rgba(8,6,5,.95)'); gr.addColorStop(.5, 'rgba(15,11,8,.7)'); gr.addColorStop(1, 'rgba(20,15,10,0)'); g.fillStyle = gr; g.fillRect(0, 0, 128, 128); blobs(g, 128, 128, 30, 4, 12, .3, .6, '5,5,5'); })); t.encoding = THREE.sRGBEncoding; return t; })();
@@ -411,7 +424,7 @@ const MAT = {
   bag: M({ map: T.burlap.map, normalMap: T.burlap.normal, roughness: 1 }), concrete: M({ map: T.concrete.map, normalMap: T.concrete.normal, roughnessMap: T.concrete.rough, roughness: 1 }),
   plaster: M({ map: T.plaster.map, normalMap: T.plaster.normal, roughnessMap: T.plaster.rough, roughness: 1 }), rust: M({ map: T.rust.map, normalMap: T.rust.normal, roughnessMap: T.rust.rough, roughness: 1, metalness: .35 }),
   crate: M({ map: T.crate.map, normalMap: T.crate.normal, roughnessMap: T.crate.rough, roughness: 1 }), bark: M({ map: T.bark.map, normalMap: T.bark.normal, roughness: 1 }), tent: M({ map: T.tent.map, normalMap: T.tent.normal, roughness: 1 }),
-  armorA: M({ map: T.armorA.map, normalMap: T.armorA.normal, roughness: .7, metalness: .35 }), armorB: M({ map: T.armorB.map, normalMap: T.armorB.normal, roughness: .7, metalness: .35 }),
+  armorA: M({ map: T.armorA.map, normalMap: T.armorA.normal, roughnessMap: T.armorA.rough, roughness: 1, metalness: .3 }), armorB: M({ map: T.armorB.map, normalMap: T.armorB.normal, roughnessMap: T.armorB.rough, roughness: 1, metalness: .3 }),
   dark: M({ color: 0x1b1c1a, roughness: .5, metalness: .4 }), wire: M({ color: 0x3a332c, roughness: .5, metalness: .7 }), wood: M({ color: 0x4a3a2a, roughness: .9 }), black: M({ color: 0x050505, roughness: 1 }),
   net: M({ map: netTex, alphaTest: .5, side: THREE.DoubleSide, roughness: 1 }), grass: M({ map: grassTex, alphaTest: .45, side: THREE.DoubleSide, roughness: 1 }),
   water: M({ color: 0x23251c, roughness: .06, metalness: .5 }), tire: M({ color: 0x141414, roughness: .9 }), glass: M({ color: 0x223038, roughness: .1, metalness: .6 })
@@ -846,7 +859,7 @@ const HELMET_MAT = { A: M({ map: CAMO.A, roughness: .8 }), B: M({ map: CAMO.B, r
 const GEAR_MAT = { A: M({ map: CAMO.A, color: 0x6a6a60, roughness: .95 }), B: M({ map: CAMO.B, color: 0x6a6a60, roughness: .95 }) };
 const BAND_MAT = { A: M({ color: 0x2f6fd0, roughness: .7, emissive: 0x0a1a40 }), B: M({ color: 0xc0392b, roughness: .7, emissive: 0x300805 }) };
 const LIN = h => new THREE.Color(h).convertSRGBToLinear();
-const GUN_MAT = M({ color: LIN(0x2a2b2c), roughness: .85, metalness: 0 }), GUN_TAN = M({ color: LIN(0x3a3428), roughness: .95 }), BELT_MAT = M({ color: LIN(0x4a3f2c), roughness: .9 }), BOOT_MAT = M({ color: LIN(0x2e2820), roughness: .7 }), GLOVE_MAT = M({ color: LIN(0x2a2a26), roughness: .85 }), PAD_MAT = M({ color: LIN(0x2a2a26), roughness: .8 });
+const GUN_MAT = M({ color: LIN(0x2a2b2c), roughness: .85, metalness: 0, normalMap: T.gunMetal.normal }), GUN_TAN = M({ color: LIN(0x3a3428), roughness: .95, normalMap: T.gunPoly.normal }), BELT_MAT = M({ color: LIN(0x4a3f2c), roughness: .9 }), BOOT_MAT = M({ color: LIN(0x2e2820), roughness: .7 }), GLOVE_MAT = M({ color: LIN(0x2a2a26), roughness: .85 }), PAD_MAT = M({ color: LIN(0x2a2a26), roughness: .8 });
 function rbox(w, h, d, r = .02, seg = 3) { const g = new THREE.BoxGeometry(w, h, d, seg, seg, seg), p = g.attributes.position, hx = w / 2 - r, hy = h / 2 - r, hz = d / 2 - r, v = new V(), c = new V();
   for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i); c.set(clamp(v.x, -hx, hx), clamp(v.y, -hy, hy), clamp(v.z, -hz, hz)); const n = v.clone().sub(c); if (n.lengthSq() > 1e-9) v.copy(c).addScaledVector(n.normalize(), r); p.setXYZ(i, v.x, v.y, v.z); } g.computeVertexNormals(); return g; }
 const GRIP = new V(0, -.075, -.02), FORE = new V(0, -.035, .3), MUZZLE = new V(0, 0, .68);
@@ -1418,7 +1431,7 @@ function updJets(dt) { for (let i = jets.length - 1; i >= 0; i--) { const j = je
     if (j.life <= 0) { scene.remove(j.g); jets.splice(i, 1); } } }
 
 /* ---------------- player weapons + viewmodels ---------------- */
-const VMAT = { blk: M({ color: 0x0f1011, roughness: .5, metalness: .15 }), poly: M({ color: 0x232321, roughness: .8, metalness: .1 }), tan: M({ color: 0x8a7a5a, roughness: .7 }), olive: M({ color: 0x4b5233, roughness: .75 }), glove: M({ color: 0x2b2924, roughness: .95 }), sleeve: M({ map: T.camo.map, roughness: .95 }) };
+const VMAT = { blk: M({ color: 0x0f1011, roughnessMap: T.gunMetal.rough, normalMap: T.gunMetal.normal, normalScale: new THREE.Vector2(.6, .6), roughness: 1, metalness: .3 }), poly: M({ color: 0x232321, roughnessMap: T.gunPoly.rough, normalMap: T.gunPoly.normal, normalScale: new THREE.Vector2(.8, .8), roughness: 1, metalness: .05 }), tan: M({ color: 0x8a7a5a, roughness: .7 }), olive: M({ color: 0x4b5233, roughness: .75, normalMap: T.gunPoly.normal, normalScale: new THREE.Vector2(.5, .5) }), glove: M({ color: 0x2b2924, roughness: .95 }), sleeve: M({ map: T.camo.map, roughness: .95 }) };
 function part(g, geo, mat, x, y, z, rx = 0, ry = 0, rz = 0) { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.rotation.set(rx, ry, rz); g.add(m); return m; }
 const BX = (w, h, d) => new THREE.BoxGeometry(w, h, d), CY = (a, b, h, s = 12) => new THREE.CylinderGeometry(a, b, h, s);
 function limb(g, a, b, r1, r2, mat) { const d = b.clone().sub(a), L = d.length(); const m = new THREE.Mesh(new THREE.CylinderGeometry(r2, r1, L, 10), mat); m.position.copy(a).add(b).multiplyScalar(.5); m.quaternion.setFromUnitVectors(UP, d.normalize()); g.add(m); return m; }
@@ -1430,6 +1443,9 @@ function arms(g, gripZ, foreZ, foreY = -.01) {
   limb(g, hL.clone().add(new V(-.01, -.02, .03)), eL, .036, .05, VMAT.sleeve); limb(g, eL, new V(-.36, -.44, .3), .05, .062, VMAT.sleeve);
   for (let i = 0; i < 3; i++) part(g, new THREE.CapsuleGeometry(.009, .03, 3, 6), VMAT.glove, -.028, foreY - .01, foreZ - .02 + i * .022, 0, 0, Math.PI / 2 + .3);
 }
+function gunDetail(g, z0, z1, y, opts = {}) { const RT = new THREE.BoxGeometry(.024, .006, .006); for (let z = z0; z < z1; z += .013) part(g, RT, VMAT.blk, 0, y + .004, z);
+  part(g, new THREE.TorusGeometry(.028, .004, 4, 12, Math.PI), VMAT.blk, 0, -.052, .04, 0, Math.PI / 2, Math.PI); part(g, BX(.004, .022, .006), VMAT.blk, 0, -.04, .045, .3);
+  part(g, BX(.004, .018, .05), VMAT.poly, .022, .008, -.01); part(g, BX(.01, .006, .02), VMAT.blk, -.024, .02, .1); if (opts.side) for (let z = opts.side[0]; z < opts.side[1]; z += .014) for (const sd of [-1, 1]) part(g, BX(.004, .012, .006), VMAT.blk, sd * .03, -.004, z); }
 function buildM4() { const g = new THREE.Group();
   part(g, BX(.042, .055, .25), VMAT.blk, 0, 0, 0); part(g, BX(.038, .045, .17), VMAT.blk, 0, -.048, .01); part(g, BX(.058, .058, .31), VMAT.poly, 0, -.004, -.275);
   for (const s of [-1, 1]) part(g, BX(.008, .012, .3), VMAT.blk, s * .03, -.004, -.275); part(g, BX(.022, .01, .56), VMAT.blk, 0, .033, -.16);
@@ -1438,7 +1454,7 @@ function buildM4() { const g = new THREE.Group();
   part(g, new THREE.CircleGeometry(.0022, 10), new THREE.MeshBasicMaterial({ color: new THREE.Color(9, .4, .2) }), 0, .072, -.066);
   const mag = part(g, BX(.028, .14, .07), VMAT.blk, 0, -.13, -.05, .22); part(g, BX(.03, .09, .042), VMAT.poly, 0, -.1, .085, -.35);
   part(g, CY(.016, .016, .2), VMAT.blk, 0, -.005, .2, Math.PI / 2); part(g, BX(.04, .075, .14), VMAT.poly, 0, -.025, .26); part(g, BX(.012, .02, .05), VMAT.blk, .026, .012, .02); part(g, BX(.016, .012, .03), VMAT.blk, 0, .03, .11);
-  arms(g, .085, -.30); g.userData = { mag, magY: -.13, port: new V(.03, .01, 0), muzzle: new V(0, -.004, -.66) }; return g; }
+  gunDetail(g, -.42, .1, .033, { side: [-.4, -.16] }); arms(g, .085, -.30); g.userData = { mag, magY: -.13, port: new V(.03, .01, 0), muzzle: new V(0, -.004, -.66) }; return g; }
 function buildSniper() { const g = new THREE.Group();
   part(g, BX(.05, .07, .5), VMAT.olive, 0, -.02, -.05); part(g, CY(.012, .015, .55), VMAT.blk, 0, -.005, -.55, Math.PI / 2); part(g, CY(.022, .022, .3), VMAT.blk, 0, .06, -.05, Math.PI / 2); part(g, CY(.03, .022, .06), VMAT.blk, 0, .06, -.22, Math.PI / 2); part(g, CY(.022, .028, .05), VMAT.blk, 0, .06, .11, Math.PI / 2);
   part(g, BX(.02, .03, .03), VMAT.blk, 0, .035, -.05); part(g, CY(.006, .006, .06), VMAT.blk, .04, .0, .08, 0, 0, Math.PI / 2); const mag = part(g, BX(.03, .06, .08), VMAT.blk, 0, -.08, -.02);
@@ -1448,7 +1464,7 @@ function buildRPG() { const g = new THREE.Group(); part(g, CY(.045, .045, 1.05),
   part(g, BX(.03, .1, .04), VMAT.blk, 0, -.08, .05, -.2); part(g, BX(.03, .09, .04), VMAT.blk, 0, -.07, -.25); part(g, BX(.02, .06, .06), VMAT.blk, -.05, .06, -.2);
   arms(g, .05, -.25, -.03); g.userData = { warhead: war, muzzle: new V(0, 0, -.7) }; return g; }
 /* ---------------- armory: weapon database, loadout, coins, gamepasses ---------------- */
-VMAT.wood = M({ color: 0x5a3820, roughness: .65 });
+VMAT.wood = M({ map: T.plank.map, normalMap: T.plank.normal, color: 0xc08060, roughness: .6 });
 const WDB = {
   m4: { slot: 0, name: 'M4A1', cls: 'Assault rifle', price: 0, auto: true, rpm: 760, dmg: 25, head: 2, mag: 30, res: 210, spread: .028, ads: .003, recoil: .011, reload: 2.1, fov: 52, range: 70, model: 'm4' },
   ak: { slot: 0, name: 'AK-74', cls: 'Assault rifle', price: 1200, auto: true, rpm: 650, dmg: 30, head: 2, mag: 30, res: 180, spread: .032, ads: .004, recoil: .016, reload: 2.3, fov: 54, range: 65, sound: .85, model: { len: .66, furn: 'wood', mag: 'curved', optic: 'iron' } },
@@ -1547,6 +1563,7 @@ function buildGun(m) {
   else if (m.optic === 'scope') { part(g, CY(.022, .022, .3), VMAT.blk, 0, .065, -.05, Math.PI / 2); part(g, CY(.03, .022, .06), VMAT.blk, 0, .065, -.22, Math.PI / 2); part(g, BX(.02, .03, .04), VMAT.blk, 0, .04, -.05); sightY = .065; }
   else { part(g, BX(.03, .022, .02), VMAT.blk, 0, .04, .08); part(g, BX(.008, .04, .01), VMAT.blk, 0, .045, bz + .02); }
   if (m.bipod) for (const sd of [-1, 1]) part(g, CY(.006, .006, .22), VMAT.blk, sd * .03, -.1, bz + .05, .3, 0, sd * .25);
+  if (m.optic !== 'iron') gunDetail(g, bz + .05, .1, .03, m.furn === 'wood' ? {} : { side: [bz + .03, -.15] });
   arms(g, .085, -.13 - hg * .55);
   g.userData = { mag, magY: mag.position.y, port: new V(.03, .01, 0), muzzle: new V(0, -.004, mz - .02), sightY }; return g;
 }
