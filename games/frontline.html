@@ -872,17 +872,18 @@ function applyFace(m, face) { let head = null, eb = new THREE.Box3(); m.traverse
   head.geometry.computeBoundingBox(); const hbL = head.geometry.boundingBox, ec = eb.getCenter(new V()), front = Math.sign(ec.z - hbL.getCenter(new V()).z) || 1, W = .17, Hh = .285;
   const rect = new THREE.Vector4(ec.x, ec.y - .012 + (.5 - .62) * Hh, W, Hh), mat = head.material;
   mat.onBeforeCompile = sh => { sh.uniforms.faceMap = { value: face.tex }; sh.uniforms.faceRect = { value: rect }; sh.uniforms.faceFront = { value: front }; sh.uniforms.faceSkin = { value: new THREE.Color(face.skin || '#c89a80') }; sh.uniforms.sideL = { value: face.texL || face.tex }; sh.uniforms.sideR = { value: face.texR || face.tex }; sh.uniforms.hasSide = { value: face.texL ? 1 : 0 }; sh.uniforms.sideRect = { value: new THREE.Vector4(ec.z * front, ec.y, .215, .27) }; sh.uniforms.hairCol = { value: new THREE.Color(face.hair || '#3a2a1c') };
+    sh.fragmentShader = sh.fragmentShader.replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n totalEmissiveRadiance += faceLit * .62;');
     sh.vertexShader = 'varying vec3 vFP;varying vec3 vFN;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvFP=position;vFN=normal;');
-    sh.fragmentShader = 'uniform sampler2D faceMap,sideL,sideR;uniform vec4 faceRect,sideRect;uniform float faceFront,hasSide;uniform vec3 faceSkin,hairCol;varying vec3 vFP;varying vec3 vFN;\n' + sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
+    sh.fragmentShader = 'vec3 faceLit=vec3(0.);uniform sampler2D faceMap,sideL,sideR;uniform vec4 faceRect,sideRect;uniform float faceFront,hasSide;uniform vec3 faceSkin,hairCol;varying vec3 vFP;varying vec3 vFN;\n' + sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
       vec2 fu=vec2((vFP.x-faceRect.x)/faceRect.z*faceFront+.5,(vFP.y-faceRect.y)/faceRect.w+.5);
-      vec2 q=(fu-.5)*vec2(2.1,1.95);q.y+=q.y<0.?q.y*.18:0.;float fe=length(q);float fm=(1.-smoothstep(.6,1.,fe))*smoothstep(.05,.5,normalize(vFN).z*faceFront);
+      vec2 q=(fu-.5)*vec2(2.1,1.95);q.y+=q.y<0.?q.y*.18:0.;float fe=length(q);float fnz=normalize(vFN).z*faceFront;float fm=(1.-smoothstep(.6,1.,fe))*max(smoothstep(.05,.5,fnz),(1.-smoothstep(.45,.7,fe))*step(-.2,fnz));
       vec3 fc=pow(texture2D(faceMap,clamp(fu,0.,1.)).rgb,vec3(2.2));vec3 edge=pow(faceSkin,vec3(2.2));
-      fc=mix(fc,fc*(dot(edge,vec3(.33))/max(dot(fc,vec3(.33)),.02)*.25+.75),.0);diffuseColor.rgb=mix(diffuseColor.rgb,fc*1.08,fm);
+      fc=mix(fc,fc*(dot(edge,vec3(.33))/max(dot(fc,vec3(.33)),.02)*.25+.75),.0);diffuseColor.rgb=mix(diffuseColor.rgb,fc*1.08,fm);faceLit=fc*fm;diffuseColor.rgb*=1.-.55*fm;
       if(hasSide>.5){vec3 nn=normalize(vFN);float zf=vFP.z*faceFront;vec2 su=vec2((sideRect.x+.045-zf)/sideRect.z,(vFP.y-(sideRect.y-.148))/sideRect.w);
         float sw=smoothstep(.3,.75,abs(nn.x))*(1.-smoothstep(.62,.8,su.x))*smoothstep(.42,.52,su.x)*smoothstep(0.,.08,su.y)*(1.-smoothstep(.9,1.,su.y));
         vec3 sc=pow(nn.x*faceFront>0.?texture2D(sideL,clamp(su,0.,1.)).rgb:texture2D(sideR,clamp(su,0.,1.)).rgb,vec3(2.2));diffuseColor.rgb=mix(diffuseColor.rgb,sc*1.08,sw*(1.-smoothstep(.0,.25,fm)));
         float back=smoothstep(.0,-.06,zf-sideRect.x+.09);float top=max(smoothstep(sideRect.y+.03,sideRect.y+.05,vFP.y),back*smoothstep(sideRect.y-.06,sideRect.y-.02,vFP.y))*(1.-fm);diffuseColor.rgb=mix(diffuseColor.rgb,pow(hairCol,vec3(2.2))*.9,top);}`); };
-  mat.roughness = .5; mat.customProgramCacheKey = () => 'face'; mat.needsUpdate = true; }
+  mat.roughness = .9; mat.customProgramCacheKey = () => 'face'; mat.needsUpdate = true; }
 const HAIRM = {}; function hairMat(col) { const k = col || '#3a2a1c'; if (HAIRM[k]) return HAIRM[k]; const S = 256, c = mkCanvas(S, S), h = mkCanvas(S, S), g = c.getContext('2d'), q = h.getContext('2d'); const base = new THREE.Color(k);
   g.fillStyle = '#' + base.getHexString(); g.fillRect(0, 0, S, S); q.fillStyle = '#808080'; q.fillRect(0, 0, S, S);
   for (let i = 0; i < 2600; i++) { const x = rnd(0, S), y = rnd(0, S), L = rnd(6, 18), a = rnd(-.25, .25) + Math.PI / 2, l = rnd(.5, 1.25); g.strokeStyle = `rgba(${base.r * 255 * l | 0},${base.g * 255 * l | 0},${base.b * 255 * l | 0},.7)`; g.lineWidth = rnd(.6, 1.4); g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * L, y + Math.sin(a) * L); g.stroke(); q.strokeStyle = l > 1 ? '#c0c0c0' : '#404040'; q.lineWidth = 1; q.beginPath(); q.moveTo(x, y); q.lineTo(x + Math.cos(a) * L, y + Math.sin(a) * L); q.stroke(); }
@@ -909,7 +910,7 @@ function makeSoldier(name, team, ally, idx = 0, face = null) {
         const wide = Math.abs(b.max.x - b.min.x) >= Math.abs(b.max.z - b.min.z) ? 'x' : 'z'; for (let i = 0; i < p.count; i++) { let x = p.getX(i), y = p.getY(i), z = p.getZ(i); x = c.x + (x - c.x) * .8; z = c.z + (z - c.z) * .8; y = c.y + (y - c.y) * .82 - hy * .07; p.setXYZ(i, x, y, z); } p.needsUpdate = true; o.geometry.computeBoundingBox(); o.geometry.computeBoundingSphere(); } }
     else if (/Wolf3D_(Head|Body)$/.test(n)) { o.material.color.copy(skin); o.material.roughness = .58; o.material.emissive = skin.clone().multiply(new THREE.Color(.05, .018, .012)); if (paint && /Head$/.test(n)) o.material.color.lerp(new THREE.Color(0x3c4a2a), .55); }
     else if (/Beard/.test(n)) { o.visible = beard; o.material.color.set(beardCol); }
-    else if (/^Eye(Left|Right)/.test(n)) { o.material.color.set(eyeCol).lerp(new THREE.Color(1, 1, 1), .35); if (face) o.visible = false; }
+    else if (/^Eye(Left|Right)/.test(n)) { o.material.color.set(eyeCol).lerp(new THREE.Color(1, 1, 1), .35); if (face) { o.visible = !!face.eye; if (face.eye) o.material.color.set(face.eye).lerp(new THREE.Color(1, 1, 1), .25); } }
     else if (/Teeth/.test(n) && face) o.visible = false;
     else if (/Hair|Headwear/.test(n) || n === 'Mesh') o.visible = false; });
   m.updateMatrixWorld(true);
