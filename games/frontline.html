@@ -151,6 +151,13 @@ svg.rk{vertical-align:middle;flex:none;filter:drop-shadow(0 1px 1px #000)}
 .mk.g{color:var(--grn)}.mk.r{color:var(--red)}.mk.b{color:var(--blu)}.mk.pl i{background:currentColor;animation:mkp .5s steps(2) infinite}@keyframes mkp{50%{opacity:.3}}
 #xprompt{position:absolute;left:50%;top:64%;transform:translateX(-50%);text-align:center;font-size:17px;background:rgba(0,0,0,.55);padding:7px 14px;border-left:3px solid var(--acc)}#xprompt b{color:var(--acc)}
 #xprompt i{display:block;height:4px;background:rgba(255,255,255,.15);margin-top:6px}#xprompt i b{display:block;height:100%;background:var(--acc)}
+#faceui{position:fixed;inset:0;z-index:45;background:rgba(6,9,7,.97);display:flex;justify-content:center;align-items:center;overflow:auto;padding:20px 16px}
+.fwrap{width:min(720px,100%)}.fwrap h2{font-family:var(--cond);font-size:32px;margin:0 0 6px;text-transform:uppercase;letter-spacing:.04em}
+.frow{display:flex;gap:22px;flex-wrap:wrap;margin-top:12px}.fcrop{position:relative;width:272px;height:400px;background:#111;border:1px solid rgba(255,255,255,.15);cursor:grab;touch-action:none;flex:none}
+.fcrop canvas{display:block}.fov{position:absolute;inset:10px 16px;border:2px dashed rgba(242,193,78,.85);border-radius:50%;pointer-events:none;box-shadow:0 0 0 999px rgba(0,0,0,.35)}
+.feye{position:absolute;left:24px;right:24px;top:38%;border-top:1px solid rgba(111,178,255,.9);pointer-events:none}.feye span{position:absolute;right:0;top:-18px;font-size:11px;color:var(--blu);font-family:var(--cond);letter-spacing:.1em;text-transform:uppercase}
+.fside{flex:1;min-width:220px;display:flex;flex-direction:column;gap:12px}.fhint{color:var(--dim);font-size:14px;margin:0}.fbtn input{display:none}.fbtn{display:inline-block;font-family:var(--cond);font-size:18px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--acc);color:var(--acc);padding:10px 14px;cursor:pointer;text-align:center}
+#fmsg{color:var(--grn);font-family:var(--cond);letter-spacing:.06em}
 </style>
 
 <canvas id="c"></canvas>
@@ -182,7 +189,7 @@ svg.rk{vertical-align:middle;flex:none;filter:drop-shadow(0 1px 1px #000)}
     <div class="row"><label class="chk"><input type="checkbox" id="arty" checked>Ambient artillery</label><label>Look sensitivity<input type="range" id="sens" min="0.3" max="3" step="0.05" value="1"></label></div>
     <button class="pri" id="front" disabled>Frontline Offensive</button><span id="campinfo" class="campinfo"></span>
     <div class="row"><button id="tdm" disabled>Team Deathmatch</button><button id="ffa" disabled>Free-for-all</button></div>
-    <div class="coinrow"><span id="mcoins"></span><button id="mshop">Armory</button></div>
+    <div class="coinrow"><span id="mcoins"></span><button id="mshop">Armory</button><button id="mface">My face</button></div>
     <span id="load">Building the battlefield…</span><div id="err"></div>
     <div class="keys"><b>WASD</b> move · <b>Mouse</b> or <b>Arrow keys</b> look · <b>Click</b> or <b>E</b> fire · <b>Right-click</b> or <b>Q</b> aim · <b>Shift</b> sprint · <b>Space</b> jump / climb · <b>C</b> crouch (slide while sprinting) · <b>R</b> reload · <b>1 2 3</b> primary, marksman, launcher · <b>G</b> grenade · <b>Offensive:</b> capture the sectors in order to push the front · <b>T</b> form squad, then give orders (follow, hold, attack task, disband) · <b>X</b> hold to plant or defuse a charge · <b>F</b> first / third person · <b>V</b> enter vehicle · <b>4–7</b> killstreaks · <b>Tab</b> scores · <b>Esc</b> pause<br>
     <b>Helicopter:</b> Space up · C down · W/S fly · A/D turn · E drop supplies · <b>Tank:</b> mouse aims · click/E main gun · right-click MG</div>
@@ -191,6 +198,14 @@ svg.rk{vertical-align:middle;flex:none;filter:drop-shadow(0 1px 1px #000)}
 </div>
 <div id="cine" class="hide"><div class="bar top"></div><div class="bar bot"></div><div id="cineText"><div id="cineT"></div><div id="cineS"></div></div><div id="skip">Space to skip</div></div>
 <div id="fade"></div><div id="rankup" class="hide"></div>
+<div id="faceui" class="hide"><div class="fwrap"><h2>Faces</h2>
+  <p class="note">Your photo stays on this device. It is saved only in this browser and is never uploaded. Use a front-facing photo in good light.</p>
+  <div class="frow"><div class="fcrop"><canvas id="fcv" width="272" height="400"></canvas><div class="fov"></div><div class="feye"><span>eyes</span></div></div>
+  <div class="fside"><label>Who is this?<select id="fslot"><option value="1">Me (my soldier)</option><option value="2">My squad mate</option></select></label><label id="fnamel" class="hide">Squad mate name<input id="fname" maxlength="14" autocomplete="off"></label><label class="fbtn">Choose photo<input id="ffile" type="file" accept="image/*"></label><label>Zoom<input id="fzoom" type="range" min="0.3" max="4" step="0.01" value="1"></label>
+  <label>Turn<input id="frot" type="range" min="-30" max="30" step="0.5" value="0"></label><p class="fhint">Drag the photo so the face fills the oval and the eyes sit on the line.</p>
+  <div class="row"><button class="pri" id="fsave">Save face</button><button id="fdel">Remove</button><button id="fclose">Close</button></div><span id="fmsg"></span></div></div>
+  <h2 style="margin-top:22px;font-size:24px">iPad video</h2><p class="note">Pick a video to play on the iPad lying in the village rubble. It stays on this device only and is never uploaded. MP4 works on every browser.</p>
+  <div class="row"><label class="fbtn">Choose video<input id="vfile" type="file" accept="video/*"></label><button id="vdel">Remove video</button></div><span id="vmsg" style="color:var(--grn);font-family:var(--cond)"></span></div></div>
 <div id="shop" class="hide"><div class="wrap"><div class="top"><h2>Armory</h2><div class="coinrow"><span id="shcoins"></span><button class="pri" id="shopclose">Done</button></div></div>
   <div id="shoptabs"><button data-t="weapons">Weapons</button><button data-t="upgrades">Upgrades</button><button data-t="passes">Gamepasses</button><button data-t="honors">Honors</button></div><div id="shopbody"></div></div></div>
 <div id="stats" class="screen hide"><div class="card"><span class="kick">Battle report</span><h1 id="stT">Victory</h1><p id="stS"></p><div id="stXP"></div><div id="stGrid"></div><div id="stFront"></div>
@@ -793,28 +808,44 @@ function bakePoses() { const m = THREE.SkeletonUtils.clone(RPM.scene), b = {}; m
 function loadModels() { return Promise.all([parseGLB(window.RPM_B64), parseGLB(window.ANIM_B64)]).then(([g, a]) => { RPM = g; retarget(g, a); bakePoses(); }); }
 function bubbleSprite() { const c = mkCanvas(256, 48); const t = new THREE.CanvasTexture(c); const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, transparent: true, depthTest: false, fog: false })); s.scale.set(1.7, .32, 1); s.position.y = 2.45; s.visible = false; s.renderOrder = 6; s.userData.c = c; return s; }
 function tagSprite(name, ally) { const tc = mkCanvas(256, 48, g => { g.font = 'bold 30px Barlow Condensed, sans-serif'; g.textAlign = 'center'; g.fillStyle = ally ? '#6fb2ff' : '#e0442f'; g.shadowColor = '#000'; g.shadowBlur = 6; g.fillText(name, 128, 34); }); const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(tc), transparent: true, depthTest: !ally, fog: false })); s.scale.set(1.2, .22, 1); s.renderOrder = 5; return s; }
-function makeSoldier(name, team, ally, idx = 0) {
+function applyFace(m, face) { let head = null, eb = new THREE.Box3(); m.traverse(o => { if (!o.isMesh) return; if (/Wolf3D_Head$/.test(o.name)) head = o; if (/^EyeLeft|^EyeRight/.test(o.name)) { o.geometry.computeBoundingBox(); eb.union(o.geometry.boundingBox); } }); if (!head || eb.isEmpty()) return;
+  head.geometry.computeBoundingBox(); const hbL = head.geometry.boundingBox, ec = eb.getCenter(new V()), front = Math.sign(ec.z - hbL.getCenter(new V()).z) || 1, W = .162, Hh = .25;
+  const rect = new THREE.Vector4(ec.x, ec.y - .012 + (.5 - .62) * Hh, W, Hh), mat = head.material;
+  mat.onBeforeCompile = sh => { sh.uniforms.faceMap = { value: face.tex }; sh.uniforms.faceRect = { value: rect }; sh.uniforms.faceFront = { value: front };
+    sh.vertexShader = 'varying vec3 vFP;varying vec3 vFN;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvFP=position;vFN=normal;');
+    sh.fragmentShader = 'uniform sampler2D faceMap;uniform vec4 faceRect;uniform float faceFront;varying vec3 vFP;varying vec3 vFN;\n' + sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
+      vec2 fu=vec2((vFP.x-faceRect.x)/faceRect.z*faceFront+.5,(vFP.y-faceRect.y)/faceRect.w+.5);
+      float fe=length((fu-.5)*vec2(2.05,2.0));float fm=(1.-smoothstep(.72,1.,fe))*smoothstep(.15,.55,normalize(vFN).z*faceFront);
+      vec3 fc=pow(texture2D(faceMap,clamp(fu,0.,1.)).rgb,vec3(2.2));diffuseColor.rgb=mix(diffuseColor.rgb,fc,fm);`); };
+  mat.customProgramCacheKey = () => 'face'; mat.needsUpdate = true; }
+const FACE = { tex: null, skin: null, hair: null }, FACE2 = { tex: null, skin: null, hair: null, name: '' };
+function loadFace() { for (const [F, key] of [[FACE, 'fl_face'], [FACE2, 'fl_face2']]) { F.tex = null; let d = null; try { d = JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) { } if (!d || !d.img) continue; F.name = d.name || ''; const img = new Image(); img.onload = () => { const t = new THREE.Texture(img); t.needsUpdate = true; t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; F.tex = t; F.skin = d.skin; F.hair = d.hair; }; img.src = d.img; } }
+loadFace();
+function makeSoldier(name, team, ally, idx = 0, face = null) {
   const root = new THREE.Group(); root.rotation.order = 'YXZ'; scene.add(root); team = team || 'B';
   const m = THREE.SkeletonUtils.clone(RPM.scene); m.rotation.y = Math.PI; root.add(m);
   let seed = 2166136261; for (const ch of (name || 'x') + team + idx) seed = Math.imul(seed ^ ch.charCodeAt(0), 16777619) >>> 0; const R = () => (seed = Math.imul(seed ^ seed >>> 15, 2246822507) + 0x9e3779b9 >>> 0) / 4294967296; const pick = a => a[R() * a.length | 0];
-  const bones = {}, morphs = []; const skin = new THREE.Color(SKINS[(idx * 5 + (R() * 3 | 0)) % SKINS.length]).multiplyScalar(.92 + R() * .12); const beard = R() < .45;
+  const bones = {}, morphs = []; const skin = face && face.skin ? new THREE.Color(face.skin) : new THREE.Color(SKINS[(idx * 5 + (R() * 3 | 0)) % SKINS.length]).multiplyScalar(.92 + R() * .12); const beard = !face && R() < .45;
   const beardCol = pick([0x2a1d14, 0x14100d, 0x6b3a1e, 0x8a8178, 0x7a5a32, 0x3b2a1c]), eyeCol = pick([0x6b4a2e, 0x4a6a8a, 0x5d6e44, 0x8a6a3e, 0x3a2a1e]), cloth = .8 + R() * .25;
-  const hat = pick(['helmet', 'goggles', 'net', 'helmet', 'boonie', 'cap', 'bare']), paint = R() < .2, shades = R() < .22, scarf = R() < .4, kit = pick(['pack', 'pack', 'radio', 'roll', 'none']);
+  let hat = pick(['helmet', 'goggles', 'net', 'helmet', 'boonie', 'cap', 'bare']), paint = R() < .2, shades = R() < .22, scarf = R() < .4, kit = pick(['pack', 'pack', 'radio', 'roll', 'none']);
+  if (face) { hat = R() < .5 ? 'bare' : 'cap'; paint = false; shades = false; }
   const H = .93 + R() * .14, Wd = .94 + R() * .13, hsc = [1 + (R() - .5) * .12, 1 + (R() - .5) * .1, 1 + (R() - .5) * .1];
   m.traverse(o => { if (o.isBone) bones[o.name] = o; if (!o.isMesh) return; o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; o.material = o.material.clone(); const n = o.name;
     if (o.morphTargetDictionary && 'mouthOpen' in o.morphTargetDictionary) morphs.push(o);
     if (/Outfit_Top|Outfit_Bottom/.test(n)) { o.material.map = CAMO[team]; o.material.color.setScalar(cloth * (/Bottom/.test(n) ? .92 : 1)); o.material.roughness = .92; if (o.material.normalMap) o.material.normalScale.set(1.6, 1.6); }
     else if (/Footwear/.test(n)) { o.material.map = null; o.material.color.copy(LIN(0x2e261d)); o.material.roughness = .85; }
-    else if (/Headwear/.test(n)) { o.visible = !/helmet|goggles|net/.test(hat); o.material.color.set(beardCol).multiplyScalar(1.6);
+    else if (/Headwear/.test(n)) { o.visible = !/helmet|goggles|net/.test(hat); o.material.color.set(face && face.hair ? face.hair : beardCol).multiplyScalar(face ? 1.25 : 1.6);
       if (o.visible) { o.geometry = o.geometry.clone(); o.geometry.computeBoundingBox(); const b = o.geometry.boundingBox, c = b.getCenter(new V()), p = o.geometry.attributes.position, hy = b.max.y - b.min.y;
         const wide = Math.abs(b.max.x - b.min.x) >= Math.abs(b.max.z - b.min.z) ? 'x' : 'z'; for (let i = 0; i < p.count; i++) { let x = p.getX(i), y = p.getY(i), z = p.getZ(i); x = c.x + (x - c.x) * .8; z = c.z + (z - c.z) * .8; y = c.y + (y - c.y) * .82 - hy * .07; p.setXYZ(i, x, y, z); } p.needsUpdate = true; o.geometry.computeBoundingBox(); o.geometry.computeBoundingSphere(); } }
     else if (/Wolf3D_(Head|Body)$/.test(n)) { o.material.color.copy(skin); o.material.roughness = .58; o.material.emissive = skin.clone().multiply(new THREE.Color(.05, .018, .012)); if (paint && /Head$/.test(n)) o.material.color.lerp(new THREE.Color(0x3c4a2a), .55); }
     else if (/Beard/.test(n)) { o.visible = beard; o.material.color.set(beardCol); }
-    else if (/^Eye(Left|Right)/.test(n)) o.material.color.set(eyeCol).lerp(new THREE.Color(1, 1, 1), .35);
+    else if (/^Eye(Left|Right)/.test(n)) { o.material.color.set(eyeCol).lerp(new THREE.Color(1, 1, 1), .35); if (face) o.visible = false; }
+    else if (/Teeth/.test(n) && face) o.visible = false;
     else if (/Hair|Headwear/.test(n) || n === 'Mesh') o.visible = false; });
   m.updateMatrixWorld(true);
   const hb = new THREE.Box3(); m.traverse(o => { if (o.isMesh && /Wolf3D_Head/.test(o.name)) { o.geometry.computeBoundingBox(); hb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld); } });
   const hc = hb.getCenter(new V()), hs = hb.getSize(new V());
+  if (face && face.tex) applyFace(m, face);
   const att = (mesh, bone) => { mesh.castShadow = true; scene.add(mesh); mesh.updateMatrixWorld(true); bones[bone].attach(mesh); return mesh; };
   const hp = (x, y, z) => new V(hc.x + x * hs.x, hb.max.y + y * hs.y, hc.z + z * hs.z), headM = (geo, mat, p, rx = 0) => { const o = new THREE.Mesh(geo, mat); o.position.copy(p); o.rotation.x = rx; return att(o, 'Head'); };
   const GM = GEAR_MAT[team], FABH = gearMat(team, 'fab');
@@ -909,7 +940,7 @@ const hostile = (a, b) => a !== b && (!isTeam() || teamOf(a) !== teamOf(b));
 const hostileTeam = (team, id) => !isTeam() ? true : teamOf(id) !== team;
 const nameOf = id => id === me.id ? me.name : /^truck/.test(id || '') ? 'Gun truck' : /^tank/.test(id || '') ? 'Tank' : id === 'arty' ? 'Artillery' : id === 'world' ? 'the wreck' : (score.get(id) || {}).name || '?';
 function addEnt(id, name, team, idx = 0) {
-  const ally = isTeam() && team === me.team; const s = makeSoldier(name, isTeam() ? team : 'B', ally, idx);
+  const ally = isTeam() && team === me.team; const f2 = FACE2.tex && isTeam() && id === 'b' + me.team + '0' ? FACE2 : null; if (f2 && FACE2.name) name = FACE2.name; const s = makeSoldier(name, isTeam() ? team : 'B', ally, idx, f2);
   const e = Object.assign(s, { id, name, bot: true, team, pos: new V(), tpos: new V(), yaw: 0, ryaw: 0, tyaw: 0, pitch: 0, hp: 100, dead: false, crouch: false, speed: 0, firedT: -99, streak: 0, tagT: 0, idx });
   s.body.userData = { ent: e, head: false }; s.head.userData = { ent: e, head: true }; hitboxes.push(s.body, s.head); ents.set(id, e); sc(id, name, team); return e;
 }
@@ -1660,7 +1691,23 @@ const PROPS = []; const BARREL_RED = M({ color: LIN(0x8a2a1c), roughness: .55, m
 function makeProp(kind, p) { let m, r, mass; if (kind === 'barrel' || kind === 'red') { m = new THREE.Mesh(CY(.29, .29, .88, 16), kind === 'red' ? BARREL_RED : MAT.rust); for (const y of [-.26, .26]) { const rr = new THREE.Mesh(new THREE.TorusGeometry(.295, .018, 4, 16), MAT.dark); rr.rotation.x = Math.PI / 2; rr.position.y = y; m.add(rr); } r = .44; mass = kind === 'red' ? 2 : 3; }
   else if (kind === 'crate') { m = new THREE.Mesh(rbox(.7, .55, .7, .03), MAT.crate); r = .42; mass = 2.5; } else { m = new THREE.Mesh(rbox(.2, .34, .3, .03), M({ color: LIN(0x4a5a2c), roughness: .6 })); r = .2; mass = 1; }
   m.castShadow = m.receiveShadow = true; scene.add(m); const o = { kind, m, r, mass, p: p.clone(), v: new V(), w: new V(), hp: 30, rest: 0, dead: false }; o.p.y = th(p.x, p.z) + r * .9; m.position.copy(o.p); m.rotation.y = Math.random() * 6; PROPS.push(o); return o; }
-function spawnProps() { PROPS.forEach(o => scene.remove(o.m)); PROPS.length = 0; const add = (k, x0, x1, z0, z1, n) => { for (let i = 0; i < n; i++) { const p = randWalk(x0, x1, z0, z1); if (p) makeProp(k, p); } };
+// iPad in the village rubble; plays a video the player picks (kept in this browser only, via IndexedDB)
+const IPAD = { g: null, scr: null, video: null, url: null };
+function mediaDB() { return new Promise((res, rej) => { const r = indexedDB.open('fl_media', 1); r.onupgradeneeded = () => r.result.createObjectStore('m'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+async function mediaGet(k) { try { const db = await mediaDB(); return await new Promise(res => { const q = db.transaction('m').objectStore('m').get(k); q.onsuccess = () => res(q.result || null); q.onerror = () => res(null); }); } catch (e) { return null; } }
+async function mediaSet(k, v) { const db = await mediaDB(); return new Promise((res, rej) => { const tx = db.transaction('m', 'readwrite'); v == null ? tx.objectStore('m').delete(k) : tx.objectStore('m').put(v, k); tx.oncomplete = res; tx.onerror = () => rej(tx.error); }); }
+function buildIpad() { if (IPAD.g) return; const g = new THREE.Group(); const p = SECTORS[2]; const x = p.x + 3.2, z = p.z + 4.5, y = th(x, z);
+  const blk = (w, h, d, px, py, pz, ry) => { const m = new THREE.Mesh(rbox(w, h, d, .03), MAT.concrete); m.position.set(px, py, pz); m.rotation.y = ry; m.castShadow = m.receiveShadow = true; g.add(m); };
+  blk(1.2, .45, .7, 0, .22, 0, .2); blk(.6, .3, .5, .8, .15, .3, -.4); blk(.5, .25, .4, -.75, .12, -.2, .7); for (let i = 0; i < 6; i++) blk(rnd(.15, .3), rnd(.08, .15), rnd(.15, .25), rnd(-1, 1), .05, rnd(-.7, .7), rnd(0, 3));
+  const tab = new THREE.Group(); tab.position.set(0, .56, .05); tab.rotation.set(-.85, .25, 0); g.add(tab); blk(.22, .09, .1, -.02, .5, -.07, .25);
+  const body = new THREE.Mesh(rbox(.26, .185, .008, .012), M({ color: LIN(0x2a2c30), roughness: .35, metalness: .6 })); body.castShadow = true; tab.add(body);
+  const scr = new THREE.Mesh(new THREE.PlaneGeometry(.235, .165), new THREE.MeshBasicMaterial({ color: 0x06080a, toneMapped: false })); scr.position.z = .0045; tab.add(scr);
+  g.position.set(x, y, z); g.rotation.y = -.5; scene.add(g); IPAD.g = g; IPAD.scr = scr; IPAD.body = body; loadIpadVideo(); }
+async function loadIpadVideo() { if (!IPAD.scr) return; const blob = await mediaGet('ipad'); if (IPAD.video) { IPAD.video.pause(); IPAD.video.removeAttribute('src'); IPAD.video.load(); } if (IPAD.url) URL.revokeObjectURL(IPAD.url); IPAD.url = null;
+  if (!blob) { IPAD.scr.material.map = null; IPAD.scr.material.color.setHex(0x06080a); IPAD.scr.material.needsUpdate = true; return; }
+  const v = IPAD.video || (IPAD.video = Object.assign(document.createElement('video'), { muted: true, loop: true, playsInline: true })); IPAD.url = URL.createObjectURL(blob); v.onloadedmetadata = () => { const port = v.videoHeight > v.videoWidth; IPAD.scr.scale.set(port ? .165 / .235 : 1, port ? .235 / .165 : 1, 1); IPAD.body.scale.set(port ? .185 / .26 : 1, port ? .26 / .185 : 1, 1); }; v.src = IPAD.url; v.play().catch(() => { });
+  const t = new THREE.VideoTexture(v); t.encoding = THREE.sRGBEncoding; IPAD.scr.material.map = t; IPAD.scr.material.color.setHex(0xffffff); IPAD.scr.material.needsUpdate = true; }
+function spawnProps() { buildIpad(); PROPS.forEach(o => scene.remove(o.m)); PROPS.length = 0; const add = (k, x0, x1, z0, z1, n) => { for (let i = 0; i < n; i++) { const p = randWalk(x0, x1, z0, z1); if (p) makeProp(k, p); } };
   add('barrel', -12, 12, -14, 14, 6); add('red', -14, 14, -16, 16, 4); add('crate', -12, 12, -12, 12, 5); add('can', -10, 10, -10, 10, 4);
   for (const sx of [-1, 1]) { add('barrel', sx * 50, sx * 66, -24, 24, 4); add('red', sx * 40, sx * 62, -30, 30, 3); add('crate', sx * 48, sx * 66, -20, 20, 4); add('can', sx * 46, sx * 64, -20, 20, 3); add('red', sx * 22, sx * 34, -40, 40, 2); } }
 function rayProp(o, d, far) { let best = null; for (const q of PROPS) { if (q.dead) continue; const oc = o.clone().sub(q.p), b = oc.dot(d), c = oc.lengthSq() - q.r * q.r * .8, h = b * b - c; if (h < 0) continue; const t = -b - Math.sqrt(h); if (t > 0 && t < far && (!best || t < best.t)) best = { t, q }; } return best; }
@@ -2048,7 +2095,7 @@ function start(m) { wi = 0; applyLoadout(); if (!PROPS.length) spawnProps(); bat
   if (m !== 'ffa') { makeJeep(-70, -15, Math.PI / 2, 'A', false); makeJeep(-70, 27, Math.PI / 2, 'A', true); makeJeep(-66, -22, Math.PI / 2, 'A', true, true); makeJeep(66, 22, -Math.PI / 2, 'B', true, true); makeJeep(70, -15, -Math.PI / 2, 'B', false);
     makeTank(-66, 0, Math.PI / 2, 'A', false); makeTank(66, 0, -Math.PI / 2, 'B', true); makeTransport(-70, 12, Math.PI / 2, 'A'); if (hasPass('gunship')) makeTransport(-72, 30, Math.PI / 2, 'A', true); }
   else { makeJeep(-70, 27, Math.PI / 2, null, false); makeJeep(70, -15, -Math.PI / 2, null, true); makeTank(66, 0, -Math.PI / 2, null, false); makeTransport(-70, 12, Math.PI / 2, null); }
-  pModel = makeSoldier(me.name, me.team || 'A', true, 3); pModel.tag.visible = false; if (hasPass('camo')) pModel.m.traverse(o => { if (o.isMesh && /Outfit/.test(o.name)) o.material.color.setHex(0x3a3a3a); }); PENT.team = me.team; pModel.body.userData = { ent: PENT, head: false }; pModel.head.userData = { ent: PENT, head: true }; hitboxes.push(pModel.body, pModel.head);
+  pModel = makeSoldier(me.name, me.team || 'A', true, 3, FACE.tex ? FACE : null); pModel.tag.visible = false; if (hasPass('camo')) pModel.m.traverse(o => { if (o.isMesh && /Outfit/.test(o.name)) o.material.color.setHex(0x3a3a3a); }); PENT.team = me.team; pModel.body.userData = { ent: PENT, head: false }; pModel.head.userData = { ent: PENT, head: true }; hitboxes.push(pModel.body, pModel.head);
   combCache = combatants();
   $('menu').classList.add('hide'); $('hud').classList.remove('hide'); playing = true; respawn(); updScore(); drawStreaks(); lockPointer();
   if (m === 'tdm') announce('Team Deathmatch · first team to 50 · tanks and a supply helicopter are at your base', true);
@@ -2075,6 +2122,25 @@ $('shopbody').onclick = e => { const b = e.target.closest('button[data-a]'); if 
   saveProfile(); applyLoadout(); if (playing && !me.dead) { if (a === 'upg' && k === 'armor') { me.hp = maxHp(); updHp(); } if (a === 'upg' && k === 'nades') me.nades = maxNades(); updAmmo(); } renderShop(); };
 document.querySelectorAll('#shoptabs button').forEach(b => b.onclick = () => renderShop(b.dataset.t));
 $('shopclose').onclick = () => { $('shop').classList.add('hide'); renderProfile(); }; $('name').addEventListener('input', renderProfile); renderProfile(); $('mshop').onclick = openShop; $('pshop').onclick = openShop; $('sshop').onclick = openShop; updCoins();
+const FUI = { img: null, x: 0, y: 0, z: 1, r: 0, drag: null }; const fcv = $('fcv'), fcx = fcv.getContext('2d');
+function fDraw() { fcx.fillStyle = '#111'; fcx.fillRect(0, 0, 272, 400); if (!FUI.img) { fcx.fillStyle = '#8d978a'; fcx.font = '16px Barlow, sans-serif'; fcx.textAlign = 'center'; fcx.fillText('Choose a photo', 136, 200); return; }
+  fcx.save(); fcx.translate(136 + FUI.x, 200 + FUI.y); fcx.rotate(FUI.r * Math.PI / 180); const sc = FUI.z * 400 / FUI.img.height; fcx.drawImage(FUI.img, -FUI.img.width * sc / 2, -FUI.img.height * sc / 2, FUI.img.width * sc, FUI.img.height * sc); fcx.restore(); }
+function fLoad(src) { const im = new Image(); im.onload = () => { FUI.img = im; FUI.x = FUI.y = FUI.r = 0; FUI.z = 1; $('fzoom').value = 1; $('frot').value = 0; fDraw(); }; im.src = src; }
+$('mface').onclick = () => { $('faceui').classList.remove('hide'); $('fmsg').textContent = ''; try { const d = JSON.parse(localStorage.getItem($('fslot').value === '2' ? 'fl_face2' : 'fl_face') || 'null'); if (d && d.img && !FUI.img) fLoad(d.img); } catch (e) { } fDraw(); };
+$('fclose').onclick = () => $('faceui').classList.add('hide');
+$('ffile').onchange = e => { const f = e.target.files[0]; if (!f) return; const rd = new FileReader(); rd.onload = () => fLoad(rd.result); rd.readAsDataURL(f); };
+$('fzoom').oninput = e => { FUI.z = +e.target.value; fDraw(); }; $('frot').oninput = e => { FUI.r = +e.target.value; fDraw(); };
+fcv.parentNode.addEventListener('pointerdown', e => { FUI.drag = [e.clientX, e.clientY, FUI.x, FUI.y]; e.currentTarget.setPointerCapture(e.pointerId); });
+fcv.parentNode.addEventListener('pointermove', e => { if (!FUI.drag) return; FUI.x = FUI.drag[2] + e.clientX - FUI.drag[0]; FUI.y = FUI.drag[3] + e.clientY - FUI.drag[1]; fDraw(); });
+fcv.parentNode.addEventListener('pointerup', () => FUI.drag = null); fcv.parentNode.addEventListener('wheel', e => { e.preventDefault(); FUI.z = clamp(FUI.z * (e.deltaY < 0 ? 1.06 : .94), .3, 4); $('fzoom').value = FUI.z; fDraw(); }, { passive: false });
+$('fsave').onclick = () => { if (!FUI.img) { $('fmsg').textContent = 'Choose a photo first'; return; } const c = document.createElement('canvas'); c.width = 256; c.height = 376; c.getContext('2d').drawImage(fcv, 0, 0, 272, 400, 0, 0, 256, 376);
+  const px = (x, y, w, h) => { const d = c.getContext('2d').getImageData(x, y, w, h).data; let r = 0, g = 0, b = 0, n = d.length / 4; for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; } return [r / n, g / n, b / n]; };
+  const a = px(60, 210, 30, 30), b2 = px(166, 210, 30, 30), sk = a.map((v, i) => (v + b2[i]) / 2), hr = px(100, 20, 56, 16); const hex = v => '#' + v.map(x => Math.round(Math.min(255, x)).toString(16).padStart(2, '0')).join('');
+  const two = $('fslot').value === '2'; try { localStorage.setItem(two ? 'fl_face2' : 'fl_face', JSON.stringify({ img: c.toDataURL('image/jpeg', .88), skin: hex(sk.map(x => x * 1.05)), hair: hex(hr), name: two ? ($('fname').value.trim() || 'Squadmate').slice(0, 14) : '' })); loadFace(); $('fmsg').textContent = two ? 'Saved. Your squad mate fights next to you in the next battle.' : 'Saved. Press F in a battle to see your soldier.'; } catch (e) { $('fmsg').textContent = 'Could not save on this browser'; } };
+$('fdel').onclick = () => { const two = $('fslot').value === '2'; try { localStorage.removeItem(two ? 'fl_face2' : 'fl_face'); } catch (e) { } (two ? FACE2 : FACE).tex = null; FUI.img = null; fDraw(); $('fmsg').textContent = 'Face removed'; };
+$('fslot').onchange = () => { $('fnamel').classList.toggle('hide', $('fslot').value !== '2'); FUI.img = null; try { const d = JSON.parse(localStorage.getItem($('fslot').value === '2' ? 'fl_face2' : 'fl_face') || 'null'); if (d && d.img) { fLoad(d.img); if (d.name) $('fname').value = d.name; } } catch (e) { } fDraw(); };
+$('vfile').onchange = async e => { const f = e.target.files[0]; if (!f) return; if (f.size > 150e6) { $('vmsg').textContent = 'That video is too big (150 MB max)'; return; } try { await mediaSet('ipad', f); $('vmsg').textContent = 'Saved. It plays on the iPad in the village rubble.'; loadIpadVideo(); } catch (er) { $('vmsg').textContent = 'Could not save on this browser'; } };
+$('vdel').onclick = async () => { try { await mediaSet('ipad', null); } catch (er) { } $('vmsg').textContent = 'Video removed'; loadIpadVideo(); };
 $('front').onclick = () => start('front'); $('nextb').onclick = nextBattle; $('menub').onclick = () => location.reload(); $('tdm').onclick = () => start('tdm'); $('ffa').onclick = () => start('ffa');
 $('resume').onclick = () => showPause(false); $('leave').onclick = () => location.reload();
 $('psens').oninput = e => { sens = +e.target.value; };
