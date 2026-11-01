@@ -81,6 +81,23 @@ html,html,body{height:100%}body{min-height:100%;background:var(--bg);color:var(-
 .class-stat{background:rgba(255,255,255,.04);border-radius:10px;padding:.65rem 1rem;text-align:center;}
 .class-stat-num{font-family:Georgia,serif;font-size:1.5rem;font-weight:300;color:#eef4f8;}
 .class-stat-label{font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.08em;}
+/* ── Auth screen polish ── */
+#auth-card{box-shadow:0 24px 70px rgba(0,0,0,.6),0 0 0 1px rgba(124,58,237,.28),0 0 90px rgba(124,58,237,.14);animation:authIn .35s ease-out;max-height:calc(100vh - 24px);overflow-y:auto}
+@keyframes authIn{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:none}}
+#auth-card .ares-logo{font-size:46px!important;font-weight:700;letter-spacing:.01em;background:linear-gradient(135deg,#4ade80 10%,#a78bfa 90%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+#auth-card .auth-input{transition:border-color .15s,box-shadow .15s}
+#auth-card .auth-input:focus{border-color:#8b5cf6;box-shadow:0 0 0 3px rgba(139,92,246,.25);outline:none}
+#auth-card .auth-btn{transition:transform .12s,box-shadow .15s,filter .15s;box-shadow:0 6px 20px rgba(124,58,237,.35)}
+#auth-card .auth-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 10px 26px rgba(124,58,237,.5)}
+#auth-card .auth-btn:active:not(:disabled){transform:translateY(0)}
+#auth-card .auth-btn:disabled{opacity:.8;cursor:wait}
+#auth-card .auth-btn:disabled::after{content:'';display:inline-block;width:13px;height:13px;margin-left:9px;vertical-align:-2px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:authSpin .7s linear infinite}
+@keyframes authSpin{to{transform:rotate(360deg)}}
+#auth-card .auth-type-btn{white-space:nowrap;font-size:12.5px}
+#auth-card .auth-hint.ok{color:#4ade80}#auth-card .auth-hint.bad{color:#f87171}
+#auth-card .auth-error.show{animation:authShake .35s}
+@keyframes authShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+@media (max-width:420px){#auth-card{padding:22px 18px}#auth-card .ares-logo{font-size:40px!important}}
 </style>
 <script>
 // ─── Global safety net ───────────────────────────────────────────────────
@@ -280,13 +297,13 @@ html,html,body{height:100%}body{min-height:100%;background:var(--bg);color:var(-
     <div id="auth-login-form">
       <div class="auth-field">
         <label class="auth-label">Username</label>
-        <input class="auth-input" id="login-user" type="text" placeholder="Enter username" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()"/>
+        <input class="auth-input" id="login-user" type="text" placeholder="Enter username" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()"/>
       </div>
       <div class="auth-field">
         <label class="auth-label">Password</label>
         <div class="auth-pw-wrap">
           <input class="auth-input" id="login-pass" type="password" placeholder="Enter password" autocomplete="current-password" onkeydown="if(event.key==='Enter')authLogin()"/>
-          <button class="auth-eye" onclick="authTogglePw('login-pass',this)">👁</button>
+          <button type="button" class="auth-eye" aria-label="Show or hide password" onclick="authTogglePw('login-pass',this)">👁</button>
         </div>
       </div>
       <div class="auth-error" id="login-error"></div>
@@ -349,21 +366,21 @@ html,html,body{height:100%}body{min-height:100%;background:var(--bg);color:var(-
         <label class="auth-label">Account Type</label>
         <div class="auth-type-toggle">
           <button class="auth-type-btn active" id="type-student" onclick="setAccountType('child')">🎓 Student</button>
-          <button class="auth-type-btn" id="type-teacher" onclick="setAccountType('teacher')">🍎 Teacher (request)</button>
+          <button class="auth-type-btn" id="type-teacher" onclick="setAccountType('teacher')">🍎 Teacher</button>
           <button class="auth-type-btn" id="type-parent" onclick="setAccountType('parent')">👨‍👩‍👧 Parent</button>
         </div>
         <div class="auth-hint" id="auth-type-hint">Can study, earn XP and be linked to up to 2 parents.</div>
       </div>
       <div class="auth-field">
         <label class="auth-label">Username</label>
-        <input class="auth-input" id="signup-user" type="text" placeholder="Choose a username" maxlength="20" autocomplete="username"/>
-        <div class="auth-hint">3–20 characters, letters and numbers only</div>
+        <input class="auth-input" id="signup-user" type="text" placeholder="Choose a username" maxlength="20" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next" oninput="authCheckUsername(this.value)" onkeydown="if(event.key==='Enter')document.getElementById('signup-pass').focus()"/>
+        <div class="auth-hint" id="signup-user-hint">3–20 characters: letters, numbers, _ or @</div>
       </div>
       <div class="auth-field">
         <label class="auth-label">Password</label>
         <div class="auth-pw-wrap">
-          <input class="auth-input" id="signup-pass" type="password" placeholder="Choose a password" autocomplete="new-password" oninput="authCheckStrength(this.value)"/>
-          <button class="auth-eye" onclick="authTogglePw('signup-pass',this)">👁</button>
+          <input class="auth-input" id="signup-pass" type="password" placeholder="Choose a password" autocomplete="new-password" oninput="authCheckStrength(this.value);authCheckConfirm()"/>
+          <button type="button" class="auth-eye" aria-label="Show or hide password" onclick="authTogglePw('signup-pass',this)">👁</button>
         </div>
         <div class="auth-strength-bar"><div id="auth-strength-fill"></div></div>
         <div class="auth-hint" id="auth-strength-label">Password strength</div>
@@ -371,10 +388,11 @@ html,html,body{height:100%}body{min-height:100%;background:var(--bg);color:var(-
       <div class="auth-field">
         <label class="auth-label">Confirm Password</label>
         <div class="auth-pw-wrap">
-          <input class="auth-input" id="signup-confirm" type="password" placeholder="Repeat password" autocomplete="new-password" onkeydown="if(event.key==='Enter')authSignup()"/>
-          <button class="auth-eye" onclick="authTogglePw('signup-confirm',this)">👁</button>
+          <input class="auth-input" id="signup-confirm" type="password" placeholder="Repeat password" autocomplete="new-password" oninput="authCheckConfirm()" onkeydown="if(event.key==='Enter')authSignup()"/>
+          <button type="button" class="auth-eye" aria-label="Show or hide password" onclick="authTogglePw('signup-confirm',this)">👁</button>
         </div>
       </div>
+      <div class="auth-hint" id="signup-confirm-hint" style="min-height:16px;margin:2px 0 10px;"></div>
       <div class="auth-error" id="signup-error"></div>
       <button class="auth-btn" onclick="authSignup()">Create Account →</button>
       <div class="auth-note">Already have an account? <a onclick="authShowLogin()" style="color:#A78BFA;cursor:pointer;">Log in</a></div>
@@ -4342,6 +4360,22 @@ function authShowLogin() {
   document.getElementById('tab-login').classList.add('active');
   document.getElementById('tab-signup').classList.remove('active');
   document.getElementById('login-error').classList.remove('show');
+  _authFocus('login-user');
+}
+function _authFocus(id){ setTimeout(function(){ try{ var el=document.getElementById(id); if(el&&el.offsetParent!==null&&!(('ontouchstart' in window)&&window.innerWidth<700&&false)) el.focus(); }catch(e){} }, 60); }
+function authCheckUsername(v) {
+  var h=document.getElementById('signup-user-hint'); if(!h) return;
+  v=(v||'').trim();
+  if(!v){ h.textContent='3–20 characters: letters, numbers, _ or @'; h.className='auth-hint'; return; }
+  if(v.length<3){ h.textContent='Too short — at least 3 characters'; h.className='auth-hint bad'; return; }
+  if(!/^[a-zA-Z0-9_@]+$/.test(v)){ h.textContent='Only letters, numbers, _ and @ are allowed'; h.className='auth-hint bad'; return; }
+  h.textContent='✓ Looks good (usernames aren\'t case-sensitive)'; h.className='auth-hint ok';
+}
+function authCheckConfirm() {
+  var h=document.getElementById('signup-confirm-hint'); if(!h) return;
+  var a=document.getElementById('signup-pass').value, b=document.getElementById('signup-confirm').value;
+  if(!b){ h.textContent=''; h.className='auth-hint'; return; }
+  if(a===b){ h.textContent='✓ Passwords match'; h.className='auth-hint ok'; } else { h.textContent='Passwords don\'t match yet'; h.className='auth-hint bad'; }
 }
 function authShowSignup() {
   document.getElementById('auth-login-form').style.display = 'none';
@@ -4349,6 +4383,7 @@ function authShowSignup() {
   document.getElementById('tab-signup').classList.add('active');
   document.getElementById('tab-login').classList.remove('active');
   document.getElementById('signup-error').classList.remove('show');
+  _authFocus('signup-user');
 }
 function authTogglePw(inputId, btn) {
   const inp = document.getElementById(inputId);
@@ -4420,6 +4455,7 @@ async function authSignup() {
   // From here on, every request carries this user's real, verified
   // identity — the rest of account setup below runs as an authenticated
   // update to their own row, not an anonymous insert.
+  try {
   _applyAuthToken(result.token);
   const cleanUsername = result.username;
 
@@ -4470,6 +4506,11 @@ async function authSignup() {
   } catch(e) {}
   btn.textContent = '✓ Account created!'; btn.disabled = false;
   authEnterApp(cleanUsername);
+  } catch (e) {
+    console.error('Signup finish failed', e);
+    btn.textContent = 'Create Account →'; btn.disabled = false;
+    return authShowError('signup-error', 'Your account was created, but setup hit a snag. Tap Log In and sign in with the same details.');
+  }
   // Welcome shield after brief delay
   setTimeout(()=>{
     showShield('Welcome to Ares, '+username+'! 🎉','correct',0);
