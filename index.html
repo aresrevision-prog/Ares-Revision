@@ -14143,6 +14143,7 @@ function openFrontline(){
   try{ var hub=document.getElementById('arena-hub'); if(hub)hub.style.display='none'; }catch(e){}
   if(page.parentNode!==document.body)document.body.appendChild(page);
   page.style.cssText='display:block !important;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:2147483647;background:#000;';
+  try{ window._flNet={ url: SUPABASE_URL, key: SUPABASE_ANON_KEY }; }catch(e){}
   var f=document.getElementById('fl-frame'); if((f.getAttribute('src')||'').indexOf('frontline')<0)f.src='/games/frontline.html';
   setTimeout(function(){try{f.focus()}catch(e){}},300);
 }
