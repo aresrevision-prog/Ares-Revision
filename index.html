@@ -4481,14 +4481,27 @@ async function authSignup() {
 // flaky connection (or a cold-starting function) doesn't strand people on a
 // dead "Checking…" button. 5xx / 404 / network errors are retried; real
 // answers (200, 400, 401, 403, 429…) are returned straight away.
+// If the direct Supabase address can't be reached at all (school/ISP filters often block *.supabase.co),
+// the same call is retried through this site's own domain (vercel.json rewrites /functions/v1/* to Supabase).
 async function _edgeCall(name, payload, tries) {
+  const direct = await _edgeCallAt(SUPABASE_URL, name, payload, tries);
+  if (!direct.failed || !direct.err || !direct.err.network) return direct;
+  try {
+    if (/^https?:$/.test(location.protocol) && location.origin !== SUPABASE_URL) {
+      const via = await _edgeCallAt(location.origin, name, payload, 2);
+      if (!via.failed || (via.err && !via.err.network && via.err.status !== 404)) return via;
+    }
+  } catch(e) {}
+  return direct;
+}
+async function _edgeCallAt(base, name, payload, tries) {
   tries = tries || 3;
   let lastErr = null;
   for (let i = 0; i < tries; i++) {
     const ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
     const timer = setTimeout(() => { try { ctl && ctl.abort(); } catch(e){} }, 15000);
     try {
-      const resp = await fetch(SUPABASE_URL + '/functions/v1/' + name, {
+      const resp = await fetch(base + '/functions/v1/' + name, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY },
         body: JSON.stringify(payload),
@@ -9538,7 +9551,8 @@ var _aresLastAIError='';
 async function _aresProxyText(prompt, maxTokens){
   var targets=[
     {u:SUPABASE_URL+'/functions/v1/ares-ai', h:{'Content-Type':'application/json',apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+SUPABASE_ANON_KEY}},
-    {u:'/api/ai', h:{'Content-Type':'application/json'}}
+    {u:'/api/ai', h:{'Content-Type':'application/json'}},
+    {u:'/functions/v1/ares-ai', h:{'Content-Type':'application/json',apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+SUPABASE_ANON_KEY}}
   ];
   for(var i=0;i<targets.length;i++){
     for(var attempt=0;attempt<2;attempt++){
