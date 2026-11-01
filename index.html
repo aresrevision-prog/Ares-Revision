@@ -7430,7 +7430,7 @@ async function sendAresMessage() {
 
   try {
     // Try Anthropic first — auto-authenticated in Claude.ai environment
-    try {
+    if (_aresKey) try {
       const r1 = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers:{'Content-Type':'application/json','x-api-key':_aresKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
@@ -7454,34 +7454,17 @@ async function sendAresMessage() {
         parts: [{ text: m.content }]
       }));
       // Try the shared server proxy first (one key, works for everyone, stays secret)
-      try {
-        const flat = sysPrompt + '\n\n' + aresConversation.slice(-12).map(m => (m.role === 'assistant' ? 'Ares' : 'Student') + ': ' + m.content).join('\n') + '\nAres:';
-        const rp = await fetch(SUPABASE_URL + '/functions/v1/ares-ai', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY },
-          body: JSON.stringify({ prompt: flat, maxTokens: 1024 })
-        });
-        if (rp.ok) { const dp = await rp.json(); if (dp && dp.text) reply = dp.text; }
-      } catch (e) { /* proxy unavailable — try user key below */ }
+      const flat = sysPrompt + '\n\n' + aresConversation.slice(-12).map(m => (m.role === 'assistant' ? 'Ares' : 'Student') + ': ' + m.content).join('\n') + '\nAres:';
+      reply = await _aresProxyText(flat, 1024);
 
       // Fall back to the user's own Gemini key (for local use without the proxy)
       if (!reply) {
         if (!_userGeminiKey) throw new Error('NO_API_KEY');
-        const r2 = await fetch(
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=' + _userGeminiKey,
-          {
-            method: 'POST',
-            headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({
-              system_instruction: { parts: [{ text: sysPrompt }] },
-              contents: msgs,
-              generationConfig: { maxOutputTokens: 1024, temperature: 0.7 }
-            })
-          }
-        );
-        const d2 = await r2.json();
-        reply = d2?.candidates?.[0]?.content?.parts?.[0]?.text || null;
-        if (!reply && d2?.error) throw new Error(d2.error.message || 'Gemini error');
+        reply = await _aresGeminiDirect({
+          system_instruction: { parts: [{ text: sysPrompt }] },
+          contents: msgs,
+          generationConfig: { maxOutputTokens: 1024, temperature: 0.7 }
+        }, _userGeminiKey);
       }
     }
 
@@ -7532,7 +7515,7 @@ async function sendAresMessage() {
     typingDiv.remove();
     var _msg = (err && err.message) || '';
     if (_msg === 'NO_API_KEY') {
-      appendAresMessage('bot', '⚠️ Athena AI needs a connection to work. If you\'re viewing this on the hosted site, it should connect automatically — try again in a moment. If that keeps failing, tap the <b>⚙️ Key</b> button above to add your own free Google Gemini key.');
+      appendAresMessage('bot', '⚠️ Athena AI needs a connection to work. If you\'re viewing this on the hosted site, it should connect automatically — try again in a moment. If that keeps failing, tap the <b>⚙️ Key</b> button above to add your own free Google Gemini key.' + (_aresLastAIError ? ' <span style="opacity:.6;font-size:11px">(server said: ' + _aresLastAIError + ')</span>' : ''));
     } else {
       appendAresMessage('bot', '⚠️ Something went wrong reaching the AI (' + _msg + '). Please try again — if it keeps happening, tap the <b>⚙️ Key</b> button above to add your own key.');
     }
@@ -9550,6 +9533,41 @@ function clearAresKeySettings(){
 window.openAresKeySettings=openAresKeySettings; window.closeAresKeySettings=closeAresKeySettings;
 window.saveAresKeySettings=saveAresKeySettings; window.clearAresKeySettings=clearAresKeySettings;
 
+// Shared AI backend: Supabase edge function first, then the Vercel /api/ai route; one retry each on network/5xx errors.
+var _aresLastAIError='';
+async function _aresProxyText(prompt, maxTokens){
+  var targets=[
+    {u:SUPABASE_URL+'/functions/v1/ares-ai', h:{'Content-Type':'application/json',apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+SUPABASE_ANON_KEY}},
+    {u:'/api/ai', h:{'Content-Type':'application/json'}}
+  ];
+  for(var i=0;i<targets.length;i++){
+    for(var attempt=0;attempt<2;attempt++){
+      try{
+        var r=await fetch(targets[i].u,{method:'POST',headers:targets[i].h,body:JSON.stringify({prompt:prompt,maxTokens:maxTokens})});
+        if(r.ok){ var d=await r.json(); if(d&&d.text) return d.text; _aresLastAIError='empty reply'; break; }
+        var ed=null; try{ ed=await r.json(); }catch(e){}
+        _aresLastAIError=(ed&&ed.error)?String(ed.error).slice(0,120):('HTTP '+r.status);
+        if(r.status<500) break; // client error / missing route: retrying won't help
+      }catch(e){ _aresLastAIError='network'; }
+      await new Promise(function(res){setTimeout(res,600)});
+    }
+  }
+  return null;
+}
+// Direct Gemini with a model fallback (newer model first, stable one second)
+async function _aresGeminiDirect(body, key){
+  var models=['gemini-3.6-flash','gemini-2.5-flash'],lastErr='AI request failed — please try again.';
+  for(var i=0;i<models.length;i++){
+    try{
+      var r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+models[i]+':generateContent?key='+key,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+      var d=await r.json();
+      var t=d&&d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts&&d.candidates[0].content.parts[0]&&d.candidates[0].content.parts[0].text;
+      if(t) return t;
+      if(d&&d.error) lastErr=d.error.message||lastErr;
+    }catch(e){ lastErr=e.message||lastErr; }
+  }
+  throw new Error(lastErr);
+}
 // Unified AI call: try Anthropic (if key present), fall back to Gemini (embedded key). Returns plain text.
 async function aresAICall(prompt, maxTokens){
   maxTokens = maxTokens || 1000;
@@ -9570,36 +9588,12 @@ async function aresAICall(prompt, maxTokens){
     }catch(e){ /* fall through to Gemini */ }
   }
   // 2) Shared server proxy (one key, works for everyone, stays secret)
-  try{
-    var rp = await fetch(SUPABASE_URL + '/functions/v1/ares-ai', {
-      method:'POST',
-      headers:{'Content-Type':'application/json', apikey: SUPABASE_ANON_KEY},
-      body:JSON.stringify({ prompt: prompt, maxTokens: maxTokens })
-    });
-    if(rp.ok){
-      var dp = await rp.json();
-      if(dp && dp.text) return dp.text;
-    }
-  }catch(e){ /* proxy not available — fall through */ }
+  var pt=await _aresProxyText(prompt,maxTokens); if(pt) return pt;
 
   // 3) User's own Gemini key (for local/offline use without the proxy)
   var gkey = (typeof aresGetGeminiKey==='function' ? aresGetGeminiKey() : (localStorage.getItem('ares_gemini_key')||''));
-  if(!gkey){
-    // No Anthropic result, no proxy, and no user key — tell the caller a key is needed
-    throw new Error('NO_API_KEY');
-  }
-  try{
-    var rg = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key='+gkey,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({ contents:[{role:'user',parts:[{text:prompt}]}], generationConfig:{ maxOutputTokens:maxTokens, temperature:0.7 } })
-    });
-    var dg = await rg.json();
-    var tg = dg && dg.candidates && dg.candidates[0] && dg.candidates[0].content && dg.candidates[0].content.parts && dg.candidates[0].content.parts[0] && dg.candidates[0].content.parts[0].text;
-    if(tg) return tg;
-    if(dg && dg.error) throw new Error(dg.error.message||'AI request failed');
-  }catch(e){ throw e; }
-  throw new Error('AI request failed — please try again.');
+  if(!gkey){ throw new Error('NO_API_KEY'); }
+  return await _aresGeminiDirect({ contents:[{role:'user',parts:[{text:prompt}]}], generationConfig:{ maxOutputTokens:maxTokens, temperature:0.7 } }, gkey);
 }
 function aresSaveApiKey(key) {
   localStorage.setItem('ares_api_key', key.trim());
