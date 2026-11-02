@@ -852,6 +852,7 @@ html,html,body{height:100%}body{min-height:100%;background:var(--bg);color:var(-
       <span style="flex:1;"><b style="display:block;font-size:17px;letter-spacing:.12em;color:#f2c14e;">FRONTLINE WARZONE</b><span style="font-size:13px;opacity:.8;">3D war shooter · squads, tanks, helicopters, sabotage, ranks and an armory</span></span>
       <span style="font-weight:900;letter-spacing:.15em;color:#f2c14e;">▶ PLAY</span>
     </button>
+    <div id="at-vote-frontline" style="margin:8px 0 0;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);"></div>
   </div>
 </div>
 <div id="page-nightshift" style="display:none;position:fixed;inset:0;z-index:99600;background:#050506;">
@@ -3767,13 +3768,27 @@ let _deletedAccountsSet = {}; // username -> true
 // a few seconds until the next refresh cycle catches up.
 let _pendingWriteUsernames = new Set();
 
+// PostgREST silently caps one response at 1000 rows — page through so 200, 2000 or more accounts all load.
+async function _fetchAllAccountRows() {
+  const PAGE = 500; let all = [], from = 0;
+  for (let guard = 0; guard < 200; guard++) {
+    const { data, error } = await supabaseClient.from('accounts').select('*').order('username', { ascending: true }).range(from, from + PAGE - 1);
+    if (error) return { data: null, error };
+    all = all.concat(data || []);
+    if (!data || data.length < PAGE) break;
+    from += PAGE;
+  }
+  return { data: all, error: null };
+}
+let _lastFullSync = 0;
 async function fetchAllFromSupabase() {
+  _lastFullSync = Date.now();
   ensureGun();
   if (!supabaseClient) throw new Error('Supabase not initialised');
   _setSyncDot('connecting');
 
   const [accRes, linkRes, pendRes, blockRes, banRes, delRes] = await Promise.all([
-    supabaseClient.from('accounts').select('*'),
+    _fetchAllAccountRows(),
     supabaseClient.from('parent_links').select('*'),
     supabaseClient.from('pending_requests').select('*'),
     supabaseClient.from('blocked_users').select('*'),
@@ -3827,8 +3842,16 @@ function syncFromGun(){ fetchAllFromSupabase().catch(e => { console.error('sync 
 // GUN's self-healing "republish" timer either, since a real database
 // doesn't lose data on restart the way the old free-tier relay host did.
 setTimeout(() => { ensureGun(); syncFromGun(); }, 300);
-setInterval(() => { if (supabaseClient) fetchAllFromSupabase().catch(()=>{}); }, 10000);
-setInterval(() => { if (supabaseClient) checkGlobalAnnouncement().catch(()=>{}); }, 10000);
+// With hundreds of accounts a full refetch every 10s per device is far too heavy: poll every 5s but only
+// actually sync when the tab is visible, every 15s while the admin panel is open, otherwise every 60s.
+setInterval(() => {
+  if (!supabaseClient || document.hidden) return;
+  let adminOpen = false;
+  try { const m = document.getElementById('account-log-modal'); adminOpen = !!(m && m.style.display === 'flex'); } catch(e) {}
+  if (Date.now() - _lastFullSync < (adminOpen ? 15000 : 60000)) return;
+  fetchAllFromSupabase().catch(()=>{});
+}, 5000);
+setInterval(() => { if (supabaseClient && !document.hidden) checkGlobalAnnouncement().catch(()=>{}); }, 60000);
 // ── Global announcement (everyone) ──────────────────────────────────────
 // Shown as a dismissible banner — checked on load, on login, and via the
 // same periodic poll as everything else, so it reaches people already
@@ -8765,6 +8788,7 @@ function arenaOpen() {
   document.getElementById('arena-hub').style.display = 'flex';
   _aresSizeGameButtons();
   try{ var _tc=document.getElementById('arena-test-card'); if(_tc)_tc.style.display=''; }catch(e){}
+  try{ _refreshPromoted(); }catch(e){}
 }
 
 // If only one game button is visible, make it bigger so the row doesn't look empty
@@ -12861,6 +12885,13 @@ function _aresUpdateArenaButton(){
       <div class="ac-desc">The Chrome dino leaps into 3D. Dodge, boost and survive the end of the world.</div>
       <div class="ac-play">▶ PLAY</div>
     </button>
+    <button class="arena-card" id="arena-promoted-frontline" onclick="openFrontline()" style="display:none;--c1:#141a0c;--c2:#2a3418;--rgb:242,193,78;">
+      <div class="ac-emoji">🪖</div>
+      <div class="ac-name">FRONTLINE WARZONE</div>
+      <div class="ac-tag">COMMUNITY PICK</div>
+      <div class="ac-desc">Voted into the Arena by the testers.</div>
+      <div class="ac-play">▶ PLAY</div>
+    </button>
     <button class="arena-card" onclick="snakeOpen()" style="--c1:#06240f;--c2:#0b3d1a;--rgb:80,220,120;">
       <div class="ac-emoji">🐍</div>
       <div class="ac-name">SNAKE</div>
@@ -14266,7 +14297,7 @@ window.openNightShift=openNightShift;window.closeNightShift=closeNightShift;
 function _arenaGameBlocked(){ try{ if(currentUser){ var a=getAccounts()[currentUser]; if(a&&a.accountType==='parent'){ if(typeof showXpPop==='function')showXpPop('🔒 Games are not available on parent accounts'); return true; } } }catch(e){} return false; }
 function openFrontline(){
   if(_arenaGameBlocked())return; var page=document.getElementById('page-frontline'); if(!page)return;
-  var ok=_testOk(); if(!ok){ openArenaTest(); return; }
+  if(!_gamePromoted('frontline')){ var ok=_testOk(); if(!ok){ openArenaTest(); return; } }
   try{ var t=document.getElementById('page-arenatest'); if(t)t.style.display='none'; }catch(e){}
   try{ var hub=document.getElementById('arena-hub'); if(hub)hub.style.display='none'; }catch(e){}
   if(page.parentNode!==document.body)document.body.appendChild(page);
@@ -14282,6 +14313,30 @@ function closeFrontline(){
   var t=document.getElementById('page-arenatest'); if(t){ t.style.display='flex'; } else { try{ var hub=document.getElementById('arena-hub'); if(hub)hub.style.display='flex'; }catch(e){} }
 }
 var _AT_HASH='dd49477b0b970dde26d58606384cfedd0dc5740b719bffc06442e7d949849deb';
+var TEST_GAMES=[{id:'frontline',name:'Frontline Warzone'}];
+var TEST_PROMOTE_AT=5; // net 👍 minus 👎 (one vote per account) needed to join the Arena hub
+function _testTally(id){ var up=0,down=0; try{ var a=getAccounts(); for(var u in a){ var x=a[u]; var v=x&&x.testVotes&&x.testVotes[id]; if(v===1)up++; else if(v===-1)down++; } }catch(e){} return {up:up,down:down,net:up-down}; }
+function _gamePromoted(id){ return _testTally(id).net>=TEST_PROMOTE_AT; }
+function _refreshPromoted(){ TEST_GAMES.forEach(function(g){ var el=document.getElementById('arena-promoted-'+g.id); if(el)el.style.display=_gamePromoted(g.id)?'':'none'; }); }
+function testVote(id,v){
+  if(!currentUser){ if(typeof showXpPop==='function')showXpPop('🔒 Log in to vote'); return; }
+  var acc=getAccounts(), me=acc[currentUser]; if(!me||me.accountType==='parent')return;
+  var votes=Object.assign({},me.testVotes||{}); if(votes[id]===v)delete votes[id]; else votes[id]=v;
+  me.testVotes=votes; saveAccounts(acc); renderTestVotes();
+  if(typeof showXpPop==='function')showXpPop(votes[id]===1?'👍 Voted up':votes[id]===-1?'👎 Voted down':'Vote removed');
+}
+function renderTestVotes(){
+  var me=currentUser&&getAccounts()[currentUser], mine=(me&&me.testVotes)||{};
+  TEST_GAMES.forEach(function(g){
+    var el=document.getElementById('at-vote-'+g.id); if(!el)return; var t=_testTally(g.id), ok=t.net>=TEST_PROMOTE_AT, pct=Math.max(0,Math.min(100,Math.round(t.net/TEST_PROMOTE_AT*100)));
+    var b=function(v,l){ var on=mine[g.id]===v; return '<button onclick="testVote(\''+g.id+'\','+v+')" style="flex:1;padding:8px;border-radius:9px;cursor:pointer;font-family:inherit;font-weight:800;font-size:14px;border:1px solid '+(on?(v===1?'#4ade80':'#f87171'):'rgba(255,255,255,.15)')+';background:'+(on?(v===1?'rgba(74,222,128,.18)':'rgba(248,113,113,.18)'):'rgba(255,255,255,.05)')+';color:#fff;">'+l+'</button>'; };
+    el.innerHTML='<div style="font-size:12px;opacity:.75;margin-bottom:8px;">'+(ok?'✅ <b>Voted into the Arena hub</b> — everyone with Arena access can play it':'Vote to add this to the Arena hub — needs a net score of '+TEST_PROMOTE_AT)+'</div>'
+      +(currentUser?'<div style="display:flex;gap:8px;">'+b(1,'👍 '+t.up)+b(-1,'👎 '+t.down)+'</div>':'<div style="font-size:12px;opacity:.6;">Log in to vote · 👍 '+t.up+' · 👎 '+t.down+'</div>')
+      +'<div style="height:6px;border-radius:99px;background:rgba(255,255,255,.1);margin-top:8px;overflow:hidden;"><div style="height:100%;width:'+pct+'%;background:'+(ok?'#4ade80':'#f2c14e')+';"></div></div>'
+      +'<div style="font-size:11px;opacity:.55;margin-top:4px;">Net score '+t.net+' / '+TEST_PROMOTE_AT+' · one vote per account</div>';
+  });
+}
+window.testVote=testVote;window.renderTestVotes=renderTestVotes;
 function _testAllowed(){ try{ if(window._adminSession)return true; var a=currentUser&&getAccounts()[currentUser]; return !!(a&&a.testAccess&&a.accountType!=='parent'); }catch(e){ return false; } }
 function _testDenied(){ if(_testAllowed())return false; if(typeof showXpPop==='function')showXpPop('🔒 Test games need admin access'); return true; }
 function _testOk(){ try{ return _testAllowed()||sessionStorage.getItem('ares_test_ok')==='1'; }catch(e){ return _testAllowed(); } }
@@ -14292,13 +14347,13 @@ function openArenaTest(){
   if(page.parentNode!==document.body)document.body.appendChild(page);
   page.style.display='flex'; page.style.zIndex='2147483647';
   var ok=_testOk();
-  document.getElementById('at-lock').style.display=ok?'none':'block'; document.getElementById('at-room').style.display=ok?'block':'none';
+  document.getElementById('at-lock').style.display=ok?'none':'block'; document.getElementById('at-room').style.display=ok?'block':'none'; if(ok)renderTestVotes();
   document.getElementById('at-err').textContent=''; var i=document.getElementById('at-pw'); i.value=''; if(!ok)setTimeout(function(){try{i.focus()}catch(e){}},100);
 }
 async function arenaTestUnlock(){
   var i=document.getElementById('at-pw'), v=(i.value||'').trim(), h='';
   try{ var b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(v)); h=Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,'0')}).join(''); }catch(e){}
-  if(h===_AT_HASH){ try{ sessionStorage.setItem('ares_test_ok','1'); }catch(e){} document.getElementById('at-err').textContent=''; document.getElementById('at-lock').style.display='none'; document.getElementById('at-room').style.display='block'; }
+  if(h===_AT_HASH){ try{ sessionStorage.setItem('ares_test_ok','1'); }catch(e){} document.getElementById('at-err').textContent=''; document.getElementById('at-lock').style.display='none'; document.getElementById('at-room').style.display='block'; renderTestVotes(); }
   else { document.getElementById('at-err').textContent='Wrong password'; i.value=''; i.focus(); }
 }
 function closeArenaTest(){ var page=document.getElementById('page-arenatest'); if(page)page.style.display='none'; try{ var hub=document.getElementById('arena-hub'); if(hub)hub.style.display='flex'; }catch(e){} }
