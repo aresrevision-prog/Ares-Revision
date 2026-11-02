@@ -841,6 +841,13 @@ html,html,body{height:100%}body{min-height:100%;background:var(--bg);color:var(-
   </div>
   <iframe id="wm-frame" title="World Minds" style="width:100%;height:calc(100% - 41px);border:0;display:block;background:#0a0f17;" allow="autoplay; fullscreen"></iframe>
 </div>
+<div id="page-empireheat" style="display:none;position:fixed;inset:0;z-index:99600;background:#07060a;">
+  <div style="display:flex;align-items:center;gap:12px;padding:8px 14px;background:#07060a;border-bottom:2px solid #3a1f2a;">
+    <button onclick="closeEmpireHeat()" style="background:#14101a;color:#f6c21a;border:1px solid #3a1f2a;border-radius:6px;padding:6px 14px;cursor:pointer;font-family:inherit;font-size:13px;">← Back to Test</button>
+    <span style="color:#f6c21a;letter-spacing:2px;font-weight:700;">🗽 EMPIRE HEAT</span>
+  </div>
+  <iframe id="eh-frame" title="Empire Heat" style="width:100%;height:calc(100% - 41px);border:0;display:block;background:#07060a;" allow="autoplay; fullscreen"></iframe>
+</div>
 <div id="page-arenatest" style="display:none;position:fixed;inset:0;z-index:99600;background:radial-gradient(900px 500px at 50% 0%,#1c2630,#0a0d10);color:#d8e0e8;font-family:inherit;align-items:center;justify-content:center;">
   <button onclick="closeArenaTest()" style="position:fixed;top:14px;left:14px;background:#141a20;color:#c8d4e0;border:1px solid #2c3a48;border-radius:6px;padding:6px 14px;cursor:pointer;font-family:inherit;font-size:13px;">← Back to Arena</button>
   <div id="at-lock" style="width:min(340px,90vw);text-align:center;background:rgba(255,255,255,.04);border:1px solid #2c3a48;border-radius:14px;padding:26px 22px;">
@@ -851,7 +858,7 @@ html,html,body{height:100%}body{min-height:100%;background:var(--bg);color:var(-
     <div id="at-err" style="height:18px;font-size:12px;color:#ff7a6a;margin-top:8px;"></div>
     <button onclick="arenaTestUnlock()" style="width:100%;margin-top:6px;padding:12px;border-radius:9px;border:none;background:#96aabe;color:#0a0d10;font-weight:900;letter-spacing:.25em;cursor:pointer;font-family:inherit;">UNLOCK</button>
   </div>
-  <div id="at-room" style="display:none;width:min(520px,92vw);text-align:center;">
+  <div id="at-room" style="display:none;width:min(520px,92vw);text-align:center;max-height:92vh;overflow-y:auto;">
     <div style="font-size:22px;font-weight:800;letter-spacing:.2em;">TEST AREA</div>
     <div style="font-size:14px;opacity:.75;margin:10px 0 18px;">Test builds</div>
     <button onclick="openFrontline()" style="width:100%;text-align:left;display:flex;gap:14px;align-items:center;padding:16px 18px;border-radius:12px;border:1px solid rgba(242,193,78,.45);background:linear-gradient(135deg,#141a0c,#2a3418);color:#e8ece4;cursor:pointer;font-family:inherit;">
@@ -866,6 +873,12 @@ html,html,body{height:100%}body{min-height:100%;background:var(--bg);color:var(-
       <span style="font-weight:900;letter-spacing:.15em;color:#e2c06c;">▶ PLAY</span>
     </button>
     <div id="at-vote-worldminds" style="margin:8px 0 0;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);"></div>
+    <button onclick="openEmpireHeat()" style="width:100%;margin-top:14px;text-align:left;display:flex;gap:14px;align-items:center;padding:16px 18px;border-radius:12px;border:1px solid rgba(246,194,26,.45);background:linear-gradient(135deg,#120a14,#2a1426);color:#f0e8ee;cursor:pointer;font-family:inherit;">
+      <span style="font-size:30px;">🗽</span>
+      <span style="flex:1;"><b style="display:block;font-size:17px;letter-spacing:.12em;color:#f6c21a;">EMPIRE HEAT</b><span style="font-size:13px;opacity:.8;">Open-world NYC crime game · real Manhattan, car theft, heists, cops, stores, clubs and subways</span></span>
+      <span style="font-weight:900;letter-spacing:.15em;color:#f6c21a;">▶ PLAY</span>
+    </button>
+    <div id="at-vote-empireheat" style="margin:8px 0 0;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);"></div>
   </div>
 </div>
 <div id="page-nightshift" style="display:none;position:fixed;inset:0;z-index:99600;background:#050506;">
@@ -12905,6 +12918,13 @@ function _aresUpdateArenaButton(){
       <div class="ac-desc">Voted into the Arena by the testers.</div>
       <div class="ac-play">▶ PLAY</div>
     </button>
+    <button class="arena-card" id="arena-promoted-empireheat" onclick="openEmpireHeat()" style="display:none;--c1:#120a14;--c2:#2a1426;--rgb:246,194,26;">
+      <div class="ac-emoji">🗽</div>
+      <div class="ac-name">EMPIRE HEAT</div>
+      <div class="ac-tag">COMMUNITY PICK</div>
+      <div class="ac-desc">Voted into the Arena by the testers.</div>
+      <div class="ac-play">▶ PLAY</div>
+    </button>
     <button class="arena-card" id="arena-promoted-worldminds" onclick="openWorldMinds()" style="display:none;--c1:#0a0f17;--c2:#152030;--rgb:226,192,108;">
       <div class="ac-emoji">🌍</div>
       <div class="ac-name">WORLD MINDS</div>
@@ -14348,8 +14368,24 @@ function closeWorldMinds(){
   var t=document.getElementById('page-arenatest'); if(t){ t.style.display='flex'; } else { try{ var hub=document.getElementById('arena-hub'); if(hub)hub.style.display='flex'; }catch(e){} }
 }
 window.openWorldMinds=openWorldMinds;window.closeWorldMinds=closeWorldMinds;
+function openEmpireHeat(){
+  if(_arenaGameBlocked())return; var page=document.getElementById('page-empireheat'); if(!page)return;
+  if(!_gamePromoted('empireheat')){ var ok=_testOk(); if(!ok){ openArenaTest(); return; } }
+  try{ var t=document.getElementById('page-arenatest'); if(t)t.style.display='none'; }catch(e){}
+  try{ var hub=document.getElementById('arena-hub'); if(hub)hub.style.display='none'; }catch(e){}
+  if(page.parentNode!==document.body)document.body.appendChild(page);
+  page.style.cssText='display:block !important;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:2147483647;background:#07060a;';
+  var f=document.getElementById('eh-frame'); if((f.getAttribute('src')||'').indexOf('empireheat')<0)f.src='/games/empireheat.html';
+  setTimeout(function(){try{f.focus()}catch(e){}},300);
+}
+function closeEmpireHeat(){
+  var page=document.getElementById('page-empireheat'); if(page)page.style.display='none';
+  var f=document.getElementById('eh-frame'); if(f)f.src='about:blank';
+  var t=document.getElementById('page-arenatest'); if(t){ t.style.display='flex'; } else { try{ var hub=document.getElementById('arena-hub'); if(hub)hub.style.display='flex'; }catch(e){} }
+}
+window.openEmpireHeat=openEmpireHeat;window.closeEmpireHeat=closeEmpireHeat;
 var _AT_HASH='dd49477b0b970dde26d58606384cfedd0dc5740b719bffc06442e7d949849deb';
-var TEST_GAMES=[{id:'frontline',name:'Frontline Warzone'},{id:'worldminds',name:'World Minds'}];
+var TEST_GAMES=[{id:'frontline',name:'Frontline Warzone'},{id:'worldminds',name:'World Minds'},{id:'empireheat',name:'Empire Heat'}];
 var TEST_PROMOTE_AT=5; // net 👍 minus 👎 (one vote per account) needed to join the Arena hub
 function _testTally(id){ var up=0,down=0; try{ var a=getAccounts(); for(var u in a){ var x=a[u]; var v=x&&x.testVotes&&x.testVotes[id]; if(v===1)up++; else if(v===-1)down++; } }catch(e){} return {up:up,down:down,net:up-down}; }
 function _gamePromoted(id){ return _testTally(id).net>=TEST_PROMOTE_AT; }
