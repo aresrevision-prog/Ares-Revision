@@ -4179,7 +4179,7 @@ function loadGlobalAccounts(callback, timeoutMs = 4000) {
   ensureGun();
   fetchAllFromSupabase()
     .then(() => callback(getAccounts()))
-    .catch(() => callback(getAccounts()));
+    .catch(e => { console.error('loadGlobalAccounts failed', e); callback(getAccounts(), e); });
 }
 
 // ── Device bans ──────────────────────────────────────────────────────────
@@ -5268,9 +5268,14 @@ function _openAccountLogReal() {
   const searchInput = document.getElementById('admin-search-input');
   if (searchInput) searchInput.value = '';
   _startAdminForceCloseTimer();
-  loadGlobalAccounts(accounts => {
+  loadGlobalAccounts((accounts, err) => {
     _adminAllAccounts = accounts;
     renderAdminPanel();
+    if (err) {
+      const msg = (err && (err.message || err.details)) ? String(err.message || err.details).slice(0, 140) : 'unknown error';
+      const el = document.getElementById('admin-accounts-list');
+      if (el) el.insertAdjacentHTML('afterbegin', '<div style="margin:6px;padding:10px;border-radius:10px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.35);color:#F87171;font-size:12px;line-height:1.5;">⚠️ Couldn\'t load the latest accounts from the server (' + _esc(msg) + '). Showing what this device has cached. <button onclick="_openAccountLogReal()" style="margin-top:6px;display:block;background:#7C3AED;border:none;color:#fff;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">↻ Retry</button></div>');
+    }
   });
 }
 
@@ -5489,8 +5494,8 @@ function _renderAccountDetailHTML(k, accounts) {
           })()}
         </div>
         ${!isParent ? `<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
-          <button onclick="adminToggleAccess('${username}','arenaAccess')" style="flex:1;min-width:130px;background:${a.arenaAccess?'rgba(16,185,129,0.15)':'rgba(255,255,255,0.06)'};border:1px solid ${a.arenaAccess?'#10B981':'rgba(255,255,255,0.18)'};color:${a.arenaAccess?'#10B981':'rgba(255,255,255,0.7)'};border-radius:8px;padding:8px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">⚔️ Arena: ${a.arenaAccess?'ON':'OFF'}</button>
-          <button onclick="adminToggleAccess('${username}','testAccess')" style="flex:1;min-width:130px;background:${a.testAccess?'rgba(150,170,190,0.2)':'rgba(255,255,255,0.06)'};border:1px solid ${a.testAccess?'#96aabe':'rgba(255,255,255,0.18)'};color:${a.testAccess?'#c8d4e0':'rgba(255,255,255,0.7)'};border-radius:8px;padding:8px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">🧪 Test games: ${a.testAccess?'ON':'OFF'}</button>
+          <button onclick="adminToggleAccess('${k}','arenaAccess')" style="flex:1;min-width:130px;background:${a.arenaAccess?'rgba(16,185,129,0.15)':'rgba(255,255,255,0.06)'};border:1px solid ${a.arenaAccess?'#10B981':'rgba(255,255,255,0.18)'};color:${a.arenaAccess?'#10B981':'rgba(255,255,255,0.7)'};border-radius:8px;padding:8px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">⚔️ Arena: ${a.arenaAccess?'ON':'OFF'}</button>
+          <button onclick="adminToggleAccess('${k}','testAccess')" style="flex:1;min-width:130px;background:${a.testAccess?'rgba(150,170,190,0.2)':'rgba(255,255,255,0.06)'};border:1px solid ${a.testAccess?'#96aabe':'rgba(255,255,255,0.18)'};color:${a.testAccess?'#c8d4e0':'rgba(255,255,255,0.7)'};border-radius:8px;padding:8px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">🧪 Test games: ${a.testAccess?'ON':'OFF'}</button>
         </div>` : ''}
       </div>`;
 }
