@@ -5517,7 +5517,7 @@ function adminToggleAccess(username, key) {
   if (typeof gunPut === 'function') gunPut(username, accounts[username]);
   const on = accounts[username][key], nm = key === 'testAccess' ? '🧪 Test games' : '⚔️ Arena';
   showXpPop(nm + (on ? ' access granted to @' : ' access removed from @') + username);
-  try { renderAdminPanel(); } catch(e) {}
+  try { _adminAllAccounts = getAccounts(); renderAdminPanel(); } catch(e) {}
 }
 window.adminToggleAccess = adminToggleAccess;
 
