@@ -816,7 +816,7 @@ html,html,body{height:100%}body{min-height:100%;background:var(--bg);color:var(-
   <div id="at-lock" style="width:min(340px,90vw);text-align:center;background:rgba(255,255,255,.04);border:1px solid #2c3a48;border-radius:14px;padding:26px 22px;">
     <div style="font-size:34px;">🔒</div>
     <div style="font-size:20px;font-weight:800;letter-spacing:.2em;margin:8px 0 4px;">TEST</div>
-    <div style="font-size:13px;opacity:.7;margin-bottom:16px;">Enter the password to continue.</div>
+    <div style="font-size:13px;opacity:.7;margin-bottom:16px;">Enter the password to continue, or ask an admin for Test access.</div>
     <input id="at-pw" type="password" inputmode="numeric" autocomplete="off" maxlength="12" onkeydown="if(event.key==='Enter')arenaTestUnlock()" style="width:100%;box-sizing:border-box;padding:11px 12px;border-radius:9px;border:1px solid #2c3a48;background:#0c1116;color:#fff;font-size:18px;letter-spacing:.3em;text-align:center;font-family:inherit;">
     <div id="at-err" style="height:18px;font-size:12px;color:#ff7a6a;margin-top:8px;"></div>
     <button onclick="arenaTestUnlock()" style="width:100%;margin-top:6px;padding:12px;border-radius:9px;border:none;background:#96aabe;color:#0a0d10;font-weight:900;letter-spacing:.25em;cursor:pointer;font-family:inherit;">UNLOCK</button>
@@ -5378,6 +5378,7 @@ function _renderAccountDetailHTML(k, accounts) {
           ${a.proRequest?.status==='pending' ? `<div>🕐 Pro Request: <span style="color:#60A5FA;">Pending (${a.proRequest.method||'?'})</span></div>` : ''}
           ${a.banned ? `<div style="grid-column:1/-1;margin-top:3px;">🚫 <strong style="color:#F87171;">BANNED</strong> — <span style="color:rgba(255,255,255,0.45);">${a.banReason||'No reason'}</span> (${a.bannedAt||'?'})</div>` : ''}
           ${a.arenaAccess ? `<div>⚔️ Arena: <span style="color:#10B981;font-weight:700;">GRANTED</span></div>` : ''}
+          <div>🧪 Test: <button onclick="toggleTestAccess('${k}')" style="background:${a.testAccess?'rgba(16,185,129,0.15)':'rgba(255,255,255,0.06)'};border:1px solid ${a.testAccess?'rgba(16,185,129,0.45)':'rgba(255,255,255,0.15)'};color:${a.testAccess?'#10B981':'rgba(255,255,255,0.6)'};border-radius:6px;padding:1px 7px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;">${a.testAccess?'GRANTED · remove':'Grant'}</button></div>
           ${(function(){
             const rats = a.ratings || [];
             if (!rats.length) return '<div>⭐ No ratings yet</div>';
@@ -8828,6 +8829,16 @@ function adminAvatarTap(username) {
     openAccountLog();
   }
 }
+
+// ── TEST area permission (admin) ──
+function toggleTestAccess(username) {
+  if (!window._adminSession) return;
+  const accounts = getAccounts(); if (!accounts[username]) return;
+  const had = !!accounts[username].testAccess; accounts[username].testAccess = !had; saveAccounts(accounts);
+  if (typeof gunPut === 'function') gunPut(username, accounts[username]);
+  showXpPop(had ? '🧪 Test access removed from @' + username : '🧪 Test access granted to @' + username); openAccountLog();
+}
+window.toggleTestAccess = toggleTestAccess;
 
 // ── Ban System ────────────────────────────────────────────────────────────
 let _banTargetUser = null;
@@ -12722,7 +12733,7 @@ function _aresUpdateArenaButton(){
     <button class="arena-card" onclick="openArenaTest()" style="--c1:#101418;--c2:#1c2630;--rgb:150,170,190;">
       <div class="ac-emoji">🔒</div>
       <div class="ac-name">TEST</div>
-      <div class="ac-tag">LOCKED · PASSWORD</div>
+      <div class="ac-tag">LOCKED · PERMISSION OR PASSWORD</div>
       <div class="ac-desc">Private test area.</div>
       <div class="ac-play">▶ UNLOCK</div>
     </button>
@@ -14138,7 +14149,7 @@ window.openNightShift=openNightShift;window.closeNightShift=closeNightShift;
 function _arenaGameBlocked(){ try{ if(currentUser){ var a=getAccounts()[currentUser]; if(a&&a.accountType==='parent'){ if(typeof showXpPop==='function')showXpPop('🔒 Games are not available on parent accounts'); return true; } } }catch(e){} return false; }
 function openFrontline(){
   if(_arenaGameBlocked())return; var page=document.getElementById('page-frontline'); if(!page)return;
-  var ok=false; try{ ok=sessionStorage.getItem('ares_test_ok')==='1'; }catch(e){} if(!ok){ openArenaTest(); return; }
+  var ok=_arenaTestAllowed(); try{ ok=ok||sessionStorage.getItem('ares_test_ok')==='1'; }catch(e){} if(!ok){ openArenaTest(); return; }
   try{ var t=document.getElementById('page-arenatest'); if(t)t.style.display='none'; }catch(e){}
   try{ var hub=document.getElementById('arena-hub'); if(hub)hub.style.display='none'; }catch(e){}
   if(page.parentNode!==document.body)document.body.appendChild(page);
@@ -14153,13 +14164,14 @@ function closeFrontline(){
   try{ document.exitPointerLock&&document.exitPointerLock(); }catch(e){}
   var t=document.getElementById('page-arenatest'); if(t){ t.style.display='flex'; } else { try{ var hub=document.getElementById('arena-hub'); if(hub)hub.style.display='flex'; }catch(e){} }
 }
+function _arenaTestAllowed(){ try{ if(window._adminSession) return true; var a=currentUser&&getAccounts()[currentUser]; return !!(a&&a.testAccess); }catch(e){ return false; } }
 var _AT_HASH='fe2592b42a727e977f055947385b709cc82b16b9a87f88c6abf3900d65d0cdc3';
 function openArenaTest(){
   if(_arenaGameBlocked())return; var page=document.getElementById('page-arenatest'); if(!page)return;
   try{ var hub=document.getElementById('arena-hub'); if(hub)hub.style.display='none'; }catch(e){}
   if(page.parentNode!==document.body)document.body.appendChild(page);
   page.style.display='flex'; page.style.zIndex='2147483647';
-  var ok=false; try{ ok=sessionStorage.getItem('ares_test_ok')==='1'; }catch(e){}
+  var ok=_arenaTestAllowed(); try{ ok=ok||sessionStorage.getItem('ares_test_ok')==='1'; }catch(e){}
   document.getElementById('at-lock').style.display=ok?'none':'block'; document.getElementById('at-room').style.display=ok?'block':'none';
   document.getElementById('at-err').textContent=''; var i=document.getElementById('at-pw'); i.value=''; if(!ok)setTimeout(function(){try{i.focus()}catch(e){}},100);
 }
