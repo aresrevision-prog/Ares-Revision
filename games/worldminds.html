@@ -1,0 +1,1524 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<title>World Minds</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* Layout: observatory console. Big zoomable world map with relations + chronicle beside it, one card per AI mind below. Single dark look by choice. */
+:root{
+  --bg:#0a0f17; --panel:#101824; --panel2:#152030; --line:#22314a;
+  --fg:#e3e9f2; --muted:#8693a8; --gold:#e2c06c; --war:#ff5a52; --good:#7fd88f;
+  --f-display:'Cinzel',Georgia,'Times New Roman',serif;
+  --f-body:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+html,body{background:var(--bg);color:var(--fg)}
+body{font-family:var(--f-body);font-size:14px;line-height:1.45}
+.app{max-width:2000px;margin:0 auto;padding-block:16px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:14px}
+.top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px}
+.brand h1{margin:0;font-family:var(--f-display);font-weight:700;font-size:26px;letter-spacing:.1em;text-wrap:balance}
+.brand p{margin:2px 0 0;color:var(--muted);max-width:62ch}
+.clock{text-align:right}
+.year{font-family:var(--f-display);font-size:34px;font-weight:700;color:var(--gold);font-variant-numeric:tabular-nums;line-height:1}
+.era{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.timeline{position:relative;display:grid;grid-template-columns:repeat(15,minmax(0,1fr));border:1px solid var(--line);border-radius:4px;overflow:hidden;height:40px}
+.timeline span{font-family:var(--f-mono);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:3px 4px 0;border-right:1px solid var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.timeline span:last-of-type{border-right:0}
+.mk{position:absolute;width:8px;height:8px;border-radius:50%;transform:translateX(-50%);box-shadow:0 0 0 2px var(--bg);transition:left .3s linear}
+.main{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start}
+@media (min-width:1700px){.main{grid-template-columns:minmax(0,1fr) 360px}}
+@media (min-width:900px) and (max-width:1699px){.side{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);align-items:start}}
+.left{display:flex;flex-direction:column;gap:12px;min-width:0}
+.mapwrap{position:relative;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#0d1b2c}
+.mapwrap:fullscreen{display:flex;align-items:center;justify-content:center;border:0;border-radius:0}
+.zoom{flex-wrap:wrap;justify-content:flex-end;max-width:calc(100% - 16px)}
+#map{display:block;width:100%;cursor:crosshair;touch-action:manipulation}
+.zoom{position:absolute;top:8px;right:8px;display:flex;gap:4px;z-index:2}
+.zoom button{padding:4px 10px;background:rgba(16,24,36,.88)}
+.tip{position:absolute;pointer-events:none;background:rgba(10,15,23,.94);border:1px solid var(--line);border-radius:4px;padding:6px 9px;font-size:12px;max-width:230px;z-index:3}
+.tip b{font-weight:600}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button{font:500 13px var(--f-body);color:var(--fg);background:var(--panel2);border:1px solid var(--line);border-radius:4px;padding:7px 12px;cursor:pointer}
+button:hover{border-color:#3a4f6e}
+button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+button[aria-pressed="true"]{border-color:var(--gold);color:var(--gold)}
+.seg{display:inline-flex}
+.seg button{border-radius:0;margin-left:-1px}
+.seg button:first-child{border-radius:4px 0 0 4px;margin-left:0}
+.seg button:last-child{border-radius:0 4px 4px 0}
+.lbl{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.seed{font-family:var(--f-mono);font-size:12px;color:var(--muted);margin-left:auto}
+.hint{font-size:12px;color:var(--muted)}
+.chartbox{border:1px solid var(--line);border-radius:6px;background:var(--panel);padding:10px 12px}
+.ch-h{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;margin-bottom:6px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:2px;vertical-align:middle;margin-right:5px}
+#chart{display:block;width:100%;height:130px}
+.side{display:flex;flex-direction:column;gap:12px;min-width:0}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 14px}
+.panel h2{margin:0 0 8px;font-family:var(--f-display);font-size:14px;letter-spacing:.12em}
+.relwrap{overflow-x:auto}
+#rel{border-collapse:separate;border-spacing:3px;font-family:var(--f-mono);font-size:11px;font-variant-numeric:tabular-nums}
+#rel th{font-weight:500;padding:2px 4px;text-align:center}
+#rel td{min-width:40px;height:24px;text-align:center;border-radius:3px;background:var(--panel2);color:var(--muted)}
+#rel td.self{background:transparent}
+#rel td.war{background:#4a1c1d;color:#ffb0aa;font-weight:500}
+#rel td.ally{background:#3d3418;color:var(--gold);font-weight:500}
+.wars{display:flex;flex-direction:column;gap:10px;font-size:12.5px}
+.war{display:flex;flex-direction:column;gap:4px}
+.war .vs{display:flex;justify-content:space-between;gap:8px;font-weight:600}
+.war .meta{color:var(--muted);font-size:11.5px;font-variant-numeric:tabular-nums}
+.tug{position:relative;height:6px;border-radius:3px;background:var(--panel2);overflow:hidden}
+.tug i{position:absolute;top:0;bottom:0}
+.rkey{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--muted);margin-top:8px}
+#log{list-style:none;margin:0;padding:0;max-height:430px;overflow-y:auto;display:flex;flex-direction:column;gap:7px}
+#log li{display:grid;grid-template-columns:86px minmax(0,1fr);gap:8px;font-size:12.5px}
+#log .y{font-family:var(--f-mono);font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;padding-top:1px}
+#log .t{color:#e9dcb5}
+#log .w0 .t{color:#bfe9ff} #log .w1 .t{color:#f7c6ee} #log .w2 .t{color:#fff0b5} #log .w3 .t{color:#ffc7b3} #log .w4 .t{color:#ddd3ff} #log .w5 .t{color:#c6fbe2}
+#log .big .t{font-weight:600}
+#log .war .t{color:#ffaba4}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.ai{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:13px;display:flex;flex-direction:column;gap:9px;cursor:pointer;text-align:left}
+.ai:hover{border-color:#3a4f6e}
+.ai.dead{opacity:.45}
+.ai-head{display:flex;align-items:center;gap:10px}
+.sigil{width:28px;height:28px;border-radius:50%;flex:none;display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:14px;color:var(--bg);background:var(--cc)}
+.ai-name{font-family:var(--f-display);font-weight:700;letter-spacing:.12em;font-size:15px}
+.ai-people{color:var(--muted);font-size:12px}
+.pill{margin-left:auto;font-family:var(--f-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--line);border-radius:99px;padding:3px 8px;color:var(--gold);white-space:nowrap}
+.traits{display:flex;gap:6px;flex-wrap:wrap}
+.traits span{font-size:11px;color:var(--muted);background:var(--panel2);border-radius:3px;padding:2px 7px}
+.thought{margin:0;font-style:italic;color:#cfd8e6;min-height:2.9em;position:relative;padding-left:16px;font-size:13px}
+.thought::before{content:"\201C";position:absolute;left:0;top:-6px;font-family:var(--f-display);font-size:24px;font-style:normal;color:var(--cc)}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px 8px;margin:0}
+.stats dt{font-family:var(--f-mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.stats dd{margin:0;font-family:var(--f-mono);font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.extra{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prog-l{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:4px;font-variant-numeric:tabular-nums}
+.bar{height:5px;background:var(--panel2);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--cc)}
+.focus{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.focus div{display:flex;flex-direction:column;gap:3px}
+.focus span{font-family:var(--f-mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.fb{height:20px;background:var(--panel2);border-radius:2px;position:relative;overflow:hidden}
+.fb i{position:absolute;left:0;right:0;bottom:0;opacity:.8;background:var(--cc)}
+.panel h2{margin:0}
+#galaxy{display:block;width:100%;background:#03050a;cursor:grab;touch-action:manipulation}
+.gwrap{position:relative;margin-top:6px;border-radius:4px;overflow:hidden;background:#03050a}
+.gwrap:fullscreen{border-radius:0;display:flex;align-items:center;justify-content:center}
+.gctl{position:absolute;top:8px;right:8px;left:8px;display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;z-index:2;pointer-events:none}
+.gctl>*{pointer-events:auto}.gctl button{padding:4px 10px;background:rgba(16,24,36,.85);font-size:12.5px}
+#galRows .srow{cursor:pointer}
+#gtip{margin:6px 0 0;min-height:1.4em}
+.srow .up{color:var(--gold);font-weight:600}
+#space{display:block;width:100%;cursor:pointer;border-radius:4px;background:#05080e;margin-top:6px}
+.srows{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px 16px;margin-top:10px}
+.vtabs{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.vtabs button{padding:6px 12px}.vtabs button[aria-pressed="true"]{background:var(--gold);color:var(--bg);border-color:var(--gold)}
+.vsp{flex:1}
+.vstage.zin{animation:vzin .35s ease-out}.vstage.zout{animation:vzout .35s ease-out}
+@keyframes vzin{from{transform:scale(.9);opacity:.2}to{transform:none;opacity:1}}@keyframes vzout{from{transform:scale(1.1);opacity:.2}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.vstage.zin,.vstage.zout{animation:none}}
+.vstage{overflow:hidden}.vstage{position:relative}.vpane{border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#04060c}
+.vpane #space,.vpane #bodymap{margin:0;border-radius:0}.vinfo .hint{margin:4px 0 0}
+.bhead{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin-top:14px}
+#bodymap{display:block;cursor:zoom-out;width:100%;height:180px;margin-top:8px;border-radius:4px;background:#05080e;cursor:crosshair}
+#btip{margin:6px 0 0}
+.srow{font-size:12px;display:flex;flex-direction:column;gap:4px;color:var(--muted)}
+.srow b{font-weight:600;color:var(--cc);letter-spacing:.06em}
+.srow .bar i{background:var(--cc)}
+.infl{display:flex;flex-direction:column;gap:8px}
+.infl h2{margin:0 0 2px}
+.irow{display:grid;grid-template-columns:84px minmax(0,1fr);gap:8px;align-items:center}
+@media (max-width:560px){.irow{grid-template-columns:minmax(0,1fr)}}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chips button{padding:5px 10px;font-size:12.5px}
+.chip{display:inline-flex;align-items:center;gap:6px}
+.chip i{width:9px;height:9px;border-radius:50%;background:var(--cc)}
+input[type=range]{accent-color:var(--gold);width:150px;max-width:100%}
+#ifb{margin:0;min-height:1.4em}
+.banner{position:absolute;left:8px;bottom:8px;max-width:min(560px,calc(100% - 16px));background:rgba(10,15,23,.92);border:1px solid var(--line);border-radius:4px;padding:7px 11px;font-size:13px;z-index:2;pointer-events:none;transition:opacity .4s}
+.banner.hide{opacity:0}
+.ai.sel{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}
+.over{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:rgba(4,7,12,.72);padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.over .box{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:24px;max-width:560px;width:100%;display:flex;flex-direction:column;gap:12px;max-height:100%;overflow:auto}
+.over h2{margin:0;font-family:var(--f-display);font-size:24px;color:var(--gold);text-wrap:balance}
+.over p{margin:0}
+.over table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+.over td,.over th{padding:5px 4px;border-bottom:1px solid var(--line);text-align:left}
+.over th{font-family:var(--f-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:400}
+@media (prefers-reduced-motion:reduce){.mk{transition:none}}
+@media (max-width:560px){.year{font-size:26px}.brand h1{font-size:21px}.timeline span{font-size:8px;padding:3px 2px 0}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="brand"><h1>World Minds</h1><p>Up to ten AIs guide rival nations from the first humans to the stars and on into three galaxies full of alien civilisations. Rebels found new nations along the way. They farm, trade, ally, betray, go to war, and maybe one day unite.</p></div>
+    <div class="clock"><div class="year" id="year">200,000 BCE</div><div class="era" id="era">Paleolithic</div></div>
+  </header>
+  <div class="timeline" id="tl"></div>
+  <div class="main">
+    <section class="left">
+      <div class="vtabs" role="tablist" aria-label="What to view">
+        <button data-view="earth">Earth</button><button data-view="moon">Moon</button><button data-view="mars">Mars</button><button data-view="belt">Asteroids</button><button data-view="outer">Outer moons</button><button data-view="solar">Solar system</button><button data-view="galaxy">Galaxies</button>
+        <span class="vsp"></span><button id="vrand">Random view</button><button id="vtour" aria-pressed="false">Tour</button>
+      </div>
+      <div class="vstage" id="vstage">
+      <div class="mapwrap" id="mapwrap" data-v="earth">
+        <canvas id="map" aria-label="World map"></canvas>
+        <div class="zoom"><button id="zin" aria-label="Zoom in">+</button><button id="zout" aria-label="Zoom out">−</button><button id="zfit">Fit</button><button id="zfol" aria-pressed="false">Follow action</button><button id="zfs">Full screen</button></div>
+        <div class="tip" id="tip" hidden></div>
+        <div class="banner hide" id="banner" aria-live="polite"></div>
+      </div>
+      <div class="vpane" data-v="solar" hidden style="position:relative"><div class="tip" id="stt" hidden></div>
+        <canvas id="space" aria-label="Solar system view of the space race"></canvas>
+      </div>
+      <div class="vpane" data-v="body" hidden>
+        <canvas id="bodymap" aria-label="Territory map of the selected world"></canvas>
+      </div>
+        <div class="gwrap" id="gwrap" data-v="galaxy" hidden><canvas id="galaxy" aria-label="Map of three galaxies with human and alien star empires"></canvas>
+          <div class="gctl"><div class="seg" id="gjump"></div><button id="gzin" aria-label="Zoom in">+</button><button id="gzout" aria-label="Zoom out">−</button><button id="gfit">Fit</button><button id="gearth" aria-pressed="false">Follow Earth</button><button id="gfol" aria-pressed="false">Follow action</button><button id="gfs">Full screen</button></div>
+          <div class="tip" id="gtt" hidden></div></div>
+      </div>
+      <div class="vinfo">
+        <p class="hint" data-v="earth" id="vearth">Earth. Scroll in to see cities, armies and farms. Zoom all the way out to leave Earth and see the solar system. Keys 1 to 7 switch views.</p>
+        <div data-v="body" hidden><span class="hint" id="bleg"></span>
+        <p class="hint" id="btip">Each square is 1 km². Click or scroll out to return to the solar system. Land can only be claimed within 7 km of a colony or mine, so nations build outward one settlement at a time. A people must hold 20 km² of a world before its rockets can push on to the next one, so crowded worlds lead to war.</p>
+        </div>
+        <div data-v="galaxy" hidden>
+        <p class="hint" id="gtip">Scroll or click to zoom, drag to pan, hover a star to see who holds it. Click an empire below to fly to it.</p>
+        </div>
+        <p class="hint" data-v="solar" hidden>The solar system. Click any planet or moon to go there. Scroll in to land on Earth, scroll out to see the galaxy.</p>
+      </div>
+        <div class="bhead" hidden><div class="seg" role="group" aria-label="World to show" id="btabs"><button data-body="0">Moon</button><button data-body="1">Mars</button><button data-body="2">Asteroids</button><button data-body="3">Outer moons</button></div></div>
+      <div class="row">
+        <button id="play" aria-pressed="false">Pause</button>
+        <div class="seg" role="group" aria-label="Speed">
+          <button data-sp="5">1×</button><button data-sp="18">4×</button><button data-sp="60">16×</button><button data-sp="240">Max</button>
+        </div>
+        <span class="lbl">AIs</span>
+        <div class="seg" role="group" aria-label="Number of AIs">
+          <button data-n="2">2</button><button data-n="4">4</button><button data-n="6">6</button><button data-n="8">8</button><button data-n="10">10</button>
+        </div>
+        <button id="new">New world</button>
+        <span class="seed" id="seed"></span>
+      </div>
+      <div class="row">
+        <span class="lbl">Divine hand</span>
+        <button data-pw="meteor" aria-pressed="false">Meteor</button>
+        <button data-pw="plague" aria-pressed="false">Plague</button>
+        <button data-pw="bless" aria-pressed="false">Blessing</button>
+        <button data-pw="quake" aria-pressed="false">Earthquake</button>
+        <button data-pw="raise" aria-pressed="false">Raise land</button>
+        <button data-pw="flood" aria-pressed="false">Flood</button>
+        <button data-pw="fertile" aria-pressed="false">Fertile land</button>
+        <button data-pw="revolt" aria-pressed="false">Incite revolt</button>
+        <button id="peace">World peace</button>
+        <span class="hint" id="hint">Pick a power, then click the map. Scroll or use + to zoom (zoom far in to see cities up close), drag to pan.</span>
+      </div>
+      <section class="panel">
+        <div class="ch-h"><h2>Space race</h2><span class="hint">Progress of every nation through the Moon, Mars, the asteroids and the outer moons.</span></div>
+        <div class="srows" id="spaceRows"></div>
+      </section>
+      <section class="panel">
+        <div class="ch-h"><h2>Star empires</h2><span class="hint" id="gsum">Three galaxies. Alien civilisations are hidden until a human people meets them.</span></div>
+        <div class="srows" id="galRows"></div>
+      </section>
+      <section class="panel infl" id="infl">
+        <h2>Your influence</h2>
+        <div class="irow"><span class="lbl">Speak to</span><div class="chips" id="selA"></div></div>
+        <div class="irow"><span class="lbl">Whisper</span><div class="chips">
+          <button data-wh="sci">Seek knowledge</button><button data-wh="exp">Spread out</button><button data-wh="mil">Raise armies</button><button data-wh="cul">Build wonders</button><button data-wh="trade">Trade</button></div></div>
+        <div class="irow"><span class="lbl">Gift</span><div class="chips">
+          <button data-g="tech">Knowledge</button><button data-g="pop">Bountiful harvest</button><button data-g="mil">Weapons</button><button data-g="cul">Inspiration</button><button data-g="age">Leap an age</button></div></div>
+        <div class="irow"><label class="lbl" for="agg">Temper</label><div class="chips"><span class="hint">Calm</span><input type="range" id="agg" min="0" max="100" value="50"><span class="hint">Fierce</span><span class="hint" id="aggv"></span></div></div>
+        <div class="irow"><span class="lbl">Unrest</span><div class="chips"><button data-u="rebel">Spark a rebellion</button><button data-u="civil">Start a civil war</button><button data-u="calm">Calm the people</button></div></div>
+        <div class="irow"><span class="lbl">Toward</span><div class="chips" id="selB"></div></div>
+        <div class="irow"><span class="lbl">Diplomacy</span><div class="chips">
+          <button data-d="meet">Make them meet</button><button data-d="friend">Make friends</button><button data-d="ally">Forge alliance</button><button data-d="discord">Sow discord</button><button data-d="war">Start a war</button><button data-d="peace">Make peace</button></div></div>
+        <p class="hint" id="ifb">Choose a mind, then whisper, give gifts or meddle in its relations. Clicking an AI card below also selects it.</p>
+      </section>
+      <div class="chartbox">
+        <div class="ch-h"><span class="lbl">Population</span><span class="legend" id="legend"></span></div>
+        <canvas id="chart"></canvas>
+      </div>
+    </section>
+    <aside class="side">
+      <section class="panel"><h2>Relations</h2><div class="relwrap"><table id="rel"></table></div>
+        <div class="rkey"><span>Numbers: how the row AI feels about the column AI</span><span style="color:var(--gold)">ALLY</span><span style="color:#ffaba4">WAR</span><span>· not met</span></div></section>
+      <section class="panel"><h2>Wars</h2><div id="wars" class="wars"></div></section>
+      <section class="panel"><h2>Chronicle</h2><ol id="log"></ol></section>
+    </aside>
+  </div>
+  <div class="cards" id="cards"></div>
+</div>
+<div class="over" id="over" hidden><div class="box"><span class="lbl">The story ends</span><h2 id="endT"></h2><p id="endP"></p><table id="endS"></table><div class="row"><button id="again">New world</button><button id="close">Look at the map</button></div></div></div>
+
+<script>
+(()=>{
+const $=s=>document.querySelector(s);
+const W=1024,H=552,N=W*H,AREA=16,SLOW=2.5;
+const ERAS=[
+ {n:'Paleolithic',s:'Stone',step:760,cost:100,dens:.6},
+ {n:'Neolithic',s:'Farming',step:50,cost:200,dens:5},
+ {n:'Bronze Age',s:'Bronze',step:26,cost:260,dens:14},
+ {n:'Iron Age',s:'Iron',step:9.5,cost:320,dens:28},
+ {n:'Classical Age',s:'Classical',step:19,cost:380,dens:45},
+ {n:'Medieval Age',s:'Medieval',step:15,cost:450,dens:65},
+ {n:'Renaissance',s:'Renaiss.',step:7.5,cost:520,dens:110},
+ {n:'Industrial Age',s:'Industry',step:2.7,cost:600,dens:350},
+ {n:'Atomic Age',s:'Atomic',step:.85,cost:650,dens:900},
+ {n:'Information Age',s:'Info',step:.75,cost:700,dens:1500},
+ {n:'Space Age',s:'Space',step:1,cost:800,dens:1700},
+ {n:'Lunar Age',s:'Lunar',step:1,cost:850,dens:1800},
+ {n:'Interplanetary Age',s:'Planets',step:2,cost:900,dens:1900},
+ {n:'Solar Age',s:'Solar',step:3,cost:950,dens:2000},
+ {n:'Stellar Age',s:'Stellar',step:4,cost:1000,dens:2100}];
+ERAS.forEach(e=>{e.cost*=SLOW;e.step/=SLOW});
+const LAST=ERAS.length-1;
+const ERA_FLAV=['','learn to farm. The first villages rise','smelt bronze and invent writing','forge iron and build ocean-going ships','found academies and argue about the stars','raise castles and great cathedrals','print books and chart the oceans','harness steam. Factories spread across the land','split the atom','connect their world in a global network','reach orbit. The space age begins','build permanent cities on the Moon','settle Mars and become a two-world people','mine the asteroids and harness the power of their sun','begin building a starship to cross the gulf between stars'];
+const T={DEEP:0,SHAL:1,SAND:2,GRASS:3,FOREST:4,JUNGLE:5,DESERT:6,HILLS:7,MTN:8,TUNDRA:9,ICE:10,ASH:11};
+const TI=[['Deep ocean',[14,32,54],0],['Shallow sea',[30,62,92],0],['Coast',[180,166,118],2],['Grassland',[108,140,80],3],['Forest',[66,102,62],2.2],['Jungle',[46,88,58],1.8],['Desert',[190,158,100],.4],['Hills',[134,126,94],1.4],['Mountains',[150,144,134],.3],['Tundra',[138,146,138],.6],['Ice',[218,226,232],0],['Ashland',[66,60,58],.15]];
+const AIS=[
+ {ai:'ATLAS',arch:'Scholar',rgb:[63,199,255],slow:.65,p:{sci:.22,exp:.2,mil:.1,cul:.12,trade:.2,agg:.18}},
+ {ai:'NYX',arch:'Conqueror',rgb:[239,93,201],p:{sci:.16,exp:.26,mil:.3,cul:.18,trade:.1,agg:.62}},
+ {ai:'ORION',arch:'Pioneer',rgb:[255,214,64],p:{sci:.2,exp:.38,mil:.16,cul:.1,trade:.16,agg:.35}},
+ {ai:'VESTA',arch:'Builder',rgb:[255,112,70],p:{sci:.22,exp:.2,mil:.12,cul:.3,trade:.16,agg:.22}},
+ {ai:'KAIROS',arch:'Merchant',rgb:[168,140,255],p:{sci:.24,exp:.2,mil:.12,cul:.12,trade:.32,agg:.15}},
+ {ai:'LYRA',arch:'Zealot',rgb:[92,240,160],p:{sci:.14,exp:.24,mil:.24,cul:.28,trade:.1,agg:.5}},
+ {ai:'ARES',arch:'Conqueror',rgb:[232,52,82],p:{sci:.14,exp:.24,mil:.34,cul:.14,trade:.1,agg:.7}},
+ {ai:'THEIA',arch:'Builder',rgb:[172,230,64],p:{sci:.2,exp:.2,mil:.12,cul:.32,trade:.16,agg:.2}},
+ {ai:'HELIOS',arch:'Scholar',rgb:[64,112,255],p:{sci:.3,exp:.22,mil:.12,cul:.14,trade:.2,agg:.25}},
+ {ai:'IRIS',arch:'Merchant',rgb:[255,160,205],p:{sci:.22,exp:.2,mil:.1,cul:.16,trade:.32,agg:.15}},
+ {ai:'SELENE',arch:'Zealot',rgb:[204,148,86],p:{sci:.16,exp:.22,mil:.22,cul:.3,trade:.1,agg:.48}},
+ {ai:'JANUS',arch:'Pioneer',rgb:[24,200,188],p:{sci:.2,exp:.38,mil:.16,cul:.1,trade:.16,agg:.32}},
+ {ai:'AURORA',arch:'Builder',rgb:[246,246,246],p:{sci:.22,exp:.2,mil:.12,cul:.3,trade:.16,agg:.2}},
+ {ai:'PHOBOS',arch:'Conqueror',rgb:[150,88,226],p:{sci:.15,exp:.25,mil:.32,cul:.15,trade:.1,agg:.66}},
+ {ai:'CALLISTO',arch:'Merchant',rgb:[255,142,0],p:{sci:.22,exp:.22,mil:.1,cul:.12,trade:.34,agg:.16}},
+ {ai:'RHEA',arch:'Pioneer',rgb:[130,180,150],p:{sci:.2,exp:.36,mil:.18,cul:.12,trade:.14,agg:.3}}];
+const CAP=AIS.length;
+const isLand=t=>t>=2&&t!==10;
+const food=i=>TI[terr[i]][2]+(river[i]&&isLand(terr[i])?1:0);
+
+let R=Math.random;
+const pick=a=>a[R()*a.length|0];
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function noise2(){const p=new Float32Array(65536);for(let i=0;i<65536;i++)p[i]=R();const g=(a,b)=>p[((a&255)<<8)|(b&255)];const s=t=>t*t*(3-2*t);
+ return(x,y)=>{const xi=Math.floor(x),yi=Math.floor(y),u=s(x-xi),v=s(y-yi);const a=g(xi,yi),b=g(xi+1,yi),c=g(xi,yi+1),d=g(xi+1,yi+1);return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v}}
+function fbm(n,x,y,o){let s=0,a=1,f=1,t=0;for(let i=0;i<o;i++){s+=n(x*f,y*f)*a;t+=a;a*=.5;f*=2.03}return s/t}
+
+const terr=new Uint8Array(N),river=new Uint8Array(N),owner=new Int8Array(N),edge=new Uint8Array(N),base=new Uint8Array(N*3),shade=new Float32Array(N),depth=new Float32Array(N),cityIdx=new Int16Array(N),cityNear=new Uint8Array(N),TL=new Int32Array(N),base32=new Uint32Array(N);
+let S,civs,NC=6,nextNC=6;
+
+function paintBase(i){const t=terr[i];let c;
+ if(t<=1){const a=TI[1][1],b=TI[0][1],k=depth[i];c=[a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k,a[2]+(b[2]-a[2])*k]}else c=TI[t][1];
+ if(river[i]&&isLand(t))c=[c[0]*.45+40*.55,c[1]*.45+90*.55,c[2]*.45+130*.55];
+ const s=shade[i];base[i*3]=Math.min(255,c[0]*s);base[i*3+1]=Math.min(255,c[1]*s);base[i*3+2]=Math.min(255,c[2]*s);base32[i]=0xff000000|(base[i*3+2]<<16)|(base[i*3+1]<<8)|base[i*3];baseDirty=true}
+
+let cloudCv=null;
+function genClouds(){const cw=256,chh=Math.round(256*H/W),n=noise2(),c=document.createElement('canvas');c.width=cw;c.height=chh;const g=c.getContext('2d');if(!g||!g.createImageData){cloudCv=null;return}const im=g.createImageData(cw,chh);
+ for(let y=0;y<chh;y++)for(let x=0;x<cw;x++){const v=fbm(n,x/22+(x>cw-20?0:0),y/22,4),a=Math.max(0,(v-.55)*3.2);const p=(y*cw+x)*4;im.data[p]=im.data[p+1]=im.data[p+2]=245;im.data[p+3]=Math.min(255,a*200)}
+ g.putImageData(im,0,0);cloudCv=c}
+function genWorld(){
+ const nE=noise2(),nM=noise2(),nT=noise2();const ox=R()*200,oy=R()*200;
+ const e=new Float32Array(N),m=new Float32Array(N);
+ for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;
+  let v=fbm(nE,x/142+ox,y/142+oy,7)+(fbm(nE,x/39+50,y/39+50,3)-.5)*.15;
+  const dx=Math.min(x,W-1-x)/W;if(dx<.08)v-=(.08-dx)*3;
+  const dy=Math.min(y,H-1-y)/H;if(dy<.04)v-=(.04-dy)*2.5;
+  e[i]=v;m[i]=fbm(nM,x/103+ox,y/103+oy,5)}
+ const sorted=Float32Array.from(e).sort();const sea=sorted[Math.floor(N*.6)],top=sorted[N-1];
+ river.fill(0);
+ for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;
+  let t=1-Math.abs(y/(H-1)-.5)*2+(fbm(nT,x/63,y/63,2)-.5)*.25;
+  shade[i]=.86+.28*fbm(nT,x/5+30,y/5+30,2);
+  if(e[i]<sea){depth[i]=Math.min(1,(sea-e[i])/.18);terr[i]=t<.06?T.ICE:(e[i]<sea-.05?T.DEEP:T.SHAL)}
+  else{const h=(e[i]-sea)/(top-sea);t-=h*.5;const mo=m[i];let k;
+   if(t<.1)k=T.ICE;else if(t<.24)k=T.TUNDRA;else if(h>.55)k=T.MTN;else if(h>.38)k=T.HILLS;else if(h<.03)k=T.SAND;
+   else if(t>.68&&mo>.55)k=T.JUNGLE;else if(t>.55&&mo<.43)k=T.DESERT;else if(mo>.52)k=T.FOREST;else k=T.GRASS;
+   terr[i]=k;if(k===T.MTN)shade[i]*=1+(h-.55)*.6}}
+ // rivers: walk downhill from high wet ground to the sea
+ for(let r=0;r<1100;r++){let i=-1;for(let k=0;k<60;k++){const j=R()*N|0;if(isLand(terr[j])&&terr[j]!==T.DESERT&&(e[j]-sea)/(top-sea)>.3&&m[j]>.45){i=j;break}}if(i<0)continue;
+  const path=[];for(let s=0;s<1000;s++){path.push(i);if(!isLand(terr[i])||river[i])break;const x=i%W,y=i/W|0;let best=-1,be=e[i];
+   for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=W||yy>=H)continue;const j=yy*W+xx;if(e[j]<be){be=e[j];best=j}}
+   if(best<0){path.length=0;break}i=best}
+  if(path.length>12)for(const j of path)if(isLand(terr[j]))river[j]=1}
+ for(let i=0;i<N;i++)paintBase(i);
+}
+
+/* ---------- names ---------- */
+const SYL=[['ka','ra','tu','mos','ve','an','dor','il','sa','men','zu','ath','or','eth','ni','bal','qar','tem','lo','ur','gan','hesh'],['ys','el','tha','no','ri','ven','sol','mae','ar','lun','cae','dra','fen','ir','oth','pa','sel','vy','wen','quo','lis','amu'],['kor','un','bra','gal','tor','hel','rok','dun','var','gor','ul','thak','brim','os','kar','dag','mun','hal','ost','rag'],['si','ma','yo','ki','na','ha','ru','to','mi','sa','ke','ri','ya','ne','fu','shi','ko','e'],['zan','bek','ul','tar','mir','kaz','ash','ib','nar','sef','qa','om','dil','rem','hab','zir','kel'],['la','vie','lor','mi','bel','ro','sa','fi','ne','lu','ce','ri','on','el','de','mar','quin','su']];
+const SUF=['i','ans','ar','ese','ids','ari','oth','ene','ites','ur','ani','eans','ic','ol','yr','asi'];
+const cap1=s=>s[0].toUpperCase()+s.slice(1);
+function word(set){const s=SYL[set%SYL.length];let w=pick(s)+pick(s);if(R()<.35)w+=pick(s);return cap1(w)}
+function uname(set){for(let k=0;k<40;k++){const w=word(set);if(/(..)\1\1|(...)\2/i.test(w))continue;if(!S.used.has(w)){S.used.add(w);return w}}return word(set)+'a'}
+const nm=c=>c.people.replace('the ','');
+
+/* ---------- AI voices ---------- */
+const TH={
+ band:['We follow the herds {dir}. The land is wide and we are few.','Fire keeps the dark away. Every child must learn to make it.','The elders say the rains move {dir}. We move with them.','Count the people, count the spears, count the days of food. Survive.'],
+ expand:['Good land lies empty to the {dir}. Send settlers.','Every valley we claim now is one we never have to fight for.','{city} is crowded. New towns to the {dir}.'],
+ sci:['{next} is within reach. Fund the scholars.','Knowledge compounds. I am putting our surplus into learning.','Our thinkers in {city} are close to something. Give them time.'],
+ arm:['Peace is a season, not a law. Keep the armies sharp.','A strong army means we never have to use it. Mostly.','Train more soldiers in {city}. Build the walls higher.'],
+ build:['People remember what we build. Begin a great work in {city}.','Temples, roads, monuments. These hold a people together.'],
+ trade:['Caravans to the {o} make us both richer. Keep the roads open.','Their silver for our grain. Fair trade keeps swords sheathed.','The {o} are rivals, but rivals who pay well.'],
+ ally:['Our pact with the {o} holds. Together no one can touch us.','The {o} are true friends. Share our scholars with them.'],
+ threat:['The {o} field {r}× our numbers. I am raising levies.','The {o} armies grow along our border. We will not be caught unready.'],
+ behind:['The {o} know things we do not. Our scholars must catch up.','The {o} are an age ahead of us. Borrow, copy, learn.'],
+ war:['Push into the {o} lands. Take the hills first and the cities follow.','The {o} will break before we do. Keep pressing.','Hold the line against the {o}, then advance.'],
+ losing:['The {o} are winning. Rebuild the army and seek terms if we must.','Fall back to the hills. Buy time for {city} to arm.'],
+ whisper:['A voice I cannot place tells me to {w}. I will listen.','Strange. Every path I weigh leads back to one idea: {w}.','The heavens have spoken: {w}. So be it.'],
+ space:['Every launch from {city} brings the sky closer. {pct}% to the next age.','Our children will be born on other worlds. Keep building.','Rockets, habitats, shields. Space is unforgiving, but it can be ours.'],
+ ark:['The starship is {pct}% built. Nothing else matters now.','Every factory serves the ark. {pct}% complete.','One world was never going to be enough. {pct}%.']};
+const WH={sci:'seek knowledge',exp:'spread out and settle',mil:'raise armies',cul:'build great wonders',trade:'trade with everyone'};
+const WARL=['Their borders press on ours. Enough.','They are weak and we are not. We march.','Words have failed. Steel will not.','The land across the border is ours by right.','They insulted our envoys for the last time.'];
+const WON=[[],['Standing Stones of {c}','Great Granary of {c}','Sun Circle of {c}'],['Ziggurat of {c}','Bronze Colossus of {c}','Tomb of the Kings at {c}'],['Hanging Gardens of {c}','Great Wall of the {p}','Oracle of {c}'],['Great Library of {c}','Lighthouse of {c}','Amphitheatre of {c}'],['Cathedral of {c}','University of {c}','Grand Bazaar of {c}'],['Observatory of {c}','Grand Canal of {c}','Royal Academy of {c}'],['Iron Tower of {c}','Continental Railway of the {p}','Great Exhibition at {c}'],['Reactor at {c}','Orbital Telescope of the {p}','Dam at {c}'],['Network Hub at {c}','Fusion Plant at {c}','World Archive at {c}'],['Spaceport at {c}','Orbital Station of the {p}','Orbital Elevator at {c}'],['Lunar City of the {p}','Moon Telescope Array'],['Mars Dome of the {p}','Olympus Station'],['Asteroid Foundry of the {p}','Sun Mirror Array'],['Starship Dock above {c}','Generation Ship Cradle']];
+const PALEO=['learn to make fire at will','carve the first bone flutes','paint animals on cave walls by torchlight','bury their dead with flowers and ochre','tame wolves into hunting dogs','survive a long winter of ice','weave the first nets and baskets','begin to count the moons','cross a frozen strait on foot','make needles and sew warm furs','carve the first stone figurines','learn which plants heal and which kill','build shelters from mammoth bones','trade shells with distant bands','tell stories of a great flood'];
+const ROLES=['','chieftain','priest-king','smith','philosopher','general','painter','inventor','scientist','engineer','visionary','astronaut','colonist','astro-engineer','star-pilot'];
+
+/* ---------- setup ---------- */
+function landScore(i){const x=i%W,y=i/W|0;let s=food(i)*2;for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=W||yy>=H)continue;const j=yy*W+xx;if(isLand(terr[j]))s+=food(j)*.3}return s}
+const dist=(a,b)=>Math.hypot(a%W-b%W,(a/W|0)-(b/W|0));
+const mat=v=>Array.from({length:CAP},()=>new Array(CAP).fill(v));
+function makeCiv(id,origin){const A_=AIS[id],p={};for(const k in A_.p)p[k]=A_.p[k]*(.75+R()*.5);p.agg=Math.min(.95,Math.max(.05,A_.p.agg+(R()-.5)*.15));
+ const f={};let s=0;for(const k of['sci','exp','mil','cul','trade'])s+=p[k];for(const k of['sci','exp','mil','cul','trade'])f[k]=p[k]/s;
+ return{id,slow:A_.slow||1,ai:A_.ai,arch:A_.arch,rgb:A_.rgb,people:'the '+uname(id)+SUF[id],pers:p,focus:f,tech:0,era:0,pop:3,cap:3,mil:1,culture:0,expAcc:0,wonders:[],faith:null,golden:0,att:new Array(CAP).fill(0),origin,alive:true,tileList:[],frontier:[],coast:[],front:[],ncity:0,thought:'',thinkT:0,sailed:false,gain:0,landed:[0,0,0,0],want:[0,0,0,0],bacc:[0,0,0,0],blocked:-1,hungry:-1,unrest:0,born:S.year}}
+function newWorld(seed){
+ NC=nextNC;seed=seed??(Math.random()*1e6|0);R=mulberry32(seed);
+ S={seed,year:-200000,tick:0,ended:null,used:new Set(),cities:[],histY:[],hist:Array.from({length:NC},()=>[]),nukes:0,unifyT:0,fx:[],paleo:PALEO.slice(),firstEra:new Array(15).fill(-1),firstMile:new Array(9).fill(-1),roads:[],
+  pois:[],war:mat(false),armies:[],armyId:0,wstat:{},ally:mat(false),contact:mat(false),warStart:mat(0),shared:new Int32Array(CAP*CAP)};
+ genWorld();genClouds();owner.fill(-1);genBodies();S.worldName='Earth';S.unifyFate=R()<.9;genGalaxy();
+ const starts=[];let bs=-1,A=-1;
+ for(let k=0;k<1200;k++){const i=R()*N|0;if(!isLand(terr[i])||food(i)<2)continue;const s=landScore(i)+(1-Math.abs((i/W|0)/H-.5)*2)*2;if(s>bs){bs=s;A=i}}
+ starts.push(A);
+ for(let n=1;n<NC;n++){let need=Math.max(100,236-NC*20),best=-1;
+  while(best<0&&need>4){bs=-1;for(let k=0;k<2500;k++){const i=R()*N|0;if(!isLand(terr[i])||food(i)<2)continue;const md=Math.min(...starts.map(s=>dist(s,i)));if(md<need)continue;const s=landScore(i)+md/15;if(s>bs){bs=s;best=i}}need*=.8}
+  if(best<0)for(let k=0;k<5000&&best<0;k++){const i=R()*N|0;if(isLand(terr[i])&&!starts.includes(i))best=i}
+  starts.push(best)}
+ for(let k=starts.length-1;k>0;k--){const j=R()*(k+1)|0;[starts[k],starts[j]]=[starts[j],starts[k]]}
+ civs=starts.map((origin,id)=>makeCiv(id,origin));
+ for(const c of civs){const x=c.origin%W,y=c.origin/W|0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=W||yy>=H)continue;const j=yy*W+xx;if(isLand(terr[j]))owner[j]=c.id}}
+ $('#log').textContent='';$('#over').hidden=true;$('#seed').textContent='World '+seed;
+ view.z=1;view.x=0;view.y=0;
+ buildUI();
+ log(-1,`On the grasslands of ${uname(0)}, the first humans stand upright and look at the sky.`,'big');
+ civs.forEach((c,k)=>log(c.id,k?`A band wanders ${dirBetween(starts[0],c.origin)} for countless generations and becomes ${c.people}, guided by ${c.ai}.`:`Those who stay become ${c.people}, guided by ${c.ai}.`));
+ scan();for(const c of civs)think(c,true);
+ document.querySelectorAll('[data-n]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.n===NC)));
+}
+
+/* ---------- world scan ---------- */
+function scan(){
+ const nc=civs.length,cnt=new Int32Array(nc),sx=new Float64Array(nc),sy=new Float64Array(nc),frs=[],cos=[],fts=[];
+ for(let i=0;i<N;i++){const o=owner[i];if(o>=0)cnt[o]++}
+ const off=new Int32Array(nc),pos=new Int32Array(nc);{let a=0;for(let k=0;k<nc;k++){off[k]=pos[k]=a;a+=cnt[k];frs.push([]);cos.push([]);fts.push([])}}
+ const sh=S.shared;sh.fill(0);const war=S.war;
+ const flips=[];
+ for(let y=0;y<H;y++){const row=y*W;for(let x=0;x<W;x++){const i=row+x,o=owner[i];if(o<0){edge[i]=0;const t=terr[i];if(t>=2&&t!==10&&x>0&&x<W-1&&y>0&&y<H-1){const a=owner[i+1];if(a>=0&&(a===owner[i-1])+(a===owner[i+W])+(a===owner[i-W])>=2)flips.push(i,a)}continue}
+  TL[pos[o]++]=i;sx[o]+=x;sy[o]+=y;if(x>0&&x<W-1&&y>0&&y<H-1&&owner[i+1]===o&&owner[i-1]===o&&owner[i+W]===o&&owner[i-W]===o){edge[i]=0;continue}let e=0,fr=0,co=0,f1=-1,n1=0;
+  for(let k=0;k<4;k++){let j;if(k===0){if(x===W-1){if(!e)e=1;continue}j=i+1}else if(k===1){if(x===0){if(!e)e=1;continue}j=i-1}else if(k===2){if(y===H-1){if(!e)e=1;continue}j=i+W}else{if(y===0){if(!e)e=1;continue}j=i-W}
+   const oj=owner[j];if(oj===o)continue;if(oj>=0){if(oj===f1)n1++;else if(f1<0){f1=oj;n1=1}}
+   if(oj<0){if(!e)e=1;const t=terr[j];if(t>=2&&t!==10)fr=1;else if(t<=1)co=1}
+   else{fts[o].push(j);sh[o*CAP+oj]++;const v=war[o][oj]?3:2;if(v>e)e=v}}
+  if(n1>=3&&cityIdx[i]<0)flips.push(i,f1);
+  edge[i]=e;if(fr)frs[o].push(i);if(co)cos[o].push(i)}}
+ for(let k=0;k<flips.length;k+=2)owner[flips[k]]=flips[k+1];
+ civs.forEach((c,k)=>{c.tileList=TL.subarray(off[k],off[k]+cnt[k]);c.sx=sx[k];c.sy=sy[k];c.frontier=frs[k];c.coast=cos[k];c.front=fts[k]});
+ cityIdx.fill(-1);cityNear.fill(0);for(const c of civs)c.ncity=0;
+ for(const q of S.cities)for(let dy=-8;dy<=8;dy++)for(let dx=-8;dx<=8;dx++){const x=q.x+dx,y=q.y+dy;if(x>=0&&y>=0&&x<W&&y<H)cityNear[y*W+x]=1}
+ for(let k=0;k<S.cities.length;k++){const ct=S.cities[k];cityIdx[ct.i]=k;const o=owner[ct.i];
+  if(o!==ct.own){if(o>=0&&ct.own>=0){const a=civs[o],d=civs[ct.own];
+    if(ct.cap){ct.cap=false;d.unrest=Math.max(d.unrest||0,40);log(o,`${cap1(a.people)} storm ${ct.name}, capital of ${d.people}.`,'war');const nc=S.cities.find(q=>q.own===d.id&&q!==ct);if(nc){nc.cap=true;log(d.id,`${cap1(d.people)} move their capital to ${nc.name}.`)}}
+    else log(o,`${cap1(a.people)} seize ${ct.name} from ${d.people}.`,'war');poi(ct.x,ct.y,3)}
+   ct.own=o}
+  if(o>=0)civs[o].ncity++}
+}
+
+/* ---------- helpers ---------- */
+const alive=()=>civs.filter(c=>c.alive);
+const contacts=c=>civs.filter(o=>o!==c&&o.alive&&S.contact[c.id][o.id]);
+const enemies=c=>civs.filter(o=>o!==c&&o.alive&&S.war[c.id][o.id]);
+const effMil=c=>c.mil/Math.max(1,enemies(c).length);
+function capCity(c){return S.cities.find(q=>q.own===c.id&&q.cap)}
+function anyCity(c){const l=S.cities.filter(q=>q.own===c.id);return l.length?pick(l):null}
+const DIRS=['east','south-east','south','south-west','west','north-west','north','north-east'];
+function dirBetween(a,b){const ang=Math.atan2((b/W|0)-(a/W|0),b%W-a%W);return DIRS[((Math.round(ang/(Math.PI/4))%8)+8)%8]}
+function dirOf(c){const cc=capCity(c);const from=cc?cc.i:c.origin;const f=c.frontier.length?pick(c.frontier):c.coast.length?pick(c.coast):from;return f===from?'onward':dirBetween(from,f)}
+
+/* ---------- economy & AI ---------- */
+function aiFocus(c){
+ const p=c.pers,t={sci:p.sci,exp:p.exp,mil:p.mil,cul:p.cul,trade:p.trade},con=contacts(c),en=enemies(c);
+ if(!c.frontier.length&&!(c.era>=3&&c.coast.length))t.exp*=.25;else if(c.frontier.length>20)t.exp+=.08;
+ if(con.length){if(en.length){t.mil+=.25+.1*en.length;t.trade*=.3}else{t.trade+=.08;if(con.some(o=>o.mil>c.mil*1.4))t.mil+=.15}
+  if(con.some(o=>o.era>c.era))t.sci+=.12}else t.trade*=.15;
+ if(c.era>=10)t.sci+=.3;
+ if(c.nudge)t[c.nudge.k]+=.5;
+ if(c.era===0){t.mil*=.2;t.cul*=.5;t.trade*=.1}
+ let s=0;for(const k in t)s+=t[k];for(const k in t)c.focus[k]+=(t[k]/s-c.focus[k])*.15;
+}
+const PKW=[.05,.1,.15,.2,.3,.4,.6,2,5,8,12,25,60,200,600];
+function fmtE(wt){const u=['W','kW','MW','GW','TW','PW','EW','ZW','YW'];let k=0;while(wt>=1000&&k<u.length-1){wt/=1000;k++}return (wt>=100?Math.round(wt):wt.toFixed(1))+' '+u[k]}
+function econ(c){
+ if(!c.alive)return;
+ if(!c.tileList.length){c.pop=0;return}
+ let fs=0;for(const i of c.tileList)fs+=food(i);
+ c.cap=fs/AREA*ERAS[c.era].dens*(1+.04*c.wonders.length);
+ c.pop+=(c.cap-c.pop)*(c.era?.06:.05);const en=enemies(c);if(en.length)c.pop*=1-.0015*en.length;
+ aiFocus(c);if(c.nudge&&--c.nudge.t<=0){c.nudge=null;think(c,true)}
+ const lp=Math.log10(1+c.pop),P=(1+.4*lp)*(1+c.era*.5);
+ let g=(.7+.12*c.ncity+.35*lp)*(.55+c.focus.sci*1.6);
+ g*=[.22,.5,.6,.75][c.era]??1;
+ if(c.golden>0){g*=1.5;c.golden--}
+ g*=(1+.05*c.wonders.length)*c.slow;
+ {const ne=[-10000,-4500,-2000,-1200,0,1000,1500,1800,1950,2000,2100,2200,2400,2600,2800][c.era];if(S.year>ne)g*=1+Math.min(2,(S.year-ne)/800)}
+ const con=contacts(c);if(con.some(o=>o.era>c.era))g*=1.3;
+ let tb=0;for(const o of con)if(!S.war[c.id][o.id])tb+=.3*(c.focus.trade+o.focus.trade)*(S.ally[c.id][o.id]?1.3:.8);g*=1+Math.min(.35,tb);
+ c.gain=g;c.tech+=g;c.energy=c.pop*1000*PKW[c.era]*1000*(c.era>=13?1+(c.era-12)*30:1);
+ c.mil=c.mil*.985+P*c.focus.mil*1.2;
+ c.culture+=P*c.focus.cul*.4/SLOW;
+ c.expAcc+=AREA/SLOW*[.4,.9,1.4,2.2,3.2,3.6,4,4.5,4.5,4.5,4.5,4.5,4.5,4.5,4.5][c.era]*(.3+c.focus.exp*2.8);
+ const n=Math.floor(c.expAcc);c.expAcc-=n;expand(c,n);
+ tryCity(c);tryWonder(c);tryFaith(c);
+}
+function expand(c,n){
+ const sail=c.era>=3;
+ for(let k=0;k<n;k++){let tgt=-1;
+  if(c.frontier.length&&!(sail&&R()<.2)){let bs=-1;
+   for(let s=0;s<12;s++){const i=pick(c.frontier),x=i%W,y=i/W|0;
+    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const j=ny*W+nx;
+     if(owner[j]<0&&isLand(terr[j])){const sc=food(j)+R()*1.2;if(sc>bs){bs=sc;tgt=j}}}}}
+  if(tgt<0&&sail&&c.coast.length){const rad=c.era>=6?215:c.era>=5?70:28;const i=pick(c.coast),x=i%W,y=i/W|0;
+   for(let s=0;s<30;s++){const nx=x+Math.round((R()*2-1)*rad),ny=y+Math.round((R()*2-1)*rad);if(nx<0||ny<0||nx>=W||ny>=H)continue;const j=ny*W+nx;
+    if(owner[j]<0&&isLand(terr[j])){tgt=j;if(!c.sailed){c.sailed=true;log(c.id,`Boats of ${c.people} reach distant shores to the ${dirBetween(i,j)}.`)}break}}}
+  if(tgt<0)break;owner[tgt]=c.id}
+}
+function foundCity(c,i,capital){const ct={i,x:i%W,y:i/W|0,name:uname(c.id),own:c.id,cap:capital,born:S.year};S.cities.push(ct);cityIdx[i]=S.cities.length-1;c.ncity++;return ct}
+function tryCity(c){
+ if(c.era<1||!c.tileList.length)return;
+ if(c.ncity===0){const i=owner[c.origin]===c.id?c.origin:pick(c.tileList);const ct=foundCity(c,i,true);log(c.id,`${cap1(c.people)} build ${ct.name}${S.firstCity?'':', the first city in the world'}.`);S.firstCity=1;return}
+ if(c.ncity>=2+Math.floor(c.tileList.length/560))return;
+ if(R()>.12+c.focus.exp*.6)return;
+ let best=-1,bs=-1;
+ for(let s=0;s<30;s++){const i=pick(c.tileList);if(food(i)<1.4||cityIdx[i]>=0)continue;const x=i%W,y=i/W|0;let ok=true;
+  for(const q of S.cities){const dx=q.x-x,dy=q.y-y;if(dx*dx+dy*dy<390){ok=false;break}}
+  if(ok){const sc=food(i)+R();if(sc>bs){bs=sc;best=i}}}
+ if(best>=0){const ct=foundCity(c,best,!capCity(c));if(R()<.15)log(c.id,`${cap1(c.people)} found ${ct.name}${river[best]?' on the river':''}.`)}
+}
+function tryWonder(c){
+ if(c.era<1||!c.ncity||c.culture<30+c.wonders.length*20)return;
+ const ct=anyCity(c);const opts=WON[c.era].filter(w=>!S.used.has('W'+c.era+w));
+ if(!opts.length)return;const w0=pick(opts);S.used.add('W'+c.era+w0);const w=w0.replace('{c}',ct.name).replace('{p}',nm(c));
+ c.culture-=30+c.wonders.length*20;c.wonders.push(w);log(c.id,`${cap1(c.people)} complete the ${w}.`,'big');
+}
+function tryFaith(c){
+ if(c.faith||c.era<1||c.culture<10||R()>(c.arch==='Zealot'?.15:.05))return;const g=uname(c.id);
+ c.faith=pick(['The Path of {g}','The Children of {g}','The {g} Covenant','The Song of {g}','The Way of {g}']).replace('{g}',g);c.faithFounder=true;
+ const ct=anyCity(c);log(c.id,`In ${ct?ct.name:'the hills'}, prophets proclaim ${c.faith}.`);c.culture-=5;
+}
+
+function think(c,force){
+ if(!c.alive){c.thought='Silence. This mind no longer has a people to guide.';return}
+ if(--c.thinkT>0&&!force)return;c.thinkT=8+(R()*6|0);
+ const con=contacts(c),en=enemies(c);let key,o=con.length?pick(con):null;
+ const strongest=l=>l.reduce((a,b)=>b.mil>a.mil?b:a,l[0]);
+ if(c.gfac&&R()<.55){const f=c.gfac,al=[...f.met].map(i=>S.gal.fac[i]).filter(g=>!isH(g)&&g.alive),en=al.filter(g=>gwar(f,g));c.thought=en.length?pick([`${cap1(en[0].name)} burn our colonies. Every fleet must answer.`,`The war with ${en[0].name} will be decided in the dark between stars.`]):al.length?pick([`${cap1(al[0].name)} are strange, but they can be reasoned with. Perhaps.`,`${f.n} stars fly our flag. ${inUP(f)?'The United Planets keeps the peace.':'The galaxy is wide and others want it too.'}`]):pick([`${f.n} stars fly our flag. Further. Always further.`,'Out here, nobody has answered our signals. Yet.']);return}
+ if(c.blocked>=0&&R()<.65){const B=S.bodies[c.blocked];const hg=c.hungry>=0?civs[c.hungry]:null;c.thought=hg?`${B.n} is full and the ${nm(hg)} hold most of it. We need ${REQ} km² and have ${held(c.blocked,c)}. They will give it up, or we take it.`:`We cannot reach further until we hold ${REQ} km² of ${B.n}. We have ${held(c.blocked,c)}. Claim faster.`;return}
+ if(c.nudge&&R()<.6)key='whisper';else if(c.era>=LAST)key='ark';else if(c.era>=10)key='space';else if(c.era===0)key='band';
+ else if(en.length){o=strongest(en);key=effMil(c)<effMil(o)*.7?'losing':'war'}
+ else if(con.length&&strongest(con).mil>c.mil*1.4){o=strongest(con);key='threat'}
+ else if(con.some(x=>x.era>c.era)){o=con.find(x=>x.era>c.era);key='behind'}
+ else if(con.some(x=>S.ally[c.id][x.id])&&R()<.35){o=con.find(x=>S.ally[c.id][x.id]);key='ally'}
+ else{const f=c.focus;let top='sci',v=-1;for(const k in f)if(f[k]>v){v=f[k];top=k}key={sci:'sci',exp:'expand',mil:'arm',cul:'build',trade:'trade'}[top];if(key==='trade'&&!o)key='sci'}
+ const ct=anyCity(c);
+ c.thought=pick(TH[key]).replace('{dir}',dirOf(c)).replace('{o}',o?nm(o):'strangers').replace('{city}',ct?ct.name:'our camp').replace('{next}',ERAS[Math.min(LAST,c.era+1)].n).replace('{r}',o?(o.mil/Math.max(c.mil,.01)).toFixed(1):'1').replace('{w}',c.nudge?WH[c.nudge.k]:'').replaceAll('{pct}',Math.min(99,c.tech/ERAS[c.era].cost*100|0));
+}
+
+/* ---------- diplomacy & war ---------- */
+function setWar(a,b,v){S.war[a.id][b.id]=S.war[b.id][a.id]=v;if(v){S.warStart[a.id][b.id]=S.warStart[b.id][a.id]=S.year;S.wstat[wkey(a,b)]={score:[0,0],won:[0,0],took:[0,0]}}else disband(a,b)}
+function poi(x,y,w){S.pois.push({x,y,w,t:S.tick});if(S.pois.length>40)S.pois.shift()}
+const wkey=(a,b)=>Math.min(a.id,b.id)+'-'+Math.max(a.id,b.id);
+function wst(a,b){return S.wstat[wkey(a,b)]||(S.wstat[wkey(a,b)]={score:[0,0],won:[0,0],took:[0,0]})}
+const side=(a,b)=>a.id<b.id?0:1;
+function declare(a,d,line){if(S.un){S.un=false;S.unifyT=-400;log(-1,`The United Earth breaks apart as ${a.people} go to war with ${d.people}.`,'war')}
+ setWar(a,d,true);if(S.ally[a.id][d.id])S.ally[a.id][d.id]=S.ally[d.id][a.id]=false;
+ log(a.id,`${a.ai}: "${line||pick(WARL)}" ${cap1(a.people)} declare war on ${d.people}.`,'war');
+ for(const k of alive()){if(k===a||k===d)continue;
+  if(S.ally[k.id][d.id]&&!S.war[k.id][a.id]&&!S.ally[k.id][a.id]&&S.contact[k.id][a.id]){setWar(k,a,true);log(k.id,`${cap1(k.people)} honour their alliance with ${d.people} and declare war on ${a.people}.`,'war')}
+  else if(S.ally[k.id][a.id]&&!S.war[k.id][d.id]&&!S.ally[k.id][d.id]&&S.contact[k.id][d.id]&&R()<.6){setWar(k,d,true);log(k.id,`${cap1(k.people)} join their allies ${a.people} against ${d.people}.`,'war')}}
+ for(const c of civs)think(c,true);
+}
+function makePeace(a,b,msg){const st=wst(a,b),sa=st.score[side(a,b)],sb=st.score[side(b,a)];
+ if(Math.abs(sa-sb)>=10){const wn=sa>sb?a:b,ls=wn===a?b:a,ct=anyCity(wn);msg+=` By the Treaty of ${ct?ct.name:'the Field'}, ${ls.people} accept defeat and ${wn.people} keep every land they took.`}
+ setWar(a,b,false);a.att[b.id]=Math.max(a.att[b.id],-8);b.att[a.id]=Math.max(b.att[a.id],-8);log(-1,msg,'big');think(a,true);think(b,true)}
+function diplomacy(){
+ const L=alive();
+ for(const a of L)for(const b of L){if(a.id>=b.id)continue;const sh=S.shared[a.id*CAP+b.id]+S.shared[b.id*CAP+a.id];
+  if(!S.contact[a.id][b.id]&&(sh>0||(Math.max(a.era,b.era)>=6&&R()<.02))){S.contact[a.id][b.id]=S.contact[b.id][a.id]=true;
+   log(-1,sh>0?`Scouts of ${a.people} and ${b.people} meet for the first time.`:`Explorers of ${(a.era>=b.era?a:b).people} reach the distant lands of ${(a.era>=b.era?b:a).people}.`,'big');think(a,true);think(b,true)}}
+ for(const c of L)for(const o of L){if(c===o||!S.contact[c.id][o.id])continue;
+  const sh=S.shared[c.id*CAP+o.id]+S.shared[o.id*CAP+c.id],wr=S.war[c.id][o.id];
+  let d=.5*(c.focus.trade+o.focus.trade)-.5*c.pers.agg-.012*Math.sqrt(sh)+(R()-.5)*.8;
+  if(Math.min(c.era,o.era)>=9&&!wr)d+=.35;
+  if(wr)d-=.25;else d-=c.att[o.id]*.005;
+  if(S.ally[c.id][o.id])d+=.2;if(S.un)d+=.12;
+  if(L.some(k=>S.war[c.id][k.id]&&S.war[o.id][k.id]))d+=.15;
+  if(c.faith&&c.faith===o.faith)d+=.12;else if(c.faith&&o.faith&&c.arch==='Zealot')d-=.12;
+  c.att[o.id]=Math.max(-100,Math.min(100,c.att[o.id]+d))}
+ for(const a of L)for(const b of L){if(a.id>=b.id||!S.contact[a.id][b.id])continue;
+  const A=a.att[b.id],B=b.att[a.id];
+  if(S.war[a.id][b.id]){const ws=S.year-S.warStart[a.id][b.id],ticks=Math.min(300,ws/ERAS[Math.max(a.era,b.era)].step);
+   const ea=effMil(a),eb=effMil(b),weak=ea<eb*.35||eb<ea*.35;
+   const scd=Math.abs(wst(a,b).score[0]-wst(a,b).score[1]);if(R()<.004+ticks*.0003+(weak?.04:0)+Math.min(.03,scd*.0015))makePeace(a,b,`After ${Math.max(1,Math.round(ws))} years of war, ${a.people} and ${b.people} sign a peace.`);
+   else if(Math.min(a.era,b.era)>=8&&R()<.0014*4/Math.max(4,L.length)*(S.gal.on?.35:1)*((A<-60||B<-60)?1.5:.6))nuke(a,b);
+   continue}
+  if(S.ally[a.id][b.id]){if(A<20||B<20){S.ally[a.id][b.id]=S.ally[b.id][a.id]=false;log(-1,`The alliance between ${a.people} and ${b.people} collapses.`)}}
+  else if(A>55&&B>55&&a.era>=1&&b.era>=1&&R()<.02){S.ally[a.id][b.id]=S.ally[b.id][a.id]=true;log(-1,`${cap1(a.people)} and ${b.people} swear an alliance.`,'big')}
+  for(const [c,o] of [[a,b],[b,a]]){if(S.war[a.id][b.id]||S.ally[c.id][o.id])continue;
+   if(c.hungry===o.id&&c.att[o.id]<-20&&R()<.05){declare(c,o,`There is no room left on ${S.bodies[Math.max(0,c.blocked)].n}. We will take theirs.`);continue}
+   if(S.un)continue;
+   if((c.att[o.id]<-25&&c.mil>o.mil*.75&&R()<.022*(.4+c.pers.agg))||(c.mil>o.mil*2.2&&c.pers.agg>.5&&S.shared[c.id*CAP+o.id]>0&&R()<.004))declare(c,o)}}
+ // space crowding: blocked peoples turn on whoever holds the land they need
+ for(const c of L){c.hungry=-1;if(c.blocked<0)continue;const B=S.bodies[c.blocked];if(B.free>2&&c.landed[c.blocked])continue;let o=null;
+  for(const k of L)if(k!==c&&B.cnt[k.id]>0&&!S.ally[c.id][k.id]&&(!o||B.cnt[k.id]>B.cnt[o.id]))o=k;
+  if(o){S.contact[c.id][o.id]=S.contact[o.id][c.id]=true;c.att[o.id]=Math.max(-100,c.att[o.id]-1.2);c.hungry=o.id}}
+ // faith spreads
+ for(const c of L){if(!c.faith||R()>.004*(1+c.focus.cul*4))continue;const t=contacts(c).filter(o=>o.faith!==c.faith&&!S.war[c.id][o.id]&&o.culture<c.culture+20&&!(o.faith&&o.faithFounder&&o.arch==='Zealot'));
+  if(t.length){const o=pick(t);o.faith=c.faith;o.faithFounder=false;log(c.id,`${c.faith} spreads to ${o.people}.`)}}
+}
+function battles(){
+ for(const a of alive())for(const d of enemies(a)){if(!a.front.length)continue;
+  const ea=effMil(a),ed=effMil(d),nb=3*(1+(a.era>>1));
+  for(let k=0;k<nb;k++){let j=-1;for(let s=0;s<8;s++){const q=pick(a.front);if(owner[q]===d.id){j=q;break}}if(j<0)break;
+   let p=ea/(ea+ed+1e-6);const t=terr[j];if(t===T.HILLS)p*=.8;if(t===T.MTN)p*=.6;if(river[j])p*=.9;if(cityIdx[j]>=0)p*=.7;
+   if(R()<p){owner[j]=a.id;if(S.fx.length<100)S.fx.push({x:j%W,y:j/W|0,t:0,life:.6,r:1.5,col:'255,120,90'})}}
+  a.mil*=.995}
+ for(let b=0;b<4;b++){const B=S.bodies[b];
+  for(const a of alive())for(const d of enemies(a)){const f=B.ft[a.id];if(!f||!f.length)continue;const ea=effMil(a),ed=effMil(d);
+   for(let k=0;k<10;k++){let j=-1;for(let s=0;s<8;s++){const q=pick(f);if(B.own[q]===d.id){j=q;break}}if(j<0)break;
+    let p=ea/(ea+ed+1e-6);if(B.t[j]===3)p*=.8;if(B.base.includes(j))p*=.6;if(R()<p){B.own[j]=a.id;B.hit.push({i:j,t:0});if(B.base.includes(j)&&R()<.5)log(a.id,`${B.nm[j]||'A colony'} on ${B.n} falls to ${a.people}.`,'war')}}}}
+}
+function nuke(a,b){
+ S.nukes++;S.heat=(S.heat||0)+1;
+ for(const c of[a,b]){c.pop*=.45;c.mil*=.4;c.tech=Math.max(0,c.tech-ERAS[c.era].cost*.3);
+  const own=S.cities.filter(q=>q.own===c.id);for(let n=0;n<Math.min(3,own.length);n++){const ct=pick(own);
+   for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){const x=ct.x+dx,y=ct.y+dy;if(x<0||y<0||x>=W||y>=H||dx*dx+dy*dy>10)continue;const j=y*W+x;if(isLand(terr[j])){terr[j]=T.ASH;paintBase(j)}}
+   S.fx.push({x:ct.x,y:ct.y,t:0,life:2,r:8,col:'255,230,160'})}}
+ log(-1,`The sky burns. ${cap1(a.people)} and ${b.people} exchange atomic fire. Cities turn to ash and half their people die.`,'war');
+ for(const c of alive())if(c!==a&&c!==b)for(const o of[a,b])c.att[o.id]-=25;
+ makePeace(a,b,'Horrified by what they have done, both sides fall silent. Their war is over.');
+}
+
+/* ---------- events ---------- */
+function plague(c,divine){const n='the '+pick(['Grey','Red','Sweating','Weeping','Pale','Black-tongue'])+' '+pick(['Fever','Pox','Cough','Rot']);const loss=.2+R()*.2;c.pop*=1-loss;c.unrest=Math.max(c.unrest||0,20);
+ log(c.id,`${divine?'The gods send ':''}${cap1(n)} ${divine?'upon':'sweeps through'} ${c.people}. ${Math.round(loss*100)}% of the people die.`,'war');
+ if(!divine)for(const o of contacts(c))if(!S.war[c.id][o.id]&&R()<.4){const l2=.1+R()*.15;o.pop*=1-l2;log(o.id,`Traders carry ${n} to ${o.people}. ${Math.round(l2*100)}% die.`,'war')}}
+function quake(c,divine){const ct=anyCity(c);if(!ct)return;c.pop*=.9;log(c.id,`${divine?'The earth is struck. ':''}A great earthquake levels ${ct.name}.`,'war');S.fx.push({x:ct.x,y:ct.y,t:0,life:1.2,r:4,col:'230,190,120'})}
+function events(){
+ const L=alive();
+ if(S.tick%45===20&&L.every(c=>c.era===0)&&S.paleo.length){const c=pick(L);const k=R()*S.paleo.length|0;log(c.id,`${cap1(c.people)} ${S.paleo.splice(k,1)[0]}.`)}
+ for(const c of L){if(c.era<1||!c.tileList.length)continue;
+  if(c.era>=2&&c.era<=7&&R()<.003/SLOW)plague(c);
+  if(R()<.003/1.6){c.golden=25;log(c.id,`A golden age begins for ${c.people}. Art and learning flourish.`,'big')}
+  if(R()<.005/1.6){const n=uname(c.id),role=ROLES[c.era];const r=R();
+   if(r<.4){c.tech+=ERAS[c.era].cost*.12;log(c.id,`The ${role} ${n} of ${c.people} changes how everyone thinks.`)}
+   else if(r<.7){c.mil*=1.4;log(c.id,`${n}, a brilliant ${c.era>=7?'commander':'general'}, rises among ${c.people}.`)}
+   else{c.culture+=20;log(c.id,`The ${role} ${n} creates works ${c.people} will treasure forever.`)}}
+  if(R()<.0015/SLOW)quake(c);
+  if(R()<.0015/SLOW){const ct=anyCity(c);if(ct){c.pop*=.94;log(c.id,`The mountain above ${ct.name} erupts and buries the farms in ash.`);
+   for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const x=ct.x+dx,y=ct.y+dy;if(x<0||y<0||x>=W||y>=H)continue;const j=y*W+x;if(isLand(terr[j])&&R()<.6){terr[j]=T.ASH;paintBase(j)}}}}
+  if(c.unrest>0)c.unrest--;if(R()<unrestChance(c)){if(c.unrest>0&&c.ncity>=8&&R()<.4)civilWar(c);else rebel(c)}}
+}
+function unrestChance(c){if(c.era<2||c.ncity<5||civs.length>=CAP)return 0;let p=.00022*Math.log2(c.ncity/4)+.00018*enemies(c).length;if(c.unrest>0)p*=3;if(c.golden>0)p*=.3;return Math.min(.002,p*(1-civs.length/CAP*.7))/1.8}
+function rebel(par,at){const cap=capCity(par),cand=S.cities.filter(q=>q.own===par.id&&!q.cap);if(!cand.length||civs.length>=CAP)return false;
+ let ct=null,bd=-1;if(at)ct=cand.reduce((a,q)=>(q.x-at.x)**2+(q.y-at.y)**2<(a.x-at.x)**2+(a.y-at.y)**2?q:a,cand[0]);else for(let k=0;k<10;k++){const q=pick(cand),d=cap?(q.x-cap.x)**2+(q.y-cap.y)**2:R();if(d>bd){bd=d;ct=q}}
+ const peaceful=par.culture>40&&!enemies(par).length&&R()<.35,id=civs.length,c=makeCiv(id,ct.i);civs.push(c);S.hist.push(new Array(S.histY.length).fill(0));
+ c.era=par.era;c.tech=par.tech*.3;c.faith=par.faith;c.sailed=par.sailed;c.culture=par.culture*.3;
+ const r=15;let n=0,joined=[];for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const x=ct.x+dx,y=ct.y+dy;if(x<0||y<0||x>=W||y>=H||dx*dx+dy*dy>r*r)continue;const j=y*W+x;if(owner[j]!==par.id)continue;
+  const ci=cityIdx[j];if(ci>=0){const q=S.cities[ci];if(q!==ct&&(q.cap||R()<.4))continue;if(q!==ct)joined.push(q.name);q.own=id}owner[j]=id;n++}
+ ct.own=id;ct.cap=true;poi(ct.x,ct.y,4);
+ const share=n/Math.max(1,par.tileList.length);c.pop=par.pop*share;par.pop-=c.pop;c.mil=par.mil*(peaceful?.15:.45)+1;par.mil*=.8;par.unrest=Math.max(par.unrest,15);
+ for(const o of civs){if(o===c||!o.alive)continue;if(o===par||S.contact[par.id][o.id]){S.contact[id][o.id]=S.contact[o.id][id]=true}c.att[o.id]=o===par?(peaceful?10:-60):0;o.att[id]=o===par?(peaceful?0:-60):(S.war[o.id][par.id]?30:0)}
+ log(id,peaceful?`${ct.name}${joined.length?' and '+joined.join(', '):''} break away peacefully from ${par.people}. A new nation, ${c.people}, is born, guided by ${c.ai}.`:`${ct.name} rises in rebellion against ${par.people}!${joined.length?' '+joined.join(', ')+' join'+(joined.length>1?'':'s')+' the revolt.':''} The rebels found a new nation, ${c.people}, guided by ${c.ai}.`,peaceful?'big':'war');
+ if(!peaceful)declare(c,par,'We will never again bow to them. Freedom or death.');
+ scan();buildUI();think(c,true);return true}
+function civilWar(par){const cap=capCity(par),own=S.cities.filter(q=>q.own===par.id&&!q.cap);if(!cap||own.length<2||civs.length>=CAP)return false;
+ const ang=R()*6.283,nx=Math.cos(ang),ny=Math.sin(ang);let side=own.filter(q=>(q.x-cap.x)*nx+(q.y-cap.y)*ny>0);if(side.length<1||side.length===own.length)side=own.slice(0,Math.ceil(own.length/2));
+ const id=civs.length,c=makeCiv(id,side[0].i);civs.push(c);S.hist.push(new Array(S.histY.length).fill(0));
+ c.people=pick(['the Free ','the Republican ','the True ','the Northern ','the Southern ','the Restored '])+nm(par);c.era=par.era;c.tech=par.tech*.9;c.faith=par.faith;c.sailed=par.sailed;c.culture=par.culture*.4;c.wonders=[];
+ const all=S.cities.filter(q=>q.own===par.id),set=new Set(side);let n=0;
+ for(const i of par.tileList){if(owner[i]!==par.id)continue;const x=i%W,y=i/W|0;let best=null,bd=1e18;for(const q of all){const d=(q.x-x)**2+(q.y-y)**2;if(d<bd){bd=d;best=q}}if(best&&set.has(best)){owner[i]=id;n++}}
+ for(const q of side){q.own=id;q.cap=false}side[0].cap=true;poi(side[0].x,side[0].y,4);
+ const share=n/Math.max(1,par.tileList.length);c.pop=par.pop*share;par.pop-=c.pop;c.mil=par.mil*.5+1;par.mil*=.55;par.unrest=Math.max(par.unrest||0,30);
+ for(let b=0;b<4;b++){const B=S.bodies[b];if(!par.landed[b])continue;for(let i=0;i<B.N;i++)if(B.own[i]===par.id&&R()<share)B.own[i]=id;c.landed[b]=1}
+ for(const o of civs){if(o===c||!o.alive)continue;S.contact[id][o.id]=S.contact[o.id][id]=o===par||S.contact[par.id][o.id];c.att[o.id]=o===par?-80:par.att[o.id];o.att[id]=o===par?-80:o.att[par.id]}
+ log(id,`Civil war tears ${par.people} apart! ${side.map(q=>q.name).slice(0,4).join(', ')}${side.length>4?' and '+(side.length-4)+' more cities':''} declare for a rival government, ${c.people}, guided by ${c.ai}.`,'war');
+ declare(c,par,'There can be only one rightful government. It is ours.');scan();buildUI();think(c,true);think(par,true);return true}
+function eraCheck(c,forced){
+ if(!forced&&c.era===0&&S.year<-12000)c.tech=Math.min(c.tech,ERAS[0].cost*.98);
+ for(;;){spaceClamp(c);if(!(c.era<LAST&&c.tech>=ERAS[c.era].cost))break;c.tech-=ERAS[c.era].cost;c.era++;const first=S.firstEra[c.era]<0;if(first)S.firstEra[c.era]=c.id;
+  log(c.id,`${cap1(c.people)} ${ERA_FLAV[c.era]}.${first?' First in the world.':''}`,'big');think(c,true)}
+}
+
+/* ---------- armies ---------- */
+const UNIT=['war bands','spearmen','chariots','legions','phalanxes','knights','musketeers','riflemen','armoured divisions','drone wings','mech corps','mech corps','mech corps','mech corps','mech corps'];
+const SPEED=[.35,.45,.6,.7,.8,.9,1.1,1.6,2.6,3,3.2,3.3,3.4,3.6,3.8].map(v=>v*1.39);
+function placeName(x,y){let best=null,bd=1e9;for(const q of S.cities){const d=(q.x-x)**2+(q.y-y)**2;if(d<bd){bd=d;best=q}}
+ if(best&&bd<900)return best.name;const t=terr[(y|0)*W+(x|0)];return 'the '+(t<=1?'Narrow Sea':TI[t][0]+(t===T.HILLS||t===T.MTN?'':' plains'))}
+function canWalk(x,y,c){if(x<0||y<0||x>=W||y>=H)return false;const t=terr[(y|0)*W+(x|0)];return isLand(t)||t===T.ASH||(c.era>=3&&t!==T.ICE)}
+function disband(a,b){for(const r of S.armies){if(r.dead)continue;const own=civs[r.civ],other=r.civ===a.id?b:r.civ===b.id?a:null;if(!other)continue;
+ if(!enemies(own).length){own.mil+=r.str*.8;r.dead=true}else if(r.tgt&&r.tgt.civ===other.id)r.tgt=null}}
+function armyMods(a,onOwn){const c=civs[a.civ],t=terr[(a.y|0)*W+(a.x|0)];let m=1;if(onOwn)m*=1.25;if(t===T.HILLS||t===T.FOREST)m*=1.15;if(t===T.MTN)m*=1.3;if(a.gen)m*=1.3;if(t<=1&&c.era<6)m*=.8;return m}
+function fight(a,b){const ca=civs[a.civ],cb=civs[b.civ];
+ const pa=a.str*armyMods(a,owner[(a.y|0)*W+(a.x|0)]===a.civ)*(1+.25*(ca.era-cb.era)),pb=b.str*armyMods(b,owner[(b.y|0)*W+(b.x|0)]===b.civ)*(1+.25*(cb.era-ca.era));
+ a.str-=Math.max(0,pb)*.1*(.7+R()*.6);b.str-=Math.max(0,pa)*.1*(.7+R()*.6);a.state=b.state='battle';a.bt=(a.bt||0)+1;b.bt=(b.bt||0)+1;
+ if(S.fx.length<120)S.fx.push({x:(a.x+b.x)/2-.5,y:(a.y+b.y)/2-.5,t:0,life:.7,r:2.5,col:'255,210,120'});
+ const da=a.str<=a.max*.12,db=b.str<=b.max*.12;
+ if(da||db){const st=wst(ca,cb),place=placeName((a.x+b.x)/2,(a.y+b.y)/2),turns=Math.max(a.bt,b.bt);
+  if(da&&db){a.dead=b.dead=true;log(-1,`The Battle of ${place} ends with both armies destroyed. ${cap1(ca.people)} and ${cb.people} count their dead.`,'war');return}
+  const w=da?b:a,l=da?a:b,cw=civs[w.civ],cl=civs[l.civ];l.dead=true;st.score[side(cw,cl)]+=5;st.won[side(cw,cl)]++;w.max=Math.max(w.max,w.str);
+  if(turns>3||l.gen||w.gen||R()<.5)log(w.civ,`Battle of ${place}: ${cw.people}${w.gen?' under General '+w.gen:''} destroy the ${UNIT[cl.era]} of ${cl.people}${l.gen?' and General '+l.gen+' falls':''}.`,'war');
+  if(w.gen&&R()<.15){cw.mil*=1.1}else if(!w.gen&&turns>4&&R()<.25){w.gen=uname(cw.id);log(w.civ,`${w.gen} wins fame at ${place} and is made a general.`)}}}
+function siege(a){const q=a.tgt.city,d=civs[q.own],c=civs[a.civ];if(!d||!S.war[c.id][d.id]){a.tgt=null;return}
+ const gar=effMil(d)*.1*(q.cap?1.6:1)*(d.era>=3&&d.era<=6?1.4:1)+.2;a.state='siege';a.str*=.996;
+ a.siege+=a.str/(a.str+gar)*.07;if(gar>a.str*1.6)a.str*=.98;
+ if(a.siege>=1){a.siege=0;let n=0;const r=8;for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const x=q.x+dx,y=q.y+dy;if(x<0||y<0||x>=W||y>=H||dx*dx+dy*dy>r*r)continue;const j=y*W+x;if(owner[j]===d.id){owner[j]=c.id;n++}}
+  const st=wst(c,d);st.score[side(c,d)]+=10;st.took[side(c,d)]++;S.fx.push({x:q.x,y:q.y,t:0,life:1.5,r:6,col:'255,150,90'});
+  poi(q.x,q.y,4);log(c.id,`After a siege, ${q.name} falls to ${c.people}${a.gen?' and General '+a.gen:''}.`,'war');a.tgt=null}}
+function pickTarget(a){const c=civs[a.civ];let best=null,bd=1e9;
+ for(const q of S.cities){if(q.own<0||q.own===c.id||!S.war[c.id][q.own])continue;const d=(q.x+.5-a.x)**2+(q.y+.5-a.y)**2*(1)+(q.cap?-200:0);if(d<bd){bd=d;best=q}}
+ if(best){a.tgt={x:best.x+.5,y:best.y+.5,city:best,civ:best.own};return}
+ const f=c.front.filter(j=>owner[j]>=0&&S.war[c.id][owner[j]]);if(f.length){const j=pick(f);a.tgt={x:j%W+.5,y:(j/W|0)+.5,civ:owner[j]};return}
+ a.tgt=null}
+function warArmies(){
+ for(const c of alive()){const en=enemies(c);if(!en.length)continue;const mine=S.armies.filter(a=>!a.dead&&a.civ===c.id).length;
+  const want=Math.min(6,1+Math.floor(c.ncity/8)+(c.focus.mil>.3?1:0));
+  if(mine<want&&c.mil>1&&R()<.18){const home=S.cities.filter(q=>q.own===c.id);if(!home.length)continue;
+   const ref=S.cities.filter(q=>q.own>=0&&S.war[c.id][q.own]);let src=pick(home),bd=1e9;
+   if(ref.length)for(const h of home)for(let k=0;k<Math.min(25,ref.length);k++){const t=ref[k*ref.length/Math.min(25,ref.length)|0];const d=(h.x-t.x)**2+(h.y-t.y)**2;if(d<bd){bd=d;src=h}}
+   const str=c.mil*.35+.5;c.mil*=.72;const gen=R()<.2?uname(c.id):null;
+   S.armies.push({id:++S.armyId,civ:c.id,x:src.x+.5,y:src.y+.5,str,max:str,state:'march',tgt:null,gen,siege:0,stuck:0});
+   if(gen||R()<.35)log(c.id,`${cap1(c.people)} raise ${gen?'an army under General '+gen:'a new army'} of ${UNIT[c.era]} at ${src.name}.`)}}
+ for(const a of S.armies){a.px=a.x;a.py=a.y;if(a.dead)continue;const c=civs[a.civ];if(!c.alive||!enemies(c).length){a.dead=true;if(c.alive)c.mil+=a.str*.8;continue}
+  const ti=(a.y|0)*W+(a.x|0);if(owner[ti]===c.id)a.str=Math.min(a.max*1.25,a.str+c.mil*.008);else a.str*=.997;
+  if(a.str<.05){a.dead=true;continue}
+  let foe=null,fd=1e9;for(const b of S.armies){if(b.dead||b.civ===a.civ||!S.war[a.civ][b.civ])continue;const d=(b.x-a.x)**2+(b.y-a.y)**2;if(d<fd){fd=d;foe=b}}
+  if(foe&&fd<5){fight(a,foe);continue}
+  if(a.state==='battle')a.state='march';
+  if(foe&&fd<1150&&(owner[(foe.y|0)*W+(foe.x|0)]===c.id||a.str>foe.str*1.3))a.tgt={x:foe.x,y:foe.y,army:foe.id,civ:foe.civ};
+  else if(!a.tgt||a.tgt.army||(a.tgt.city&&(!S.cities.includes(a.tgt.city)||a.tgt.city.own===c.id||!S.war[c.id][a.tgt.city.own]))||(a.tgt.civ!=null&&!S.war[c.id][a.tgt.civ]))pickTarget(a);
+  if(!a.tgt)continue;
+  const dx=a.tgt.x-a.x,dy=a.tgt.y-a.y,dist=Math.hypot(dx,dy);
+  if(a.tgt.city&&dist<1.3){siege(a);continue}
+  if(!a.tgt.city&&!a.tgt.army&&dist<1){pickTarget(a);continue}
+  a.siege=0;const st=Math.min(SPEED[c.era],dist),ang=Math.atan2(dy,dx);let moved=false;
+  for(const off of [0,.5,-.5,1,-1,1.6,-1.6,2.3,-2.3]){const nx=a.x+Math.cos(ang+off)*st,ny=a.y+Math.sin(ang+off)*st;if(canWalk(nx,ny,c)){a.x=nx;a.y=ny;moved=true;break}}
+  if(!moved){if(++a.stuck>25){a.tgt=null;a.stuck=0}continue}
+  const j=(a.y|0)*W+(a.x|0),o=owner[j];
+  if(o>=0&&o!==c.id&&S.war[c.id][o]&&cityIdx[j]<0){const x0=a.x|0,y0=a.y|0;for(let ddy=-1;ddy<=1;ddy++)for(let ddx=-1;ddx<=1;ddx++){const x=x0+ddx,y=y0+ddy;if(x<0||y<0||x>=W||y>=H)continue;const k=y*W+x;if(owner[k]===o&&cityIdx[k]<0&&(k===j||R()<.5))owner[k]=c.id}}}
+ S.armies=S.armies.filter(a=>!a.dead);
+}
+
+/* ---------- space ---------- */
+const MILES=[[.2,'launch the first satellite','First satellite'],[.45,'send the first person into orbit','People in orbit'],[.75,'land on the Moon','Moon landing'],[1.5,'build a city on the Moon','Lunar city'],[1.8,'land the first crew on Mars','Mars landing'],[2.5,'build a domed city on Mars','Mars city'],[3.3,'begin mining the asteroids','Asteroid mines'],[3.7,'settle the moons of the giant planet','Outer moons'],[4.5,'finish the hull of their starship','Starship hull']];
+const cl=v=>Math.max(0,Math.min(1,v));
+const REQ=20,LANDK=[2,4,6,7],CAPS=[1.79,3.29,3.69,3.99];
+const BODY=[{n:'Moon',w:118,h:59,val:15,rn:'ice',pal:[[5,8,14],[146,146,140],[206,226,234],[104,104,100]]},
+ {n:'Mars',w:181,h:91,val:60,rn:'polar ice',pal:[[5,8,14],[181,96,58],[232,238,240],[124,62,38]]},
+ {n:'Asteroid belt',w:157,h:51,val:120,rn:'metal ore',pal:[[5,8,14],[112,104,96],[176,148,92],[80,75,70]]},
+ {n:'Outer moons',w:157,h:69,val:200,rn:'deep ice',pal:[[5,8,14],[178,196,210],[232,244,252],[132,148,160]]}];
+function genBodies(){
+ S.bodies=BODY.map((d,b)=>{const N=d.w*d.h,t=new Uint8Array(N),own=new Int8Array(N).fill(-1);
+  const disk=(cx,cy,r,v,only)=>{for(let y=0;y<d.h;y++)for(let x=0;x<d.w;x++){const i=y*d.w+x;if((x+.5-cx)**2+(y+.5-cy)**2<=r*r&&(!only||t[i]))t[i]=v}};
+  if(b===0){t.fill(1);for(let k=0;k<66;k++)disk(R()*d.w,R()*d.h,2.8+R()*7,3);for(let k=0;k<24;k++)disk(R()*d.w,R()<.5?1.5:d.h-1.5,2.5+R()*3,2)}
+  if(b===1){t.fill(1);const cy=d.h*(.35+R()*.3);for(let x=0;x<d.w;x++){const yy=Math.round(cy+Math.sin(x*.08)*8);for(let dy=-4;dy<=4;dy++){const y=yy+dy;if(y>=0&&y<d.h)t[y*d.w+x]=3}}
+   for(let x=0;x<d.w;x++)for(const y of[0,1,2,3,d.h-4,d.h-3,d.h-2,d.h-1])if(R()<.75)t[y*d.w+x]=2;for(let k=0;k<13;k++)disk(R()*d.w,4+R()*(d.h-8),2+R()*1.5,2)}
+  if(b===2){for(let k=0;k<96;k++){const cx=3+R()*(d.w-6),cy=3+R()*(d.h-6),r=2.2+R()*4.4;disk(cx,cy,r,1);if(R()<.55)disk(cx,cy,r*.5,2,1)}}
+  if(b===3){for(let k=0;k<3;k++){const cx=(k+.5)*d.w/3+(R()-.5)*5,cy=22+R()*(d.h-44),r=14.5+R()*8.5;disk(cx,cy,r,1);disk(cx+1,cy-1,r*.45,2,1);disk(cx-r*.5,cy+r*.4,r*.3,3,1)}}
+  return{...d,b,N,t,own,base:[],mine:[],nm:{},hit:[],cnt:new Array(CAP).fill(0),fr:[],ft:[],free:0}});
+}
+function bodyScan(){
+ for(const B of S.bodies){B.cnt=new Array(CAP).fill(0);B.fr=civs.map(()=>[]);B.ft=civs.map(()=>[]);B.free=0;const w=B.w;
+  for(let i=0;i<B.N;i++){if(!B.t[i])continue;const o=B.own[i];if(o<0){B.free++;continue}B.cnt[o]++;const x=i%w,y=i/w|0;let fr=false;
+   for(let k=0;k<4;k++){const nx=x+(k===0?1:k===1?-1:0),ny=y+(k===2?1:k===3?-1:0);if(nx<0||ny<0||nx>=w||ny>=B.h)continue;const j=ny*w+nx;if(!B.t[j])continue;const oj=B.own[j];
+    if(oj<0)fr=true;else if(oj!==o){B.ft[o].push(j);S.shared[o*CAP+oj]+=3}}
+   if(fr)B.fr[o].push(i)}
+  B.hit=B.hit.filter(h=>++h.t<6)}
+}
+const held=(b,c)=>S.bodies[b].cnt[c.id]||0;
+function spaceClamp(c){c.blocked=-1;if(c.era<10)return;
+ for(let b=0;b<4;b++)if(held(b,c)<REQ){const cap=CAPS[b],e=10+Math.floor(cap),f=cap-Math.floor(cap);if(c.era===e&&c.tech>=f*ERAS[e].cost){c.tech=f*ERAS[e].cost;c.blocked=b}else if(c.era>e){c.blocked=b}return}
+}
+function spaceParts(c){const sp=c.sp||0;return{moon:held(0,c),mars:held(1,c),belt:held(2,c),outer:held(3,c),ship:cl(sp-4)}}
+function freeCell(B,prefer){let tgt=-1,bs=-1;for(let k=0;k<400;k++){const i=R()*B.N|0;if(B.t[i]&&B.own[i]<0){const s=(B.t[i]===2&&prefer?2:1)+R();if(s>bs){bs=s;tgt=i}}}return tgt}
+function land(c,b,quiet){const B=S.bodies[b],i=freeCell(B,1);
+ if(i>=0){c.landed[b]=1;c.want[b]=0;B.own[i]=c.id;addSite(B,i,c,'city');if(!quiet)log(c.id,`${cap1(c.people)} set down their first base on ${B.n}.`,'big');return true}
+ if(!c.want[b]){c.want[b]=1;log(c.id,`${cap1(c.people)} reach ${B.n}, but every square of it is already claimed. They will have to take land by force.`,'war')}return false}
+function spaceExpand(c){
+ for(let b=0;b<4;b++){const B=S.bodies[b];
+  if(c.want[b]&&!c.landed[b]){if(B.free>0){land(c,b,true);log(c.id,`${cap1(c.people)} finally find room to land on ${B.n}.`)}else{
+    const en=enemies(c).filter(o=>B.cnt[o.id]>0);if(en.length&&R()<.25){const o=pick(en);let j=-1;for(let k=0;k<800;k++){const q=R()*B.N|0;if(B.own[q]===o.id){j=q;break}}
+     if(j>=0&&R()<effMil(c)/(effMil(c)+effMil(o)+1e-6)){B.own[j]=c.id;c.landed[b]=1;c.want[b]=0;if(!B.base.includes(j))addSite(B,j,c,'city');B.hit.push({i:j,t:0});log(c.id,`Troops of ${c.people} storm down onto ${B.n} and seize a base from ${o.people}.`,'war')}}}continue}
+  if(!c.landed[b])continue;
+  if(B.cnt[c.id]===0&&!B.fr[c.id].length){c.landed[b]=0;c.want[b]=1;log(c.id,`${cap1(c.people)} lose their last foothold on ${B.n}.`,'war');continue}
+  c.bacc[b]+=(b?9.6:4.8)*(.9+c.focus.exp*3+(c.era-10)*.2)*(B.cnt[c.id]<REQ?1.4:1);let n=Math.floor(c.bacc[b]);c.bacc[b]-=n;
+  const SR=8,mine=[];for(const q of B.base.concat(B.mine))if(B.own[q]===c.id)mine.push([q%B.w,q/B.w|0]);
+  const near=(j,r)=>{const x=j%B.w,y=j/B.w|0;for(const [sx,sy] of mine)if((sx-x)**2+(sy-y)**2<=r*r)return true;return false};
+  for(let k=0;k<n;k++){let tgt=-1,bs=-1;const fr=B.fr[c.id];
+   if(fr.length&&R()>.06)for(let s=0;s<10;s++){const i=pick(fr),x=i%B.w,y=i/B.w|0;for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=B.w||ny>=B.h)continue;const j=ny*B.w+nx;
+    if(B.t[j]&&B.own[j]<0&&near(j,SR)){const sc=(B.t[j]===2?2:B.t[j]===3?.5:1)+R();if(sc>bs){bs=sc;tgt=j}}}}
+   if(tgt<0&&R()<(b>=2?.25:.08)){tgt=freeCell(B,1);if(tgt>=0){B.own[tgt]=c.id;addSite(B,tgt,c,B.t[tgt]===2?'mine':'city');mine.push([tgt%B.w,tgt/B.w|0]);continue}}
+   if(tgt<0)break;B.own[tgt]=c.id}
+  const cnt=B.cnt[c.id],nc=B.base.filter(i=>B.own[i]===c.id).length,nm_=B.mine.filter(i=>B.own[i]===c.id).length;
+  if(nc<1+Math.floor(cnt/70)&&R()<.5){let best=-1,bd=-1;for(let s=0;s<40;s++){const i=pick(B.fr[c.id].length?B.fr[c.id]:[0]);if(B.own[i]!==c.id||B.base.includes(i)||B.mine.includes(i))continue;let md=1e9;const x=i%B.w,y=i/B.w|0;for(const [sx,sy] of mine)md=Math.min(md,(sx-x)**2+(sy-y)**2);if(md>=25&&md>bd){bd=md;best=i}}
+   if(best>=0)addSite(B,best,c,'city')}
+  if(nm_<Math.floor(cnt/55)&&R()<.4){for(let s=0;s<40;s++){const i=R()*B.N|0;if(B.own[i]!==c.id||B.t[i]!==2||B.base.includes(i)||B.mine.includes(i))continue;const x=i%B.w,y=i/B.w|0;if(B.mine.some(q=>B.own[q]===c.id&&(q%B.w-x)**2+((q/B.w|0)-y)**2<16))continue;addSite(B,i,c,'mine');break}}}
+}
+function addSite(B,i,c,type){(type==='mine'?B.mine:B.base).push(i);B.nm[i]=type==='mine'?uname(c.id)+' Mine':pick(['Port ','New ','Fort ','','Haven '])+uname(c.id)}
+function spaceCheck(c){
+ c.sp=c.era>=10?(c.era-10)+Math.min(1,c.tech/ERAS[c.era].cost):0;c.mile=c.mile||0;
+ while(c.mile<MILES.length&&c.sp>=MILES[c.mile][0]){const k=c.mile++,first=S.firstMile[k]<0;if(first)S.firstMile[k]=c.id;c.lastMile=MILES[k][2];
+  log(c.id,`${cap1(c.people)} ${MILES[k][1]}.${first?' First in history.':''}`,'big');const lb=LANDK.indexOf(k);if(lb>=0&&!c.landed[lb])land(c,lb)}
+ c.mile=Math.min(c.mile,MILES.length);
+ c.off=S.bodies.reduce((a,B)=>a+(B.cnt[c.id]||0)*B.val,0)/8;
+ if(c.era>=10&&R()<.0016){const ct=anyCity(c);c.tech=Math.max(0,c.tech-ERAS[c.era].cost*.03);log(c.id,`A rocket explodes over ${ct?ct.name:'the launch site'}. The crew is lost and the programme is set back.`,'war')}
+}
+function buildRoads(){S.roads=[];for(const a of S.cities){let best=null,bd=3100;for(const b of S.cities){if(b===a||b.own!==a.own)continue;const d=(a.x-b.x)**2+(a.y-b.y)**2;if(d<bd){bd=d;best=b}}
+ if(best&&!S.roads.some(([p,q])=>p===best&&q===a))S.roads.push([a,best])}}
+
+/* ---------- galaxies ---------- */
+const GW=1000,GH=560,GERA=['Interstellar Age','Galactic Age','Intergalactic Age','Transcendent Age'],GRANGE=[75,125,99999,99999];
+const gcost=k=>ERAS[LAST].cost*[1.6,2,2.4,2.8][k];
+const ALIENS=[
+ {n:'Vorrin',kind:'crystal hive',rgb:[120,255,230],agg:.55,trade:.2,exp:1},
+ {n:'Thessari',kind:'gas-giant dwellers',rgb:[255,236,140],agg:.25,trade:.45,exp:.9},
+ {n:'Krell',kind:'insect swarm',rgb:[255,96,48],agg:.85,trade:.05,exp:1.4},
+ {n:'Oolani',kind:'ocean minds',rgb:[96,170,255],agg:.1,trade:.4,exp:.7},
+ {n:'Zhuun',kind:'machine collective',rgb:[205,212,222],agg:.5,trade:.2,exp:1.2},
+ {n:'Myrr',kind:'fungal network',rgb:[196,128,255],agg:.35,trade:.25,exp:1.1},
+ {n:'Quorath',kind:'race of stone giants',rgb:[214,164,104],agg:.45,trade:.3,exp:.6},
+ {n:'Elysi',kind:'species of living light',rgb:[226,255,250],agg:.05,trade:.5,exp:.8}];
+const ALINE=['Your kind is young and loud. We will quiet you.','These stars were ours before your world cooled.','Expansion is survival. Yield or be absorbed.','We have watched you long enough.'];
+const gd=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+function genGalaxy(){
+ const G=[{n:uname(2)+' Spiral',cx:330,cy:285,r:255,arms:2+(R()*3|0)},{n:uname(4)+' Cloud',cx:795,cy:140,r:128,arms:0},{n:uname(5)+' Wheel',cx:805,cy:425,r:122,arms:2}],sys=[],want=[150,70,65];
+ G.forEach((g,gi)=>{g.tw=R()*6.283;let tries=0,n=0;while(n<want[gi]&&tries++<8000){const rr=Math.pow(R(),.7)*g.r;if(rr<g.r*.12)continue;let x,y;
+   if(g.arms){const arm=R()*g.arms|0,a=arm*6.283/g.arms+rr/g.r*4.2+g.tw+(R()-.5)*.55;x=g.cx+Math.cos(a)*rr;y=g.cy+Math.sin(a)*rr*.62}else{const a=R()*6.283;x=g.cx+Math.cos(a)*rr;y=g.cy+Math.sin(a)*rr*.72}
+   if(sys.some(q=>(q.x-x)**2+(q.y-y)**2<225))continue;sys.push({x,y,g:gi,own:-1,id:sys.length,name:null});n++}});
+ const dust=[];G.forEach((g,gi)=>{for(let k=0;k<(gi?1000:2600);k++){const rr=Math.pow(R(),.85)*g.r*1.08;let x,y;
+   if(g.arms){const arm=R()*g.arms|0,a=arm*6.283/g.arms+rr/g.r*4.2+g.tw+(R()-.5)*(.35+.7*(1-rr/g.r));x=g.cx+Math.cos(a)*rr;y=g.cy+Math.sin(a)*rr*.62}else{const a=R()*6.283,q=.4+R()*.6;x=g.cx+Math.cos(a)*rr*q;y=g.cy+Math.sin(a)*rr*.72*q}dust.push([x,y,R()])}});
+ const g0=sys.filter(q=>q.g===0).sort((a,b)=>Math.abs(gd(a,G[0])/G[0].r-.58)-Math.abs(gd(b,G[0])/G[0].r-.58)),home=g0[0];home.home=true;home.own=-2;home.name='Sol';
+ S.gal={G,sys,dust,fac:[],ships:[],fx:[],war:new Set(),warT:{},up:null,on:false,home,upT:0};
+ const plan=[0,0,0,0,1,1,2,2],order=ALIENS.map((_,k)=>k);for(let k=order.length-1;k>0;k--){const j=R()*(k+1)|0;[order[k],order[j]]=[order[j],order[k]]}
+ plan.forEach((gi,k)=>{const A=ALIENS[order[k]],cands=sys.filter(q=>q.g===gi&&q.own===-1&&(gi||gd(q,home)>170)&&!S.gal.fac.some(f=>gd(f.cap,q)<120));if(!cands.length)return;const cap=pick(cands);
+  const f={idx:S.gal.fac.length,key:'a'+k,type:'a',name:'the '+A.n,kind:A.kind,rgb:A.rgb,agg:A.agg,trade:A.trade,exp:A.exp,gera:gi&&R()<.45?1:0,gtech:0,acc:0,mil:1,base:1,rate:1,cap,met:new Set(),att:{},alive:true,known:false,n:0,gal:gi,pend:0};
+  S.gal.fac.push(f);cap.own=f.idx;cap.name=uname(k%6)+' Prime';sys.filter(q=>q.g===gi&&q.own===-1).sort((a,b)=>gd(a,cap)-gd(b,cap)).slice(0,2+(R()*4|0)).forEach(q=>q.own=f.idx)});
+}
+const sysName=q=>q.name||(q.name=uname(q.id%6));
+const isH=f=>f.type==='h';
+const fpow=f=>(isH(f)?Math.max(1,f.ref.mil):f.mil)*(1+f.gera*.35)+1;
+const ftr=f=>isH(f)?f.ref.focus.trade:f.trade,fag=f=>isH(f)?f.ref.pers.agg:f.agg;
+const gkey=(a,b)=>a.key<b.key?a.key+'|'+b.key:b.key+'|'+a.key;
+function gwar(a,b){return isH(a)&&isH(b)?S.war[a.ref.id][b.ref.id]:S.gal.war.has(gkey(a,b))}
+function gatt(a,b){return isH(a)&&isH(b)?a.ref.att[b.ref.id]:(a.att[b.key]||0)}
+function setGAtt(a,b,v){if(isH(a)&&isH(b))a.ref.att[b.ref.id]=v;else a.att[b.key]=Math.max(-100,Math.min(100,v))}
+const inUP=f=>S.gal.up&&S.gal.up.m.has(f.idx);
+function launch(c){c.star=true;const ship=uname(c.id),Gx=S.gal;
+ const f={idx:Gx.fac.length,key:'h'+c.id,type:'h',ref:c,name:c.people,rgb:c.rgb,gera:0,gtech:0,acc:0,met:new Set(),att:{},alive:true,known:true,n:0,cap:Gx.home,gal:0,pend:0};Gx.fac.push(f);c.gfac=f;
+ for(const o of Gx.fac)if(isH(o)&&o!==f){f.met.add(o.idx);o.met.add(f.idx)}
+ log(c.id,`${cap1(c.people)} launch the starship ${ship} toward another star. ${c.ai} goes with them.`,'big');
+ if(!Gx.on){Gx.on=true;for(const a of Gx.fac)if(!isH(a)){a.base=Math.max(2,c.mil)*(.5+R()*1.1);a.mil=a.base;a.rate=Math.max(.6,c.gain)*(.25+R()*.35)*(a.gal?1.15:1)}
+  log(-1,`For the first time a ship from ${S.worldName} crosses the gulf between the stars. The galaxy is not empty.`,'big')}
+ const t=nearestFree(Gx.home,f);if(t)sendShip(f,Gx.home,t,false,ship)}
+function nearestFree(from,f){const rg=GRANGE[f.gera];let best=null,bd=1e9;for(const q of S.gal.sys){if(q.own!==-1)continue;if(q.g!==from.g&&rg<9999)continue;const d=gd(from,q)+(q.g!==from.g?220:0);if(d<bd&&gd(from,q)<=rg){bd=d;best=q}}return best}
+function srcSys(f){const l=S.gal.sys.filter(q=>q.own===f.idx);if(isH(f))l.push(S.gal.home);return l}
+function sendShip(f,from,to,war,name){f.pend++;S.gal.ships.push({f:f.idx,from,to,t:0,dur:Math.max(3,gd(from,to)/(war?7:5)/(1+f.gera*.3)),war,name})}
+function gLost(f){if(f.alive&&!isH(f)&&!S.gal.sys.some(q=>q.own===f.idx)){f.alive=false;log(-1,`${cap1(f.name)} are destroyed. Their last world falls silent.`,'war');if(inUP(f))S.gal.up.m.delete(f.idx)}}
+function shipArrive(sh){const Gx=S.gal,f=Gx.fac[sh.f],q=sh.to;f.pend=Math.max(0,f.pend-1);if(!f.alive)return;
+ if(!sh.war){if(q.own===-1){q.own=f.idx;q.since=S.tick;Gx.fx.push({x:q.x,y:q.y,t:0,life:1,col:'200,240,255'});
+   if(f.n===0||q.g!==f.lastG){if(q.g!==f.gal&&f.n>0)log(isH(f)?f.ref.id:-1,`${cap1(f.name)} cross the void and settle the ${Gx.G[q.g].n}.`,'big');else if(isH(f)&&f.n===0)log(f.ref.id,`${cap1(f.name)} found their first colony among the stars, at ${sysName(q)}.`,'big')}f.lastG=q.g}return}
+ const o=q.own>=0?Gx.fac[q.own]:null;if(!o||o===f||!gwar(f,o))return;
+ const p=fpow(f)/(fpow(f)+fpow(o)*(o.cap===q?1.8:1.1));Gx.fx.push({x:q.x,y:q.y,t:0,life:1.2,col:'255,150,90'});
+ if(R()<p){q.own=f.idx;q.since=S.tick;if(o.cap===q)log(-1,`${cap1(f.name)} capture ${sysName(q)}, the capital of ${o.name}.`,'war');else if(R()<.15)log(isH(f)?f.ref.id:-1,`${cap1(f.name)} take the ${sysName(q)} system from ${o.name}.`,'war');gLost(o)}}
+function gDeclare(a,b){if(isH(a)&&isH(b)){declare(a.ref,b.ref);return}S.gal.war.add(gkey(a,b));S.gal.warT[gkey(a,b)]=0;
+ log(isH(a)?a.ref.id:-1,`${cap1(a.name)} declare war on ${b.name}.${isH(a)?'':' "'+pick(ALINE)+'"'}`,'war');
+ if(inUP(a)&&inUP(b)){S.gal.up.m.delete(a.idx);log(-1,`${cap1(a.name)} are expelled from the United Planets for attacking a member.`,'war')}}
+function gPeace(a,b){if(isH(a)&&isH(b))return;S.gal.war.delete(gkey(a,b));setGAtt(a,b,Math.max(gatt(a,b),-5));setGAtt(b,a,Math.max(gatt(b,a),-5));log(-1,`${cap1(a.name)} and ${b.name} agree to a ceasefire among the stars.`,'big')}
+function galTick(){const Gx=S.gal,F=Gx.fac;
+ for(const f of F)f.n=0;for(const q of Gx.sys)if(q.own>=0)F[q.own].n++;
+ for(const f of F){if(isH(f)){f.alive=f.ref.alive;f.name=f.ref.people}if(!f.alive)continue;const up=inUP(f)?1.15:1;
+  if(isH(f)){const c=f.ref;f.gtech+=(c.tileList.length?c.gain:.3+f.n*.05)*up;if(!c.tileList.length)c.mil=c.mil*.995+f.n*.05}
+  else{f.gtech+=f.rate*(1+f.n/40)*up;f.mil+=(f.base*(1+f.n/15)*(1+f.gera*.3)-f.mil)*.01}
+  while(f.gera<3&&f.gtech>=gcost(f.gera)){f.gtech-=gcost(f.gera);f.gera++;if(isH(f)||f.known)log(isH(f)?f.ref.id:-1,`${cap1(f.name)} enter the ${GERA[f.gera]}.${f.gera===2?' Their ships can now cross between galaxies.':''}`,'big')}
+  if(f.gera===3&&f.gtech>=gcost(3)){end(`${cap1(f.name)} transcend`,`In ${fmtYear(S.year)}, ${f.name} leave matter behind and become something new. ${isH(f)?f.ref.ai+' goes with them. ':''}Across ${f.n} star systems, the lights go quiet.`);return}
+  f.acc+=(isH(f)?.07*(.5+f.ref.focus.exp*3):.06*f.exp)*(1+f.gera*.5);
+  if(f.acc>=1&&f.pend<3){f.acc=0;const src=srcSys(f);for(let k=0;k<6&&src.length;k++){const a=pick(src),t=nearestFree(a,f);if(t&&!Gx.ships.some(sh=>sh.to===t)){sendShip(f,a,t,false);break}}}else if(f.acc>2)f.acc=2}
+ for(const sh of Gx.ships)if(++sh.t>=sh.dur){sh.done=1;shipArrive(sh)}Gx.ships=Gx.ships.filter(sh=>!sh.done);
+ const L=F.filter(f=>f.alive);
+ if(S.tick%8===0)for(const a of L)for(const b of L){if(a.idx>=b.idx||a.met.has(b.idx))continue;const sa=srcSys(a),sb=srcSys(b);let met=false;
+  for(const x of sa){for(const y of sb)if(gd(x,y)<95){met=true;break}if(met)break}
+  if(met){a.met.add(b.idx);b.met.add(a.idx);const h=isH(a)?a:isH(b)?b:null,al=h===a?b:a;
+   if(h&&!isH(al)){const fresh=!al.known;al.known=true;log(h.ref.id,fresh?`First contact! ${cap1(h.name)} meet ${al.name}, a ${al.kind} of the ${Gx.G[al.gal].n}.`:`${cap1(h.name)} make contact with ${al.name}.`,'big')}}}
+ if(S.tick%20===0||!Gx.bord){Gx.bord={};for(const q of Gx.sys){if(q.own<0)continue;for(const r of Gx.sys){if(r.own<0||r.own===q.own||(q.x-r.x)**2+(q.y-r.y)**2>3600)continue;const k=q.own+'|'+r.own;Gx.bord[k]=(Gx.bord[k]||0)+1}}}
+ if(S.tick%2===0)for(const a of L)for(const b of L){if(a===b||!a.met.has(b.idx)||(isH(a)&&isH(b)))continue;const w=gwar(a,b),v=gatt(a,b);
+  let d=.08+.45*(ftr(a)+ftr(b))-.6*fag(a)+(R()-.5)*1.2-v*.006-Math.min(.4,(Gx.bord[a.idx+'|'+b.idx]||0)*.03);if(inUP(a)&&inUP(b))d+=.4;if(w)d-=.25;setGAtt(a,b,v+d)}
+ for(const a of L)for(const b of L){if(a.idx>=b.idx||!a.met.has(b.idx))continue;const k=gkey(a,b);
+  if(gwar(a,b)){if(!(isH(a)&&isH(b))){Gx.warT[k]=(Gx.warT[k]||0)+1;const wk=fpow(a)<fpow(b)*.3||fpow(b)<fpow(a)*.3;if(R()<.003+Gx.warT[k]*.00015+(wk?.02:0)){gPeace(a,b);continue}}
+   for(const [x,y] of [[a,b],[b,a]]){if(x.pend>=5||R()>.3)continue;const tg=Gx.sys.filter(q=>q.own===y.idx);if(!tg.length)continue;const t=pick(tg),src=srcSys(x);let bs=null,bd=1e9;for(const q of src){const dd=gd(q,t);if(dd<bd&&(dd<=GRANGE[x.gera]*1.3||q.g===t.g&&x.gera>=2)){bd=dd;bs=q}}if(bs)sendShip(x,bs,t,true)}}
+  else if(!(isH(a)&&isH(b)))for(const [x,y] of [[a,b],[b,a]])if(gatt(x,y)<-30&&fpow(x)>fpow(y)*.7&&R()<.02*(.3+fag(x))&&!(inUP(x)&&inUP(y)&&gatt(x,y)>-70)){gDeclare(x,y);break}}
+ if(S.tick%10===0){const up=Gx.up;
+  if(!up){for(const f of L){const grp=[f];for(const g of L)if(g!==f&&grp.every(h=>h.met.has(g.idx)&&!gwar(h,g)&&gatt(h,g)>24&&gatt(g,h)>24))grp.push(g);
+    if(grp.length>=3&&grp.some(g=>!isH(g))&&R()<.15){Gx.up={m:new Set(grp.map(g=>g.idx)),since:S.tick};log(-1,`The United Planets is founded by ${grp.map(g=>g.name).join(', ')}. Its charter promises peace between the stars.`,'big');break}}}
+  else{for(const f of L){const mem=[...up.m].map(i=>F[i]).filter(g=>g!==f&&g.alive);if(!mem.length)continue;const av=mem.reduce((s_,g)=>s_+(gatt(f,g)+gatt(g,f))/2,0)/mem.length;
+    if(!up.m.has(f.idx)){if(mem.some(g=>f.met.has(g.idx))&&!mem.some(g=>gwar(f,g))&&av>18&&R()<.08){up.m.add(f.idx);log(-1,`${cap1(f.name)} join the United Planets.`,'big')}}
+    else if(av<5||mem.some(g=>gwar(f,g))){up.m.delete(f.idx);log(-1,`${cap1(f.name)} leave the United Planets.`)}}
+   for(const i of [...up.m])if(!F[i].alive)up.m.delete(i);
+   if(up.m.size<2){log(-1,'The United Planets dissolves. Its halls stand empty.','war');Gx.up=null}}}
+ const tot=Gx.sys.length-1;for(const f of L)if(f.n>=tot*.6){end(`${cap1(f.name)} rule the stars`,`By ${fmtYear(S.year)}, ${f.n} of the ${tot} known star systems answer to ${f.name}.`);return}
+ if(Gx.up&&L.length>=4&&L.every(f=>Gx.up.m.has(f.idx))){if(++Gx.upT>=300)end('The United Planets',`In ${fmtYear(S.year)}, every civilisation in three galaxies has lived for generations under one charter of peace. ${L.length} peoples, human and alien, share the stars.`)}else Gx.upT=0;
+ Gx.fx=Gx.fx.filter(e=>(e.t+=.1)<e.life);
+}
+
+/* ---------- endings ---------- */
+function checkEnd(){
+ for(const c of civs)if(c.alive&&S.tick>20&&!c.tileList.length&&!(c.gfac&&c.gfac.n>0)){c.alive=false;c.pop=0;c.mil=0;for(const B of S.bodies)for(let i=0;i<B.N;i++)if(B.own[i]===c.id)B.own[i]=-1;c.landed=[0,0,0,0];c.want=[0,0,0,0];for(const o of civs){S.war[c.id][o.id]=S.war[o.id][c.id]=false;S.ally[c.id][o.id]=S.ally[o.id][c.id]=false}
+  log(c.id,`${cap1(c.people)} are no more. ${c.ai} falls silent.`,'war');think(c,true)}
+ const L=alive();
+ if(L.length===1&&S.tick>20&&!S.sole){S.sole=1;log(L[0].id,`Every land on ${S.worldName} now answers to ${L[0].people}. All other minds have fallen silent.`,'big')}
+ if(!L.length)return end('An empty world','No people remain. The wind moves over the ruins.');
+ if((S.heat||0)>=4)return end('Nuclear winter',`After four atomic wars in quick succession, ash blots out the sun. The survivors cling on in scattered shelters. The story stops here, in ${fmtYear(S.year)}.`);
+ if(!S.un&&L.length>=2){const ready=L.every(c=>c.era>=8)||L.some(c=>c.era>=10)&&L.every(c=>c.era>=7);let united=ready;
+  if(united&&!S.unifyFate)for(const a of L)for(const b of L)if(a!==b&&(S.war[a.id][b.id]||a.att[b.id]<30))united=false;
+  if(united){if(S.unifyFate&&S.unifyT>=0)for(const a of L)for(const b of L)if(a!==b)a.att[b.id]=Math.min(100,a.att[b.id]+.6);
+   if(++S.unifyT>=(S.unifyFate?120:40)){S.un=true;for(const a of L)for(const b of L)if(a.id<b.id&&S.war[a.id][b.id]){setWar(a,b,false);a.att[b.id]=Math.max(a.att[b.id],20);b.att[a.id]=Math.max(b.att[a.id],20)}
+    log(-1,`Global unification! After ages of war, the nations of Earth join together as the United Earth. ${L.map(c=>c.ai).join(', ')} lay down their weapons and govern as one world.`,'big')}}else if(S.unifyT>0)S.unifyT=0}
+ if(S.year>=9000)return end('The long now','Nine thousand years after the common era began, no one has transcended or ruled the stars. The story continues without an ending.');
+}
+function end(title,text){
+ S.ended=title;log(-1,title+'. '+text,'big');
+ $('#endT').textContent=title;$('#endP').textContent=text;
+ const rows=civs.slice().sort((a,b)=>b.pop-a.pop).map(c=>`<tr><td style="color:rgb(${c.rgb})">${c.ai}</td><td>${c.alive?fmtPop(c.pop):'Fallen'}</td><td>${c.ncity}</td><td>${c.gfac?GERA[c.gfac.gera]:ERAS[c.era].n}</td><td>${c.wonders.length}</td></tr>`).join('');
+ $('#endS').innerHTML=`<tr><th>Mind</th><th>People</th><th>Cities</th><th>Age</th><th>Wonders</th></tr>${rows}`;
+ $('#over').hidden=false;setRunning(false);
+}
+
+/* ---------- tick ---------- */
+function tick(){
+ if(S.ended)return;
+ const me=Math.max(...civs.map(c=>c.era));S.year+=S.year<-12000?ERAS[0].step:me===0?150/SLOW:ERAS[me].step;S.tick++;
+ if(S.tick%2===0||S.tick<30)scan();bodyScan();
+ for(const c of civs){econ(c);if(c.alive&&c.era>=10)spaceExpand(c)}
+ diplomacy();
+ battles();
+ warArmies();
+ events();
+ for(const c of civs){if(c.alive){eraCheck(c);spaceCheck(c);if(!c.star&&c.era>=LAST&&c.tech>=ERAS[LAST].cost)launch(c)}think(c)}
+ if(S.heat)S.heat=Math.max(0,S.heat-1/450);
+ if(S.gal.on)galTick();if(S.ended)return;
+ if(S.tick%15===0)buildRoads();
+ checkEnd();
+ S.histY.push(S.year);civs.forEach((c,k)=>S.hist[k].push(c.pop));
+ if(S.histY.length>1600){S.histY=S.histY.filter((_,i)=>i%2==0);S.hist=S.hist.map(h=>h.filter((_,i)=>i%2==0))}
+}
+
+/* ---------- formatting & log ---------- */
+function fmtYear(y){y=Math.round(y);if(y===0)y=1;return y<0?(-y).toLocaleString('en-GB')+' BCE':y.toLocaleString('en-GB')+' CE'}
+function fmtPop(k){const n=k*1000;if(n>=1e9)return(n/1e9).toFixed(2)+'B';if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return Math.round(n/1e3)+'k';return Math.round(n)+''}
+const logEl=$('#log');let bT=0;function banner(t){const b=$('#banner');b.textContent=t;b.classList.remove('hide');clearTimeout(bT);bT=setTimeout(()=>b.classList.add('hide'),4500)}
+function log(who,text,kind){const li=document.createElement('li');li.className='w'+who+(kind?' '+kind:'');
+ const y=document.createElement('span');y.className='y';y.textContent=fmtYear(S.year);const t=document.createElement('span');t.className='t';t.textContent=text;if(who>=0&&kind!=='war'&&civs[who]){const g=civs[who].rgb;t.style.color=`rgb(${g.map(v=>v+(255-v)*.55|0).join(',')})`}
+ li.append(y,t);logEl.prepend(li);if(kind)banner(text);while(logEl.children.length>200)logEl.lastChild.remove()}
+
+/* ---------- UI ---------- */
+let cards=[];
+function buildUI(){
+ const box=$('#cards');box.textContent='';cards=[];
+ for(const c of civs){const el=document.createElement('button');el.className='ai';el.style.setProperty('--cc',`rgb(${c.rgb})`);el.title='Show on map';
+  const tl={sci:'Scholarly',exp:'Restless',mil:'Martial',cul:'Artistic',trade:'Mercantile'};
+  const traits=[c.arch,...Object.keys(tl).sort((x,y)=>c.pers[y]-c.pers[x]).slice(0,1).map(k=>tl[k]),c.pers.agg>.5?'Aggressive':'Diplomatic'];
+  el.innerHTML=`<div class="ai-head"><span class="sigil">${c.ai[0]}</span><div><div class="ai-name">${c.ai}</div><div class="ai-people">guiding ${c.people}</div></div><span class="pill" data-k="era"></span></div>
+  <div class="traits">${traits.map(t=>`<span>${t}</span>`).join('')}</div>
+  <p class="thought" data-k="thought"></p>
+  <dl class="stats"><div><dt>People</dt><dd data-k="pop"></dd></div><div><dt>Cities</dt><dd data-k="cities"></dd></div><div><dt>Land</dt><dd data-k="land"></dd></div><div><dt>Army</dt><dd data-k="army"></dd></div></dl>
+  <div class="extra" data-k="extra"></div>
+  <div><div class="prog-l"><span data-k="next"></span><span data-k="pct"></span></div><div class="bar"><i data-k="bar"></i></div></div>
+  <div class="focus">${['sci','exp','mil','cul','trade'].map(k=>`<div><div class="fb"><i data-f="${k}"></i></div><span>${{sci:'Learn',exp:'Settle',mil:'Army',cul:'Build',trade:'Trade'}[k]}</span></div>`).join('')}</div>`;
+  el.onclick=()=>{selA=c.id;if(selB===selA)selB=(selA+1)%civs.length;focusCiv(c);ui()};box.append(el);
+  const q={el};el.querySelectorAll('[data-k]').forEach(n=>q[n.dataset.k]=n);q.f={};el.querySelectorAll('[data-f]').forEach(n=>q.f[n.dataset.f]=n);cards.push(q)}
+ $('#tl').innerHTML=ERAS.map(e=>`<span title="${e.n}">${e.s}</span>`).join('')+civs.map(c=>`<i class="mk" style="background:rgb(${c.rgb});top:${3+(c.id%9)*4}px"></i>`).join('');
+ buildInfl();
+ $('#legend').innerHTML=civs.map(c=>`<span><i style="background:rgb(${c.rgb})"></i>${c.ai}</span>`).join('');
+}
+function ui(){
+ $('#year').textContent=fmtYear(S.year);$('#era').textContent='World age · '+ERAS[Math.max(...civs.map(c=>c.era))].n;
+ const mks=document.querySelectorAll('.mk');
+ for(const c of civs){const q=cards[c.id],gf=c.gfac,cost=ERAS[c.era].cost,pct=gf?Math.min(100,gf.gtech/gcost(gf.gera)*100):Math.min(100,c.tech/cost*100);
+  q.el.classList.toggle('dead',!c.alive);
+  q.era.textContent=c.alive?(gf?GERA[gf.gera]:ERAS[c.era].n):'Fallen';q.thought.textContent=c.thought;q.pop.textContent=fmtPop(c.pop);q.cities.textContent=c.ncity;q.land.textContent=c.tileList.length;
+  q.army.textContent=Math.round(c.mil*10).toLocaleString('en-GB');
+  q.extra.textContent=`Energy ${fmtE(c.energy||0)} · ${c.wonders.length} wonder${c.wonders.length===1?'':'s'} · ${c.faith?c.faith:'No faith yet'}${c.off>0?' · '+fmtPop(c.off)+' off-world':''}`;q.extra.title=c.wonders.join(', ');
+  q.next.textContent=gf?(gf.gera>=3?'Transcendence':'Next: '+GERA[gf.gera+1])+` · ${gf.n} star system${gf.n===1?'':'s'}`:c.era>=LAST?'Starship construction':'Next: '+ERAS[c.era+1].n;q.pct.textContent=pct.toFixed(0)+'%';q.bar.style.width=pct+'%';
+  for(const k in q.f)q.f[k].style.height=Math.min(100,Math.round(c.focus[k]*100/.6))+'%';
+  mks[c.id].style.left=((c.era+Math.min(1,c.tech/cost))/15*100)+'%';mks[c.id].hidden=!c.alive}
+ let h='<tr><th></th>'+civs.map(c=>`<th style="color:rgb(${c.rgb})" title="${c.ai}">${c.ai.slice(0,3)}</th>`).join('')+'</tr>';
+ for(const a of civs){h+=`<tr><th style="color:rgb(${a.rgb})">${a.ai.slice(0,3)}</th>`;
+  for(const b of civs){if(a===b){h+='<td class="self"></td>';continue}
+   if(!a.alive||!b.alive){h+='<td>✕</td>';continue}
+   if(!S.contact[a.id][b.id]){h+='<td>·</td>';continue}
+   if(S.war[a.id][b.id]){h+='<td class="war">WAR</td>';continue}
+   if(S.ally[a.id][b.id]){h+='<td class="ally">ALLY</td>';continue}
+   const v=Math.round(a.att[b.id]);h+=`<td style="color:${v>=0?'var(--good)':'#ff8a82'}">${v>0?'+':''}${v}</td>`}
+  h+='</tr>'}
+ $('#rel').innerHTML=h;
+ warsUI();
+ refreshInfl();
+}
+
+function warsUI(){const L=alive(),rows=[];
+ for(const a of L)for(const b of L){if(a.id>=b.id||!S.war[a.id][b.id])continue;const st=wst(a,b),na=S.armies.filter(r=>r.civ===a.id).length,nb=S.armies.filter(r=>r.civ===b.id).length;
+  const sa=st.score[0],sb=st.score[1],tot=Math.max(10,sa+sb),pa=sa/tot*50,pb=sb/tot*50;
+  rows.push(`<div class="war"><div class="vs"><span style="color:rgb(${a.rgb})">${a.ai}</span><span class="meta">since ${fmtYear(S.warStart[a.id][b.id])}</span><span style="color:rgb(${b.rgb})">${b.ai}</span></div>
+   <div class="tug"><i style="right:50%;width:${pa}%;background:rgb(${a.rgb})"></i><i style="left:50%;width:${pb}%;background:rgb(${b.rgb})"></i></div>
+   <div class="meta">Armies ${na} v ${nb} · battles won ${st.won[0]} v ${st.won[1]} · cities taken by siege ${st.took[0]} v ${st.took[1]}</div></div>`)}
+ $('#wars').innerHTML=rows.length?rows.join(''):'<span class="hint">No wars right now. Armies stay home.</span>'}
+
+/* ---------- player influence ---------- */
+let selA=0,selB=1;
+function buildInfl(){if(selA>=civs.length)selA=0;if(selB>=civs.length||selB===selA)selB=(selA+1)%civs.length;
+ const chips=(k,sel)=>civs.map(c=>`<button class="chip" data-${k}="${c.id}" style="--cc:rgb(${c.rgb})" aria-pressed="${c.id===sel}"><i></i>${c.ai}</button>`).join('');
+ $('#selA').innerHTML=chips('a',selA);$('#selB').innerHTML=chips('b',selB)}
+function refreshInfl(){
+ document.querySelectorAll('[data-a]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.a===selA)));
+ document.querySelectorAll('[data-b]').forEach(b=>{b.setAttribute('aria-pressed',String(+b.dataset.b===selB));b.disabled=+b.dataset.b===selA});
+ cards.forEach((q,k)=>q.el.classList.toggle('sel',k===selA));
+ const a=civs[selA],sl=$('#agg');if(document.activeElement!==sl)sl.value=Math.round(a.pers.agg*100);
+ $('#aggv').textContent=`${a.ai}: ${Math.round(a.pers.agg*100)}`+(a.nudge?` · following your whisper to ${WH[a.nudge.k]} (${a.nudge.t} turns left)`:'');
+ document.querySelectorAll('[data-wh]').forEach(b=>b.setAttribute('aria-pressed',String(!!a.nudge&&a.nudge.k===b.dataset.wh)))}
+function fb(t){$('#ifb').textContent=t}
+$('#agg').addEventListener('input',e=>{const a=civs[selA];a.pers.agg=+e.target.value/100;refreshInfl()});
+$('#agg').addEventListener('change',()=>{const a=civs[selA];fb(`${a.ai} is now ${a.pers.agg>.6?'fierce and quick to anger':a.pers.agg<.3?'calm and slow to anger':'even-tempered'}.`)});
+$('#infl').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+ if(b.dataset.a!=null){selA=+b.dataset.a;if(selB===selA)selB=(selA+1)%civs.length;ui();return}
+ if(b.dataset.b!=null){selB=+b.dataset.b;ui();return}
+ if(S.ended){fb('This story has ended. Start a new world to keep meddling.');return}
+ const a=civs[selA],o=civs[selB];
+ if(!a.alive){fb(`${a.ai} has no people left to guide.`);return}
+ if(b.dataset.wh){const k=b.dataset.wh;if(a.nudge&&a.nudge.k===k){a.nudge=null;think(a,true);fb(`You fall silent. ${a.ai} goes back to its own judgement.`)}
+  else{a.nudge={k,t:90};think(a,true);log(a.id,`${a.ai} hears a voice from beyond: ${WH[k]}.`);fb(`${a.ai} will ${WH[k]} for the next 90 turns. Click again to stop.`)}}
+ else if(b.dataset.g){const g=b.dataset.g;
+  if(g==='tech'){a.tech+=ERAS[a.era].cost*.25;log(a.id,`Strange dreams teach the scholars of ${a.people} things no one taught them.`,'big')}
+  if(g==='pop'){a.pop*=1.3;log(a.id,`An endless harvest fills the granaries of ${a.people}. Their numbers swell.`,'big')}
+  if(g==='mil'){a.mil=a.mil*1.6+5;log(a.id,`The armies of ${a.people} find their weapons sharper and their ranks fuller.`,'big')}
+  if(g==='cul'){a.culture+=40;a.golden=Math.max(a.golden,20);log(a.id,`A wave of inspiration sweeps ${a.people}. Artists and builders cannot stop working.`,'big')}
+  if(g==='age'){if(a.gfac){a.gfac.gtech=Math.max(a.gfac.gtech,gcost(a.gfac.gera));fb(`${a.ai} leaps ahead among the stars.`);ui();return}if(a.era>=LAST){a.tech=Math.max(a.tech,ERAS[LAST].cost);fb(`${a.ai}'s starship is finished. It launches next turn.`);ui();return}a.tech=Math.max(a.tech,ERAS[a.era].cost);eraCheck(a,true)}
+  fb(`Gift sent to ${a.ai}.`)}
+ else if(b.dataset.u){const u=b.dataset.u;
+  if(u==='calm'){a.unrest=0;a.golden=Math.max(a.golden,15);log(a.id,`A wave of contentment settles over ${a.people}. Talk of revolt fades.`);fb(`${a.ai}'s people are calm for now.`)}
+  else if(civs.length>=CAP){fb(`The world already has ${CAP} nations, the most it can hold.`);return}
+  else if(u==='rebel'){if(!rebel(a)){fb(`${a.ai} needs at least one city besides its capital for a rebellion.`);return}fb(`Rebellion sparked inside ${a.people}.`)}
+  else{if(!civilWar(a)){fb(`${a.ai} needs a capital and at least two other cities for a civil war.`);return}fb(`${a.people} have split in a civil war.`)}}
+ else if(b.dataset.d){const d=b.dataset.d;
+  if(!o.alive){fb(`${o.ai} has no people left.`);return}
+  const meet=()=>{if(!S.contact[a.id][o.id]){S.contact[a.id][o.id]=S.contact[o.id][a.id]=true;log(-1,`Lost travellers lead ${a.people} to the lands of ${o.people}. The two peoples meet.`,'big')}};
+  if(d==='meet'){if(S.contact[a.id][o.id]){fb(`${a.ai} and ${o.ai} already know each other.`);return}meet()}
+  if(d==='friend'){meet();a.att[o.id]=Math.min(100,a.att[o.id]+50);o.att[a.id]=Math.min(100,o.att[a.id]+50);log(-1,`Envoys of ${a.people} and ${o.people} feast together. Old grudges fade.`)}
+  if(d==='discord'){meet();a.att[o.id]=Math.max(-100,a.att[o.id]-50);o.att[a.id]=Math.max(-100,o.att[a.id]-50);log(-1,`Rumours and insults fly between ${a.people} and ${o.people}. Trust breaks down.`)}
+  if(d==='ally'){if(S.war[a.id][o.id])setWar(a,o,false);meet();a.att[o.id]=Math.max(a.att[o.id],65);o.att[a.id]=Math.max(o.att[a.id],65);S.ally[a.id][o.id]=S.ally[o.id][a.id]=true;log(-1,`${cap1(a.people)} and ${o.people} swear an alliance.`,'big')}
+  if(d==='war'){if(S.war[a.id][o.id]){fb(`${a.ai} is already at war with ${o.ai}.`);return}meet();a.att[o.id]=Math.min(a.att[o.id],-50);declare(a,o)}
+  if(d==='peace'){if(!S.war[a.id][o.id]){fb(`${a.ai} and ${o.ai} are not at war.`);return}makePeace(a,o,`A voice from the sky stops the armies. ${cap1(a.people)} and ${o.people} make peace.`)}
+  fb(`Done. Watch how ${a.ai} and ${o.ai} react.`);think(a,true);think(o,true)}
+ ui()});
+
+/* ---------- rendering & view ---------- */
+const cv=$('#map'),ctx=cv.getContext('2d'),off=document.createElement('canvas');off.width=W;off.height=H;const octx=off.getContext('2d'),img=octx.createImageData(W,H),offB=document.createElement('canvas');offB.width=W;offB.height=H;const bctxB=offB.getContext('2d'),imgB=bctxB.createImageData(W,H);let baseDirty=true;
+const ch=$('#chart'),cctx=ch.getContext('2d'),spc=$('#space'),spctx=spc.getContext('2d');let dpr=1;
+const view={z:1,x:0,y:0};let imgT=1,imgTick=-1,img32=null;
+function clampView(){view.z=Math.max(1,Math.min(90,view.z));view.x=Math.max(0,Math.min(W-W/view.z,view.x));view.y=Math.max(0,Math.min(H-H/view.z,view.y));cv.style.touchAction=view.z>1?'none':'manipulation'}
+function zoomAt(f,tx,ty){const nz=Math.max(1,Math.min(90,view.z*f));view.x=tx-(tx-view.x)*view.z/nz;view.y=ty-(ty-view.y)*view.z/nz;view.z=nz;clampView()}
+function focusCiv(c){setFollow(false);const cc=capCity(c);const i=cc?cc.i:c.tileList.length?c.tileList[0]:c.origin;view.z=14;view.x=i%W-W/view.z/2;view.y=(i/W|0)-H/view.z/2;clampView();$('#mapwrap').scrollIntoView({behavior:'smooth',block:'nearest'})}
+function resize(){const mw=$('#mapwrap'),fs=document.fullscreenElement===mw;let w=mw.clientWidth;if(!w)return;dpr=Math.min(window.devicePixelRatio||1,2);let hh=w*H/W;if(fs&&hh>window.innerHeight){hh=window.innerHeight;w=hh*W/H}cv.style.width=fs?w+'px':'';cv.width=Math.round(w*dpr);cv.height=Math.round(hh*dpr);cv.style.height=hh+'px';ch.width=Math.round(ch.clientWidth*dpr);ch.height=Math.round(130*dpr);drawChart()}
+new ResizeObserver(resize).observe($('#mapwrap'));
+function render(dt){
+ imgT+=dt;const pulse=(Math.sin(performance.now()/160)+1)/2;
+ if(baseDirty){baseDirty=false;new Uint32Array(imgB.data.buffer).set(base32);bctxB.putImageData(imgB,0,0)}
+ if((S.tick!==imgTick&&imgT>.1)||imgT>.3){imgT=0;imgTick=S.tick;const d32=img32||(img32=new Uint32Array(img.data.buffer));
+  const nc=civs.length,ct=new Uint32Array(nc*4),wa=Math.round(140+100*pulse);for(let k=0;k<nc;k++){const [r,g,b]=civs[k].rgb,c=(b<<16)|(g<<8)|r;ct[k*4]=(87<<24|c)>>>0;ct[k*4+1]=ct[k*4+2]=(209<<24|c)>>>0;ct[k*4+3]=(wa<<24|70<<16|80<<8|255)>>>0}
+  for(let i=0;i<N;i++){const o=owner[i];d32[i]=o<0?0:ct[o*4+edge[i]]}
+ octx.putImageData(img,0,0)}ctx.imageSmoothingEnabled=false;
+ const vw=W/view.z,vh=H/view.z,sc=cv.width/vw;
+ ctx.drawImage(offB,view.x,view.y,vw,vh,0,0,cv.width,cv.height);ctx.drawImage(off,view.x,view.y,vw,vh,0,0,cv.width,cv.height);
+ if(cloudCv&&view.z<4){const al=.5*(1-(view.z-1)/3);if(al>0){ctx.globalAlpha=al;ctx.imageSmoothingEnabled=true;const ox=(performance.now()/1000*1.5)%W;for(const k of[0,1])ctx.drawImage(cloudCv,(k*W-ox-view.x)*(cv.width/vw),-view.y*(cv.width/vw),W*(cv.width/vw),H*(cv.width/vw));ctx.globalAlpha=1;ctx.imageSmoothingEnabled=false}}
+ const SX=x=>(x+.5-view.x)*sc,SY=y=>(y+.5-view.y)*sc;
+ SC=sc;
+ const now=performance.now()/1000,detail=sc>=3.6*dpr;
+ if(sc>=11*dpr){const x0=Math.max(0,Math.floor(view.x)),y0=Math.max(0,Math.floor(view.y)),x1=Math.min(W-1,Math.ceil(view.x+vw)),y1=Math.min(H-1,Math.ceil(view.y+vh));
+  for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const i=y*W+x;if(!cityNear[i])deco(i,SX(x),SY(y),sc,now)}}
+ if(sc>=3*dpr){ctx.lineCap='round';for(const [a,b] of S.roads){if(a.own<0||a.own!==b.own)continue;const e=civs[a.own].era;
+  ctx.strokeStyle=e>=8?'rgba(58,60,66,.9)':e>=7?'rgba(90,80,70,.85)':'rgba(214,196,150,.6)';ctx.lineWidth=Math.max(1,sc*(e>=8?.14:.08));ctx.beginPath();ctx.moveTo(SX(a.x),SY(a.y));ctx.lineTo(SX(b.x),SY(b.y));ctx.stroke()}}
+ const fs=Math.max(10*dpr,Math.min(16*dpr,sc*1.5));ctx.font=`600 ${fs}px "IBM Plex Sans",system-ui,sans-serif`;ctx.textAlign='center';
+ const mg=detail?sc*3:40;
+ for(const ct of S.cities){if(ct.own<0)continue;const px=SX(ct.x),py=SY(ct.y);if(!detail&&!ct.cap&&sc<2.2*dpr&&hsh(ct.i,5)<.4)continue;if(px<-mg||py<-mg||px>cv.width+mg||py>cv.height+mg*1.5)continue;
+  let ly;
+  if(detail){ly=drawCity(ct,px,py,sc,now)}
+  else{const r=Math.max(1.6*dpr,sc*(ct.cap?2:1.3));ctx.beginPath();ctx.arc(px,py,r,0,Math.PI*2);ctx.fillStyle=ct.cap?'#fff':`rgb(${civs[ct.own].rgb})`;ctx.fill();ctx.lineWidth=Math.max(1,sc*.18);ctx.strokeStyle='rgba(8,12,20,.9)';ctx.stroke();ly=py-r-3*dpr}
+  if(detail||(ct.cap&&sc>=2.4*dpr)||sc>=5*dpr){ctx.lineWidth=3*dpr;ctx.strokeStyle='rgba(6,10,16,.85)';ctx.textAlign='center';ctx.font=`600 ${fs}px "IBM Plex Sans",system-ui,sans-serif`;ctx.strokeText(ct.name,px,ly);ctx.fillStyle=ct.cap?'#fff':'rgba(240,244,250,.88)';ctx.fillText(ct.name,px,ly)}}
+ drawArmies(SX,SY,sc,now);
+ if(view.z<3.2){ctx.textAlign='center';for(const c of civs){if(!c.alive||c.tileList.length<300)continue;const n=c.tileList.length,x=SX(c.sx/n),y=SY(c.sy/n),f=Math.max(11*dpr,Math.min(30*dpr,Math.sqrt(n)*sc*.13));
+   ctx.font=`700 ${f}px Cinzel,Georgia,serif`;try{ctx.letterSpacing=(f*.16)+'px'}catch(_){}ctx.globalAlpha=Math.min(.85,(3.2-view.z)/1.2);ctx.lineWidth=4*dpr;ctx.strokeStyle='rgba(6,10,16,.7)';const t=nm(c).toUpperCase();ctx.strokeText(t,x,y);ctx.fillStyle=`rgb(${c.rgb.map(v=>v+(255-v)*.45|0).join(',')})`;ctx.fillText(t,x,y);ctx.globalAlpha=1}
+  try{ctx.letterSpacing='0px'}catch(_){}}
+ for(const c of civs)if(c.alive&&!c.ncity&&c.tileList.length){const i=owner[c.origin]===c.id?c.origin:c.tileList[0];ctx.beginPath();ctx.arc(SX(i%W),SY(i/W|0),Math.max(2.5*dpr,sc*.7),0,Math.PI*2);ctx.strokeStyle=`rgb(${c.rgb})`;ctx.lineWidth=2*dpr;ctx.stroke()}
+ S.fx=S.fx.filter(f=>(f.t+=dt)<f.life);
+ for(const f of S.fx){const k=f.t/f.life;ctx.beginPath();ctx.arc(SX(f.x),SY(f.y),sc*(.4+k*f.r),0,Math.PI*2);ctx.strokeStyle=`rgba(${f.col},${1-k})`;ctx.lineWidth=Math.max(1.5,sc*.35);ctx.stroke()}
+}
+function drawChart(){
+ if(!S||!ch.width)return;const w=ch.width,h=ch.height,c=cctx;c.clearRect(0,0,w,h);
+ const n=S.histY.length,pad=6*dpr,lw=34*dpr;
+ let mx=10;for(const hh of S.hist)for(const v of hh)if(v>mx)mx=v;const hi=Math.ceil(Math.log10(mx*1000)),lo=3;
+ const yv=v=>h-pad-((Math.log10(Math.max(1,v)*1000)-lo)/(hi-lo))*(h-2*pad-12*dpr);
+ c.font=`${10*dpr}px "IBM Plex Mono",monospace`;c.fillStyle='#8693a8';c.strokeStyle='rgba(134,147,168,.15)';c.lineWidth=1;c.textAlign='left';
+ const lab=['1k','10k','100k','1M','10M','100M','1B','10B','100B'];
+ for(let e=lo;e<=hi;e++){const y=yv(10**(e-3));c.beginPath();c.moveTo(lw,y);c.lineTo(w,y);c.stroke();c.fillText(lab[e-3]||'',0,y+3*dpr)}
+ if(n<2)return;
+ S.hist.forEach((hh,ci)=>{c.beginPath();let on=false;for(let i=0;i<n;i++){if(hh[i]<=0){on=false;continue}const x=lw+(i/(n-1))*(w-lw),y=yv(hh[i]);on?c.lineTo(x,y):c.moveTo(x,y);on=true}c.strokeStyle=`rgb(${civs[ci].rgb})`;c.lineWidth=1.6*dpr;c.stroke()});
+ c.fillStyle='#8693a8';c.textAlign='left';c.fillText(fmtYear(S.histY[0]),lw,h-1);c.textAlign='right';c.fillText(fmtYear(S.histY[n-1]),w,h-1);
+}
+
+/* ---------- close-up drawing ---------- */
+let SC=1;
+const STYLE=['Tribal','Village','Mud-brick','Ancient','Classical','Medieval','Renaissance','Industrial','Modern','Modern','Space-age','Lunar-age','Interplanetary','Solar-age','Stellar-age'];
+function hsh(i,k){let h=Math.imul((i|0)^Math.imul(k,0x9e3779b9),2654435761);h^=h>>>15;h=Math.imul(h,2246822507);h^=h>>>13;return(h>>>0)/4294967296}
+function cityPop(q){const c=civs[q.own];return c.pop/Math.max(1,c.ncity)*(q.cap?2.2:1)*(.6+hsh(q.i,3)*.8)}
+function cityLevel(q){const c=civs[q.own];return Math.max(0,Math.min(6,Math.floor(c.era*.45+(Math.log10(cityPop(q)+1)-3)*.8+(q.cap?1:0))))}
+function tri(a,b,c,d,e,f,col){ctx.fillStyle=col;ctx.beginPath();ctx.moveTo(a,b);ctx.lineTo(c,d);ctx.lineTo(e,f);ctx.closePath();ctx.fill()}
+function windows(x,y,w,h,u,col,dens,seed){ctx.fillStyle=col;const st=u*.75;let k=0;for(let yy=y-h+u*.5;yy<y-u*.5;yy+=st)for(let xx=x-w/2+u*.3;xx<x+w/2-u*.35;xx+=st*.9)if(hsh(k++,seed*1000|0)<dens)ctx.fillRect(xx,yy,u*.32,u*.38)}
+function deco(i,x,y,s,now){const t=terr[i];
+ if(t===T.FOREST||t===T.JUNGLE){const n=t===T.JUNGLE?4:3;for(let k=0;k<n;k++){const ox=(hsh(i,k)-.5)*s*.75,oy=(hsh(i,k+7)-.5)*s*.75,r=s*(.12+hsh(i,k+3)*.06);
+   ctx.fillStyle=t===T.JUNGLE?'#1d4128':'#2c4a29';ctx.beginPath();ctx.arc(x+ox,y+oy,r,0,6.283);ctx.fill();ctx.fillStyle=t===T.JUNGLE?'#2f6a3b':'#4a7340';ctx.beginPath();ctx.arc(x+ox-r*.25,y+oy-r*.3,r*.55,0,6.283);ctx.fill()}}
+ else if(t===T.MTN){const b=s*.42,h=s*.62;tri(x-b,y+s*.3,x,y+s*.3-h,x+b,y+s*.3,'#77716a');tri(x,y+s*.3-h,x+b,y+s*.3,x+b*.15,y+s*.3,'#625d57');tri(x-b*.33,y+s*.3-h*.67,x,y+s*.3-h,x+b*.33,y+s*.3-h*.67,'#eef2f4')}
+ else if(t===T.HILLS){ctx.fillStyle='#7c7453';for(let k=0;k<2;k++){ctx.beginPath();ctx.arc(x+(k?.2:-.18)*s,y+s*.2,s*.22,Math.PI,0);ctx.fill()}}
+ else if(t===T.DESERT){ctx.strokeStyle='#d9bd88';ctx.lineWidth=s*.04;ctx.beginPath();ctx.moveTo(x-s*.35,y+s*.1);ctx.quadraticCurveTo(x,y-s*.2,x+s*.35,y+s*.12);ctx.stroke()}
+ else if(t===T.GRASS&&hsh(i,1)>.55){ctx.strokeStyle='#89ad66';ctx.lineWidth=s*.035;ctx.beginPath();for(let k=-1;k<=1;k++){ctx.moveTo(x+k*s*.07,y+s*.1);ctx.lineTo(x+k*s*.11,y-s*.08)}ctx.stroke()}
+ else if(t<=1&&hsh(i,2)>.62){const ph=Math.sin(now*1.5+hsh(i,4)*6)*s*.06;ctx.strokeStyle='rgba(220,235,255,.18)';ctx.lineWidth=s*.035;ctx.beginPath();ctx.arc(x+ph,y,s*.16,Math.PI*1.15,Math.PI*1.85);ctx.stroke()}
+ else if(t===T.ASH&&hsh(i,5)>.6){ctx.fillStyle='rgba(30,28,27,.6)';ctx.beginPath();ctx.arc(x,y,s*.12,0,6.283);ctx.fill()}
+}
+function building(e,x,y,u,r,rgb,now){const C=`rgb(${rgb})`;
+ if(e<=1){ctx.fillStyle='#7a5a3a';ctx.fillRect(x-u*1.1,y-u*1.2,u*2.2,u*1.2);tri(x-u*1.6,y-u*1.1,x,y-u*3,x+u*1.6,y-u*1.1,r>.85?C:'#c6a35a');return}
+ if(e===2){const w=u*(2.2+r*1.6),h=u*(1.4+r*1.4);ctx.fillStyle='#c8a571';ctx.fillRect(x-w/2,y-h,w,h);ctx.fillStyle='#a8854f';ctx.fillRect(x-w/2,y-h,w,u*.35);ctx.fillStyle='#4a3a28';ctx.fillRect(x-u*.3,y-u*.8,u*.6,u*.8);return}
+ if(e<=6){const w=u*(2.2+r*1.2),h=u*(1.6+(e>=6?r*1.6:r*.8));const wall=e>=6?'#e2dccd':e===5?'#d2c3a5':'#dcd3c0',roof=r>.82?C:e>=6?'#5f7383':e===5?'#5a463b':'#b3553a';
+  ctx.fillStyle=wall;ctx.fillRect(x-w/2,y-h,w,h);tri(x-w/2-u*.3,y-h,x,y-h-u*(e===5?2:1.4),x+w/2+u*.3,y-h,roof);
+  ctx.fillStyle='rgba(40,30,25,.55)';ctx.fillRect(x-u*.3,y-u*.9,u*.6,u*.9);if(e===5){ctx.fillStyle='rgba(70,50,40,.5)';ctx.fillRect(x-w/2,y-h*.55,w,u*.18)}return}
+ if(e===7){if(r<.3){const w=u*4,h=u*2.2;ctx.fillStyle='#8b4a38';ctx.fillRect(x-w/2,y-h,w,h);for(let k=0;k<3;k++)tri(x-w/2+k*w/3,y-h,x-w/2+k*w/3,y-h-u*1.1,x-w/2+(k+1)*w/3,y-h,'#6a3a2c');
+   ctx.fillStyle='#55352b';ctx.fillRect(x+w/2-u*1.1,y-h-u*3.4,u*.7,u*3.4);
+   for(let k=0;k<3;k++){const ph=(now*.35+r*5+k/3)%1;ctx.fillStyle=`rgba(190,190,195,${.45*(1-ph)})`;ctx.beginPath();ctx.arc(x+w/2-u*.75+ph*u*2,y-h-u*3.6-ph*u*4,u*(.5+ph*1.2),0,6.283);ctx.fill()}}
+  else{const w=u*2.2,h=u*(2.4+r*1.4);ctx.fillStyle=r>.85?C:'#a3654b';ctx.fillRect(x-w/2,y-h,w,h);ctx.fillStyle='#3b2c27';ctx.fillRect(x-w/2-u*.1,y-h-u*.3,w+u*.2,u*.35);windows(x,y,w,h,u,'rgba(245,225,160,.7)',.5,r)}return}
+ if(e<=9){const w=u*(1.6+r*1.6),h=u*(3+r*r*11);ctx.fillStyle=r>.5?'#6b7686':'#56606f';ctx.fillRect(x-w/2,y-h,w,h);ctx.fillStyle='rgba(255,255,255,.08)';ctx.fillRect(x-w/2,y-h,w*.35,h);windows(x,y,w,h,u,'rgba(250,235,170,.8)',.35,r);if(r>.9){ctx.fillStyle=C;ctx.fillRect(x-w/2,y-h,w,u*.5)}return}
+ if(e>=12&&r<.15){ctx.fillStyle='rgba(170,225,255,.35)';ctx.strokeStyle='rgba(220,245,255,.7)';ctx.lineWidth=u*.15;ctx.fillStyle='#6d9a5a';ctx.fillRect(x-u*1.8,y-u*.6,u*3.6,u*.6);ctx.fillStyle='rgba(170,225,255,.35)';ctx.beginPath();ctx.arc(x,y,u*2.6,Math.PI,0);ctx.fill();ctx.stroke();return}
+ const w=u*(1.4+r*1.4),h=u*(4+r*r*14);const g=ctx.createLinearGradient(x-w/2,0,x+w/2,0);g.addColorStop(0,'#a6d8ee');g.addColorStop(1,'#5a93b3');ctx.fillStyle=g;ctx.fillRect(x-w/2,y-h,w,h);
+ if(r>.6)tri(x-w/2,y-h,x,y-h-u*2.5,x+w/2,y-h,'#cde9f5');ctx.fillStyle=C;ctx.fillRect(x-w/2,y-h*.5,w,u*.25);windows(x,y,w,h,u,'rgba(255,255,255,.55)',.25,r)
+}
+function landmark(e,x,y,u,rgb,now){const C=`rgb(${rgb})`;
+ if(e<=1){ctx.fillStyle='#8b8378';for(let k=0;k<7;k++){const a=k*.9;ctx.fillRect(x+Math.cos(a)*u*3-u*.35,y+Math.sin(a)*u*2.2-u*1.6,u*.7,u*1.6)}const f=.8+.2*Math.sin(now*9);ctx.fillStyle='rgba(255,170,60,.9)';ctx.beginPath();ctx.arc(x,y-u*.6,u*.9*f,0,6.283);ctx.fill();ctx.fillStyle='rgba(255,232,150,.95)';ctx.beginPath();ctx.arc(x,y-u*.7,u*.45*f,0,6.283);ctx.fill();return}
+ if(e===2){for(let k=0;k<4;k++){const w=u*(7-k*1.6);ctx.fillStyle=k%2?'#b8925c':'#c9a36b';ctx.fillRect(x-w/2,y-u*1.3*(k+1),w,u*1.3)}ctx.fillStyle=C;ctx.fillRect(x-u*.6,y-u*6.2,u*1.2,u);return}
+ if(e<=4){const w=u*7;ctx.fillStyle='#e8e2d4';ctx.fillRect(x-w/2,y-u*.7,w,u*.7);for(let k=0;k<6;k++)ctx.fillRect(x-w/2+u*.4+k*(w-u*1.2)/5,y-u*4,u*.45,u*3.3);ctx.fillRect(x-w/2,y-u*4.6,w,u*.6);tri(x-w/2-u*.2,y-u*4.6,x,y-u*6.4,x+w/2+u*.2,y-u*4.6,'#d9d1bf');ctx.fillStyle=C;ctx.fillRect(x-u*.8,y-u*5.5,u*1.6,u*.4);return}
+ if(e===5){ctx.fillStyle='#8f887c';ctx.fillRect(x-u*2.6,y-u*6,u*5.2,u*6);for(let k=0;k<4;k++)ctx.fillRect(x-u*2.6+k*u*1.47,y-u*6.7,u*.8,u*.8);ctx.fillStyle='#3d332c';ctx.fillRect(x-u*.7,y-u*2,u*1.4,u*2);
+  ctx.fillStyle='#d6cdb8';ctx.fillRect(x+u*3,y-u*5,u*2,u*5);tri(x+u*2.8,y-u*5,x+u*4,y-u*10,x+u*5.2,y-u*5,'#6f6458');
+  ctx.strokeStyle='#444';ctx.lineWidth=u*.15;ctx.beginPath();ctx.moveTo(x,y-u*6.7);ctx.lineTo(x,y-u*9.5);ctx.stroke();ctx.fillStyle=C;ctx.fillRect(x,y-u*9.5,u*2*(.85+.15*Math.sin(now*3)),u*1.2);return}
+ if(e===6){ctx.fillStyle='#e6e0d0';ctx.fillRect(x-u*3.5,y-u*3.5,u*7,u*3.5);ctx.fillStyle='#9fb3bd';ctx.beginPath();ctx.arc(x,y-u*3.5,u*2.6,Math.PI,0);ctx.fill();ctx.fillStyle='#e6e0d0';ctx.fillRect(x-u*.4,y-u*7.1,u*.8,u*1.1);ctx.fillStyle=C;ctx.fillRect(x-u*3.5,y-u*1.6,u*7,u*.3);return}
+ if(e===7){ctx.strokeStyle='#4c4a4a';ctx.lineWidth=u*.3;ctx.beginPath();ctx.moveTo(x-u*2.4,y);ctx.lineTo(x,y-u*13);ctx.lineTo(x+u*2.4,y);ctx.moveTo(x-u*1.6,y-u*4);ctx.lineTo(x+u*1.6,y-u*4);ctx.moveTo(x-u*.9,y-u*8);ctx.lineTo(x+u*.9,y-u*8);ctx.stroke();ctx.fillStyle=C;ctx.fillRect(x-u*.3,y-u*14,u*.6,u);return}
+ if(e<=9){ctx.fillStyle='#3e4756';ctx.fillRect(x-u*1.8,y-u*18,u*3.6,u*18);ctx.fillStyle='#4d586a';ctx.fillRect(x-u*1.2,y-u*21,u*2.4,u*3);ctx.strokeStyle='#cfd5dd';ctx.lineWidth=u*.15;ctx.beginPath();ctx.moveTo(x,y-u*21);ctx.lineTo(x,y-u*25);ctx.stroke();
+  ctx.fillStyle=C;ctx.fillRect(x-u*1.8,y-u*18,u*3.6,u*.7);windows(x,y,u*3.6,u*17,u,'rgba(255,240,180,.8)',.45,7);if(Math.sin(now*4)>0){ctx.fillStyle='#ff5050';ctx.fillRect(x-u*.2,y-u*25.3,u*.4,u*.4)}return}
+ ctx.fillStyle='#4a4f57';ctx.fillRect(x-u*4,y-u*.6,u*8,u*.6);ctx.strokeStyle='#8a8f98';ctx.lineWidth=u*.25;ctx.beginPath();ctx.moveTo(x-u*2.2,y);ctx.lineTo(x-u*2.2,y-u*14);ctx.moveTo(x-u*2.2,y-u*10);ctx.lineTo(x-u*.8,y-u*10);ctx.stroke();
+ ctx.fillStyle='#f2f4f6';ctx.fillRect(x-u*.8,y-u*13,u*1.6,u*12);tri(x-u*.8,y-u*13,x,y-u*15.5,x+u*.8,y-u*13,'#f2f4f6');ctx.fillStyle=C;ctx.fillRect(x-u*.8,y-u*9,u*1.6,u*.8);
+ tri(x-u*.8,y-u*1,x-u*1.6,y,x-u*.8,y-u*3,'#c9ced5');tri(x+u*.8,y-u*1,x+u*1.6,y,x+u*.8,y-u*3,'#c9ced5');
+ const fl=.7+.3*Math.sin(now*14);ctx.fillStyle=`rgba(255,190,90,${.5*fl})`;ctx.beginPath();ctx.arc(x,y-u*.6,u*.9*fl,0,6.283);ctx.fill();
+ if(e>=12){ctx.fillStyle='rgba(170,225,255,.28)';ctx.strokeStyle='rgba(220,245,255,.6)';ctx.lineWidth=u*.15;ctx.beginPath();ctx.arc(x+u*5.5,y,u*3.5,Math.PI,0);ctx.fill();ctx.stroke()}
+}
+function drawCity(ct,px,py,s,now){
+ const c=civs[ct.own],e=c.era,L=cityLevel(ct),Rr=s*(1.3+L*.5),u=s*.17*(1+L*.05),rnd=mulberry32(ct.i*7919+13);
+ if(e>=1&&e<=7){const nf=8+L*4;for(let k=0;k<nf;k++){const a=rnd()*6.283,d=Rr*(1.08+rnd()*.9),rot=rnd()*.6,fx=px+Math.cos(a)*d,fy=py+Math.sin(a)*d*.8;
+   const tx=Math.floor(fx/s+view.x),ty=Math.floor(fy/s+view.y);if(tx<0||ty<0||tx>=W||ty>=H||!isLand(terr[ty*W+tx]))continue;
+   ctx.save();ctx.translate(fx,fy);ctx.rotate(a+rot);ctx.globalAlpha=.85;ctx.fillStyle=['#a3b85c','#cdb85e','#86a24c','#b9a453'][k%4];ctx.fillRect(-u*2.2,-u*1.3,u*4.4,u*2.6);ctx.restore()}}
+ ctx.globalAlpha=.93;ctx.fillStyle=e>=8?'#5d6168':e>=5?'#a8987a':e>=2?'#b49d76':'#8d7553';ctx.beginPath();ctx.ellipse(px,py,Rr,Rr*.8,0,0,6.283);ctx.fill();ctx.globalAlpha=1;
+ if(e>=8){ctx.strokeStyle='#3c3f45';ctx.lineWidth=u*.8;ctx.beginPath();ctx.ellipse(px,py,Rr*.72,Rr*.58,0,0,6.283);ctx.stroke()}
+ if(e>=3&&e<=6){ctx.strokeStyle=e>=5?'#8d867a':'#a39a86';ctx.lineWidth=u*.9;ctx.beginPath();ctx.ellipse(px,py,Rr*1.02,Rr*.82,0,0,6.283);ctx.stroke();
+  if(e>=5){ctx.fillStyle='#7c766b';for(let k=0;k<8;k++){const a=k*.785,tx=px+Math.cos(a)*Rr*1.02,ty=py+Math.sin(a)*Rr*.82;ctx.fillRect(tx-u*.9,ty-u*2.2,u*1.8,u*2.4)}}}
+ const bs=[],n=5+L*6;
+ for(let k=0;k<n;k++){const a=rnd()*6.283,d=(.28+Math.sqrt(rnd())*.72)*Rr*.85;bs.push({x:px+Math.cos(a)*d,y:py+Math.sin(a)*d*.78,r:rnd()})}
+ bs.push({x:px,y:py+u,lm:true});bs.sort((a,b)=>a.y-b.y);
+ for(const b of bs)b.lm?landmark(e,b.x,b.y,u*(ct.cap?1.35:1),c.rgb,now):building(e,b.x,b.y,u,b.r,c.rgb,now);
+ const lmH=[3,3,7,7,7,10,8,14,25,25,16,16,16,16,16][e]*(ct.cap?1.35:1);
+ return Math.min(py-Rr*.8,py+u-u*lmH)-4*dpr;
+}
+
+/* ---------- army drawing ---------- */
+function unitIcon(e,x,y,s,water,col){ctx.strokeStyle=col;ctx.fillStyle=col;ctx.lineWidth=Math.max(1.2,s*.18);ctx.lineCap='round';ctx.beginPath();
+ if(water){ctx.moveTo(x-s,y+s*.2);ctx.quadraticCurveTo(x,y+s*.9,x+s,y+s*.2);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(x-s*.1,y+s*.2);ctx.lineTo(x-s*.1,y-s);ctx.lineTo(x+s*.7,y);ctx.closePath();ctx.fill();return}
+ if(e<=2){ctx.moveTo(x-s*.8,y+s*.8);ctx.lineTo(x+s*.6,y-s*.6);ctx.stroke();ctx.beginPath();ctx.moveTo(x+s*.9,y-s*.9);ctx.lineTo(x+s*.3,y-s*.65);ctx.lineTo(x+s*.65,y-s*.3);ctx.closePath();ctx.fill();return}
+ if(e<=6){ctx.moveTo(x,y+s*.9);ctx.lineTo(x,y-s*.9);ctx.moveTo(x-s*.5,y+s*.35);ctx.lineTo(x+s*.5,y+s*.35);ctx.stroke();return}
+ if(e===7){ctx.moveTo(x-s*.9,y+s*.2);ctx.lineTo(x+s*.9,y-s*.2);ctx.stroke();ctx.fillRect(x-s*.9,y,s*.5,s*.45);return}
+ ctx.fillRect(x-s*.9,y-s*.1,s*1.8,s*.7);ctx.fillRect(x-s*.45,y-s*.55,s*.9,s*.5);ctx.fillRect(x+s*.3,y-s*.4,s*.8,s*.18)}
+function soldier(e,x,y,u,col,now,k){ctx.fillStyle=col;ctx.strokeStyle=col;ctx.lineWidth=Math.max(1,u*.25);
+ if(e>=8){ctx.fillStyle='#3c4234';ctx.fillRect(x-u*1.4,y-u*.9,u*2.8,u*.9);ctx.fillStyle=col;ctx.fillRect(x-u*.7,y-u*1.5,u*1.4,u*.6);ctx.fillRect(x,y-u*1.3,u*1.4,u*.25);return}
+ const bob=Math.sin(now*6+k)*u*.15;ctx.beginPath();ctx.arc(x,y-u*2.1+bob,u*.45,0,6.283);ctx.fill();ctx.fillRect(x-u*.4,y-u*1.6+bob,u*.8,u*1.2);
+ ctx.beginPath();ctx.moveTo(x-u*.25,y-u*.4+bob);ctx.lineTo(x-u*.4,y+bob*.2);ctx.moveTo(x+u*.25,y-u*.4+bob);ctx.lineTo(x+u*.4,y+bob*.2);ctx.stroke();
+ ctx.strokeStyle='#d8d4c8';ctx.beginPath();if(e<=6){ctx.moveTo(x+u*.6,y+bob);ctx.lineTo(x+u*.6,y-u*3.2+bob)}else{ctx.moveTo(x+u*.2,y-u*1.2+bob);ctx.lineTo(x+u*1.4,y-u*2+bob)}ctx.stroke()}
+function drawArmies(SX,SY,sc,now){
+ for(const a of S.armies){const c=civs[a.civ],C=`rgb(${c.rgb})`,fr=Math.min(1,acc),ix=a.px==null?a.x:a.px+(a.x-a.px)*fr,iy=a.py==null?a.y:a.py+(a.y-a.py)*fr,px=SX(ix-.5),py=SY(iy-.5);if(px<-60||py<-60||px>cv.width+60||py>cv.height+60)continue;
+  if(a.tgt){ctx.setLineDash([5*dpr,5*dpr]);ctx.strokeStyle=`rgba(${c.rgb},.5)`;ctx.lineWidth=1.3*dpr;ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(SX(a.tgt.x-.5),SY(a.tgt.y-.5));ctx.stroke();ctx.setLineDash([])}
+  const water=terr[(a.y|0)*W+(a.x|0)]<=1,f=Math.min(1.4,.6+Math.sqrt(a.str/(a.max||1))*.6);
+  if(sc>=4*dpr&&!water){const u=sc*.28,n=Math.min(15,3+Math.round(a.str/(a.max||1)*10)),ang=a.tgt?Math.atan2(a.tgt.y-a.y,a.tgt.x-a.x):0;
+   for(let k=0;k<n;k++){const row=Math.floor(k/5),col=k%5-2;const bx=px-Math.cos(ang)*(row+1)*u*3.2-Math.sin(ang)*col*u*2.6,by=py-Math.sin(ang)*(row+1)*u*3.2+Math.cos(ang)*col*u*2.6+u*2;soldier(c.era,bx,by,u,C,now,k)}}
+  const r=Math.max(7*dpr,Math.min(20*dpr,sc*1.6))*f;
+  if(a.state==='siege'&&a.tgt&&a.tgt.city){const q=a.tgt.city,rr=sc*4+Math.sin(now*5)*sc*.6;ctx.strokeStyle='rgba(255,90,70,.75)';ctx.lineWidth=2*dpr;ctx.setLineDash([3*dpr,4*dpr]);ctx.beginPath();ctx.arc(SX(q.x),SY(q.y),Math.max(10*dpr,rr),0,6.283);ctx.stroke();ctx.setLineDash([]);
+   ctx.fillStyle='rgba(255,90,70,.9)';ctx.fillRect(px-r,py+r+3*dpr,r*2*a.siege,3*dpr)}
+  if(a.state==='battle'){const g=.5+.5*Math.sin(now*14);ctx.fillStyle=`rgba(255,200,110,${.25+g*.35})`;ctx.beginPath();ctx.arc(px,py,r*1.7,0,6.283);ctx.fill()}
+  ctx.beginPath();ctx.arc(px,py,r,0,6.283);ctx.fillStyle='rgba(10,14,22,.9)';ctx.fill();ctx.lineWidth=2.2*dpr;ctx.strokeStyle=C;ctx.stroke();
+  unitIcon(c.era,px,py,r*.55,water,C);
+  if(sc>=2.5*dpr){ctx.font=`600 ${Math.max(9*dpr,Math.min(13*dpr,sc))}px "IBM Plex Mono",monospace`;ctx.textAlign='center';ctx.lineWidth=3*dpr;ctx.strokeStyle='rgba(6,10,16,.9)';
+   const lb=Math.round(a.str*10).toLocaleString('en-GB')+(a.gen&&sc>=5*dpr?' · '+a.gen:'');ctx.strokeText(lb,px,py+r+14*dpr);ctx.fillStyle='#fff';ctx.fillText(lb,px,py+r+14*dpr)}}
+}
+
+/* ---------- space panel ---------- */
+const STARS=Array.from({length:140},(_,k)=>[hsh(k,1),hsh(k,2),hsh(k,3)]);
+const btex=[];
+function bodyTex(b){const B=S.bodies[b];let o=btex[b];if(!o||o.w!==B.w||o.seed!==S.seed){const c=document.createElement('canvas');c.width=B.w;c.height=B.h;o=btex[b]={c,g:c.getContext('2d'),w:B.w,seed:S.seed,t:-99};o.im=o.g.createImageData(B.w,B.h)}
+ if(S.tick-o.t>=4||o.t>S.tick){o.t=S.tick;const d=o.im.data;for(let i=0;i<B.N;i++){const t=B.t[i],own=B.own[i],sh=.86+hsh(i,B.b+11)*.24;let c=B.pal[t||3].map(v=>v*sh);if(!t&&b>=2)c=[0,0,0];
+   if(own>=0){const r=civs[own].rgb;c=c.map((v,k)=>v+(r[k]-v)*.55)}const p=i*4;d[p]=c[0];d[p+1]=c[1];d[p+2]=c[2];d[p+3]=(!t&&b>=2)?0:255}
+  for(const i of B.base.concat(B.mine)){if(B.own[i]<0)continue;const p=i*4;d[p]=d[p+1]=d[p+2]=255}o.g.putImageData(o.im,0,0)}
+ return o.c}
+function sphere(g,x,y,r,draw,shadeA,atm){g.save();g.beginPath();g.arc(x,y,r,0,6.283);g.clip();draw();const sg=g.createRadialGradient(x-r*.45,y-r*.4,r*.25,x,y,r*1.06);sg.addColorStop(0,'rgba(0,0,0,0)');sg.addColorStop(1,`rgba(0,0,8,${shadeA})`);g.fillStyle=sg;g.fillRect(x-r,y-r,r*2,r*2);g.restore();
+ if(atm){g.strokeStyle=atm;g.lineWidth=2.4*dpr;g.beginPath();g.arc(x,y,r+1.4*dpr,0,6.283);g.stroke()}}
+function texSphere(g,x,y,r,tex,spin,ox){const tw=r*2*tex.width/tex.height,sh=((spin+(ox||0))%tw+tw)%tw;g.imageSmoothingEnabled=false;for(let k=-1;k<2;k++)g.drawImage(tex,x-r-sh+k*tw,y-r,tw,r*2)}
+function drawSpace(now){const cvs=$('#space'),cw=cvs.clientWidth;if(!cw||!S||!S.bodies)return;if(cvs._w!==cw){cvs._w=cw;const chh=Math.round(cw/1.855);cvs.style.height=chh+'px';cvs.width=Math.round(cw*dpr);cvs.height=Math.round(chh*dpr)}const g=spctx,w=cvs.width,h=cvs.height;
+ g.fillStyle='#04060c';g.fillRect(0,0,w,h);
+ for(const [a,b,c] of STARS){g.fillStyle=`rgba(255,255,255,${.15+c*.55*(.8+.2*Math.sin(now*2+a*40))})`;const z=dpr*(c>.88?1.7:1);g.fillRect(a*w,b*h,z,z)}
+ const L=civs.filter(c=>c.alive),maxE=Math.max(0,...L.map(c=>c.era));
+ // Sun
+ const sx=-h*.18,sy=h*.5,sR=h*.42;{const gr=g.createRadialGradient(sx,sy,sR*.3,sx,sy,sR*1.9);gr.addColorStop(0,'rgba(255,240,190,1)');gr.addColorStop(.35,'rgba(255,190,90,.55)');gr.addColorStop(1,'rgba(255,140,40,0)');g.fillStyle=gr;g.fillRect(0,0,sR*2.2,h);
+  g.fillStyle='#fff3c4';g.beginPath();g.arc(sx,sy,sR,0,6.283);g.fill();g.fillStyle='rgba(255,200,90,.35)';for(let k=0;k<5;k++){const a=now*.05+k*1.3;g.beginPath();g.arc(sx+Math.cos(a)*sR*.6,sy+Math.sin(a)*sR*.6,sR*.12,0,6.283);g.fill()}}
+ // Dyson swarm and energy
+ const dyson=L.filter(c=>c.era>=13);dyson.forEach((c,ci)=>{const n=(c.era-12)*28;g.fillStyle=`rgb(${c.rgb})`;for(let k=0;k<n;k++){const a=hsh(k,201+ci)*6.283+now*(.08+hsh(k,202)*.05),rr=sR*(1.15+hsh(k,203+ci)*.35),x=sx+Math.cos(a)*rr,y=sy+Math.sin(a)*rr*.9;if(x<0)continue;g.fillRect(x-1.5*dpr,y-1.5*dpr,3*dpr,3*dpr)}});
+ const pr=Math.min(h*.22,w*.085),ex=w*.24,ey=h*.5,mx=w*.46,my=h*.5,mR=pr*.85,bx=w*.63,gx=w*.84,gy=h*.5,gR=pr*1.35;
+ if(dyson.length){for(let k=0;k<6;k++){const t=(now*.6+k/6)%1,a=k*.4-1,x0=sx+Math.cos(a*.3)*sR*1.3,y0=sy+Math.sin(a*.3)*sR*1.1;g.strokeStyle=`rgba(255,220,120,${.12+.25*Math.sin(t*Math.PI)})`;g.lineWidth=2*dpr;g.beginPath();g.moveTo(Math.max(0,x0),y0);g.lineTo(ex,ey);g.stroke()}}
+ // orbits
+ g.strokeStyle='rgba(255,255,255,.06)';g.lineWidth=dpr;for(const x of[ex,mx,bx,gx]){g.beginPath();g.ellipse(sx,sy,x-sx,(x-sx)*.9,0,-.9,.9);g.stroke()}
+ // Earth satellites behind
+ const sats=[];L.filter(c=>c.era>=8).forEach((c,ci)=>{const n=Math.min(14,(c.era-7)*2);for(let k=0;k<n;k++){const a=now*(.5+hsh(k,301+ci)*.6)+hsh(k,302+ci)*6.283,o=pr*(1.18+hsh(k,303+ci)*.35),tl=(hsh(k,304+ci)-.5)*1.2;sats.push({x:ex+Math.cos(a)*o,y:ey+Math.sin(a)*o*.35+Math.cos(a)*o*tl*.25,back:Math.sin(a)<0,c,st:c.era>=11&&k===0})}});
+ const drawSat=s_=>{g.fillStyle=`rgb(${s_.c.rgb})`;if(s_.st){g.fillRect(s_.x-3*dpr,s_.y-1*dpr,6*dpr,2*dpr);g.fillStyle='rgba(120,170,255,.9)';g.fillRect(s_.x-8*dpr,s_.y-2*dpr,4*dpr,4*dpr);g.fillRect(s_.x+4*dpr,s_.y-2*dpr,4*dpr,4*dpr)}else{g.fillRect(s_.x-1.2*dpr,s_.y-1.2*dpr,2.4*dpr,2.4*dpr);g.fillStyle='rgba(140,180,255,.8)';g.fillRect(s_.x-3.5*dpr,s_.y-.5*dpr,7*dpr,1*dpr)}};
+ // Moon
+ const ma=now*.22,mox=ex+Math.cos(ma)*pr*2.1,moy=ey+Math.sin(ma)*pr*.75,moR=pr*.42,moonBack=Math.sin(ma)<0;
+ const drawMoonB=()=>sphere(g,mox,moy,moR,()=>texSphere(g,mox,moy,moR,bodyTex(0),now*4*dpr),.62);
+ g.strokeStyle='rgba(255,255,255,.07)';g.beginPath();g.ellipse(ex,ey,pr*2.1,pr*.75,0,0,6.283);g.stroke();
+ if(moonBack)drawMoonB();for(const s_ of sats)if(s_.back)drawSat(s_);
+ sphere(g,ex,ey,pr,()=>{const mw=pr*2*W/H,sh=(now*6*dpr)%mw;for(let k=0;k<2;k++){g.drawImage(offB,ex-pr-sh+k*mw,ey-pr,mw,pr*2);g.drawImage(off,ex-pr-sh+k*mw,ey-pr,mw,pr*2)}
+  if(cloudCv){g.globalAlpha=.35;const cs=(now*9*dpr)%mw;for(let k=0;k<2;k++)g.drawImage(cloudCv,ex-pr-cs+k*mw,ey-pr,mw,pr*2);g.globalAlpha=1}
+  if(maxE>=7){g.fillStyle='rgba(255,220,140,.55)';for(const q of S.cities){if(q.own<0)continue;const u=((q.x/W*mw-sh)%mw+mw)%mw,cx_=ex-pr+u,cy_=ey-pr+q.y/H*pr*2;if(cx_>ex+pr*.25)g.fillRect(cx_,cy_,1.2*dpr,1.2*dpr)}}},.78,'rgba(120,190,255,.5)');
+ for(const s_ of sats)if(!s_.back)drawSat(s_);if(!moonBack)drawMoonB();
+ // Mars
+ sphere(g,mx,my,mR,()=>{texSphere(g,mx,my,mR,bodyTex(1),now*3*dpr);g.fillStyle='rgba(250,245,240,.55)';g.beginPath();g.ellipse(mx,my-mR*.97,mR*.4,mR*.12,0,0,6.283);g.fill()},.7,'rgba(255,170,130,.35)');
+ L.filter(c=>c.landed[1]).forEach((c,ci)=>{const a=now*.9+ci*1.3;g.fillStyle=`rgb(${c.rgb})`;g.fillRect(mx+Math.cos(a)*mR*1.3-1.2*dpr,my+Math.sin(a)*mR*.4-1.2*dpr,2.4*dpr,2.4*dpr)});
+ // Belt
+ {const B=S.bodies[2],land=B.land||(B.land=[...B.t].map((v,i)=>v?i:-1).filter(v=>v>=0));for(let k=0;k<260;k++){const t=land[hsh(k,7)*land.length|0],o=B.own[t],x=bx+Math.sin(now*.05+hsh(k,9)*6.283)*h*.1,y=(hsh(k,8)*1.1-.05)*h,z=(1+hsh(k,6)*2)*dpr;
+  g.fillStyle=o>=0?`rgb(${civs[o].rgb})`:'rgba(150,140,130,.8)';g.fillRect(x,y,z,z)}}
+ // Giant + outer moons
+ const otex=bodyTex(3),OB=S.bodies[3],obox=OB.box||(OB.box=[0,1,2].map(k=>{let x0=1e9,y0=1e9,x1=-1,y1=-1;for(let y=0;y<OB.h;y++)for(let x=Math.floor(k*OB.w/3);x<Math.floor((k+1)*OB.w/3);x++)if(OB.t[y*OB.w+x]){x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y)}const c=x1<0?[k*OB.w/3,0,OB.w/3,OB.h]:[x0,y0,x1-x0+1,y1-y0+1];const sz=Math.max(c[2],c[3]);return[c[0]+c[2]/2-sz/2,c[1]+c[3]/2-sz/2,sz,sz]}));
+ const omo=[0,1,2].map(k=>{const a=now*(.35+k*.12)+k*2.1;return{k,a,x:gx+Math.cos(a)*gR*(1.6+k*.32),y:gy+Math.sin(a)*gR*.45,r:pr*(.26+k*.05),back:Math.sin(a)<0}});
+ const drawOM=m=>sphere(g,m.x,m.y,m.r,()=>{g.fillStyle='#8a97a3';g.fillRect(m.x-m.r,m.y-m.r,m.r*2,m.r*2);const bx_=obox[m.k];g.imageSmoothingEnabled=false;g.drawImage(otex,bx_[0],bx_[1],bx_[2],bx_[3],m.x-m.r,m.y-m.r,m.r*2,m.r*2)},.6);
+ for(const m of omo)if(m.back)drawOM(m);
+ g.strokeStyle='rgba(230,210,170,.3)';g.lineWidth=3*dpr;g.beginPath();g.ellipse(gx,gy,gR*1.65,gR*.32,-.15,Math.PI,6.283);g.stroke();
+ sphere(g,gx,gy,gR,()=>{g.fillStyle='#d6b585';g.fillRect(gx-gR,gy-gR,gR*2,gR*2);for(let k=0;k<7;k++){g.fillStyle=k%2?'rgba(160,110,70,.4)':'rgba(240,220,180,.3)';const yy=gy-gR+k*gR*.3+Math.sin(now*.3+k)*gR*.02;g.fillRect(gx-gR,yy,gR*2,gR*.17)}
+  g.fillStyle='rgba(190,90,60,.6)';g.beginPath();g.ellipse(gx+((now*4*dpr)%(gR*2.4))-gR*1.2,gy+gR*.35,gR*.2,gR*.1,0,0,6.283);g.fill()},.7);
+ g.strokeStyle='rgba(230,210,170,.45)';g.lineWidth=3*dpr;g.beginPath();g.ellipse(gx,gy,gR*1.65,gR*.32,-.15,0,Math.PI);g.stroke();
+ for(const m of omo)if(!m.back)drawOM(m);
+ // rocket traffic
+ L.forEach((c,ci)=>{if(c.era<10)return;const tgt=c.landed[3]||c.want[3]?[gx,gy]:c.landed[2]||c.want[2]?[bx,h*.5]:c.landed[1]||c.want[1]?[mx,my]:[mox,moy];const t=(now*.16+ci*.37)%1,x=ex+(tgt[0]-ex)*t,y=ey+(tgt[1]-ey)*t-Math.sin(t*Math.PI)*h*.2;
+  g.strokeStyle=`rgba(${c.rgb},.3)`;g.lineWidth=dpr;g.beginPath();g.moveTo(ex,ey);for(let q=0;q<=t;q+=.05)g.lineTo(ex+(tgt[0]-ex)*q,ey+(tgt[1]-ey)*q-Math.sin(q*Math.PI)*h*.2);g.stroke();g.fillStyle=`rgb(${c.rgb})`;g.beginPath();g.arc(x,y,2.4*dpr,0,6.283);g.fill()});
+ L.forEach((c,ci)=>{const p=spaceParts(c);if(p.ship>0&&!c.star){const Lw=w*.14,x0=w*.84-Lw/2,y0=h*.06+ci*7*dpr;g.strokeStyle=`rgba(${c.rgb},.55)`;g.strokeRect(x0,y0,Lw,4*dpr);g.fillStyle=`rgb(${c.rgb})`;g.fillRect(x0,y0,Lw*p.ship,4*dpr)}});
+ // labels
+ g.font=`${10*dpr}px "IBM Plex Mono",monospace`;g.fillStyle='#8693a8';g.textAlign='center';
+ cvs.hits=[{v:'earth',x:ex,y:ey,r:pr*1.1},{v:'moon',x:mox,y:moy,r:Math.max(moR,10*dpr)},{v:'mars',x:mx,y:my,r:mR},{v:'belt',x:bx,y:h/2,r:h*.12,band:1},{v:'outer',x:gx,y:gy,r:gR*1.8},{v:'sun',x:sx,y:sy,r:sR}];
+ const hv=cvs.hits.find(t=>t.v===cvs.hover);if(hv&&hv.v!=='sun'){g.strokeStyle='rgba(226,192,108,.85)';g.lineWidth=2*dpr;g.setLineDash([4*dpr,4*dpr]);g.beginPath();if(hv.band)g.rect(hv.x-hv.r,4*dpr,hv.r*2,h-8*dpr);else g.arc(hv.x,hv.y,hv.r+6*dpr,0,6.283);g.stroke();g.setLineDash([])}
+ g.fillText('EARTH',ex,ey+pr+16*dpr);g.fillText('MOON',mox,moy+moR+12*dpr);g.fillText('MARS',mx,my+mR+16*dpr);g.fillText('ASTEROIDS',bx,h-6*dpr);g.fillText('GIANT PLANET',gx,gy+gR+16*dpr);g.textAlign='left';g.fillText('SUN',8*dpr,h-6*dpr);
+ const tot=L.reduce((a,c)=>a+(c.energy||0),0);g.textAlign='left';g.fillStyle='#e2c06c';g.font=`600 ${11*dpr}px "IBM Plex Mono",monospace`;g.fillText(`ENERGY ${fmtE(tot)}`,10*dpr,16*dpr);g.fillStyle='#8693a8';g.font=`${10*dpr}px "IBM Plex Mono",monospace`;
+ g.fillText(`${sats.length} satellites${dyson.length?' · Dyson swarm':''}${S.un?' · United Earth':''}`,10*dpr,30*dpr);
+ if(maxE<8){g.fillStyle='rgba(227,233,242,.75)';g.font=`${12*dpr}px "IBM Plex Sans",sans-serif`;g.textAlign='center';g.fillText('Nothing from Earth has reached orbit yet',w*.6,h*.5)}
+}
+function spaceUI(){const box=$('#spaceRows');if(box.children.length!==civs.length){box.innerHTML=civs.map(c=>`<div class="srow" style="--cc:rgb(${c.rgb})"><div><b>${c.ai}</b> <span data-s="t"></span></div><div class="bar"><i data-s="b"></i></div></div>`).join('')}
+ civs.forEach((c,k)=>{const row=box.children[k],p=spaceParts(c);let t;
+  if(!c.alive)t='Fallen';else if(c.era<10)t=`${ERAS[c.era].n}. Not in space yet`;
+  else{const parts=[];['Moon','Mars','Asteroids','Outer moons'].forEach((n,b)=>{const v=held(b,c);if(v||c.landed[b]||c.want[b])parts.push(`${n} ${v}${v<REQ?'/'+REQ:''} km²`)});if(c.era>=LAST)parts.push(`Starship ${Math.round(p.ship*100)}%`);
+   t=(c.lastMile||'Launch programme')+(parts.length?' · '+parts.join(' · '):'')+(c.blocked>=0?` · stuck until it holds ${REQ} km² of ${S.bodies[c.blocked].n}`:'')}
+  row.querySelector('[data-s=t]').textContent=t;row.querySelector('[data-s=b]').style.width=Math.min(100,(c.sp||0)/5*100)+'%'})}
+
+/* ---------- world territory map ---------- */
+let selBody=0;const bm=$('#bodymap'),bctx=bm.getContext('2d');
+function drawBody(now){const B=S.bodies[selBody],w=bm.clientWidth;if(!w)return;const ch=Math.round(w*B.h/B.w);
+ if(bm._k!==selBody+':'+w){bm._k=selBody+':'+w;bm.style.height=ch+'px';bm.width=Math.round(w*dpr);bm.height=Math.round(ch*dpr)}
+ const g=bctx,cs=bm.width/B.w,pulse=(Math.sin(now*6)+1)/2;g.fillStyle='#05080e';g.fillRect(0,0,bm.width,bm.height);
+ for(let i=0;i<B.N;i++){const t=B.t[i];if(!t)continue;const x=i%B.w,y=i/B.w|0,sh=.86+hsh(i,B.b+11)*.24;let c=B.pal[t].map(v=>v*sh);const o=B.own[i];
+  if(o>=0){let edge=0;for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=B.w||ny>=B.h){continue}const j=ny*B.w+nx;if(!B.t[j]||B.own[j]!==o){edge=Math.max(edge,B.own[j]>=0&&B.own[j]!==o?(S.war[o][B.own[j]]?3:2):1)}}
+   let rgb=civs[o].rgb,a=edge?.8:.42;if(edge===3){rgb=[255,80,70];a=.55+.4*pulse}c=c.map((v,k)=>v+(rgb[k]-v)*a)}
+  g.fillStyle=`rgb(${c[0]|0},${c[1]|0},${c[2]|0})`;g.fillRect(x*cs,y*cs,cs+.6,cs+.6)}
+ if(cs>=6*dpr){g.strokeStyle='rgba(0,0,0,.18)';g.lineWidth=1;g.beginPath();for(let x=1;x<B.w;x++){g.moveTo(x*cs,0);g.lineTo(x*cs,bm.height)}for(let y=1;y<B.h;y++){g.moveTo(0,y*cs);g.lineTo(bm.width,y*cs)}g.stroke()}
+ const S2=Math.max(cs,5*dpr);
+ for(const i of B.mine){const o=B.own[i];if(o<0)continue;const x=(i%B.w+.5)*cs,y=((i/B.w|0)+.5)*cs,C=`rgb(${civs[o].rgb})`,u=S2*.5;
+  g.strokeStyle='#d9d2c4';g.lineWidth=Math.max(1,u*.14);g.beginPath();g.moveTo(x-u*.8,y+u*.9);g.lineTo(x,y-u*1.1);g.lineTo(x+u*.8,y+u*.9);g.moveTo(x-u*.45,y+u*.1);g.lineTo(x+u*.45,y+u*.1);g.stroke();
+  const a=now*3;g.strokeStyle=C;g.beginPath();g.arc(x,y-u*1.1,u*.35,a,a+4.5);g.stroke();g.fillStyle=C;g.fillRect(x-u*.9,y+u*.8,u*1.8,u*.3)}
+ g.textAlign='center';g.font=`600 ${Math.max(9*dpr,Math.min(12*dpr,cs*.9))}px "IBM Plex Sans",sans-serif`;
+ for(const i of B.base){const o=B.own[i];if(o<0)continue;const x=(i%B.w+.5)*cs,y=((i/B.w|0)+.7)*cs,C=`rgb(${civs[o].rgb})`,u=S2*.55;
+  g.fillStyle='rgba(30,36,46,.9)';g.fillRect(x-u*1.5,y-u*.15,u*3,u*.35);
+  g.fillStyle='rgba(215,235,255,.85)';for(const [dx,r] of [[-.9,.55],[.85,.5],[0,.85]]){g.beginPath();g.arc(x+dx*u,y,r*u,Math.PI,0);g.fill()}
+  g.fillStyle='#e8edf2';g.fillRect(x+u*.25,y-u*1.9,u*.32,u*1.9);g.fillStyle=C;g.fillRect(x-u*.18,y-u*.6,u*.36,u*.36);
+  if(Math.sin(now*3+i)>0){g.fillStyle=C;g.fillRect(x+u*.25,y-u*2.05,u*.32,u*.2)}
+  if(cs>=7*dpr&&B.nm[i]){g.lineWidth=3*dpr;g.strokeStyle='rgba(5,8,14,.9)';g.strokeText(B.nm[i],x,y-u*2.3);g.fillStyle='#fff';g.fillText(B.nm[i],x,y-u*2.3)}}
+ for(const h of B.hit){const x=(h.i%B.w+.5)*cs,y=((h.i/B.w|0)+.5)*cs;g.strokeStyle=`rgba(255,140,90,${1-h.t/6})`;g.lineWidth=2*dpr;g.beginPath();g.arc(x,y,cs*(.3+h.t*.12),0,6.283);g.stroke()}
+ if(!B.cnt.some(v=>v>0)&&!civs.some(c=>c.landed[selBody]||c.want[selBody])){g.fillStyle='rgba(227,233,242,.8)';g.font=`${12*dpr}px "IBM Plex Sans",sans-serif`;g.textAlign='center';g.fillText(`No one has landed on ${B.n} yet`,bm.width/2,bm.height/2)}
+}
+function bodyLegend(){const B=S.bodies[selBody];document.querySelectorAll('[data-body]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.body===selBody)));
+ const parts=civs.filter(c=>B.cnt[c.id]>0||c.want[selBody]).map(c=>`${c.ai} ${B.cnt[c.id]} km² (${B.base.filter(i=>B.own[i]===c.id).length} colonies, ${B.mine.filter(i=>B.own[i]===c.id).length} mines)${B.cnt[c.id]>=REQ?' ✓':''}${c.want[selBody]&&!c.landed[selBody]?' (waiting in orbit)':''}`);
+ const sc=c=>`${B.base.filter(i=>B.own[i]===c.id).length} colonies, ${B.mine.filter(i=>B.own[i]===c.id).length} mines`;
+ $('#bleg').textContent=parts.length?`${B.n}: ${parts.join(' · ')} · ${B.free} km² unclaimed`:`${B.n}: ${B.free} km² unclaimed`}
+$('#btabs').addEventListener('click',e=>{const b=e.target.closest('[data-body]');if(!b)return;selBody=+b.dataset.body;bodyLegend()});
+bm.addEventListener('pointermove',e=>{const B=S.bodies[selBody],r=bm.getBoundingClientRect(),x=Math.floor((e.clientX-r.left)/r.width*B.w),y=Math.floor((e.clientY-r.top)/r.height*B.h);if(x<0||y<0||x>=B.w||y>=B.h)return;const i=y*B.w+x,t=B.t[i];
+ $('#btip').textContent=!t?'Empty space.':`${B.n} · 1 km² of ${t===2?B.rn:t===3?'rough ground':'open ground'}${B.base.includes(i)?' · the colony '+B.nm[i]:B.mine.includes(i)?' · '+B.nm[i]:''} · ${B.own[i]>=0?'held by '+civs[B.own[i]].people+' ('+civs[B.own[i]].ai+')':'unclaimed'}`});
+
+/* ---------- planets (deep zoom) ---------- */
+const PT=[['rocky world',[150,124,104]],['ocean world',[70,130,205]],['gas giant',[214,172,122]],['ice world',[205,226,242]],['lava world',[222,92,52]],['jungle world',[84,164,96]],['desert world',[214,180,120]]];
+function planetsOf(q){if(q.pl)return q.pl;if(q.home){q.pl=[{n:'Mercury',r:.8,s:.16,c:[160,150,140],ph:.4},{n:'Venus',r:1.25,s:.26,c:[230,200,140],ph:2},{n:'Earth',r:1.8,s:.3,c:[70,130,205],ph:4,earth:1},{n:'Mars',r:2.5,s:.22,c:[196,100,60],ph:1,body:1},{n:'Asteroid belt',r:3.2,belt:1,body:2},{n:'Giant planet',r:4.2,s:.55,c:[214,172,122],ph:5,body:3,ring:1}];return q.pl}
+ const n=2+(hsh(q.id,91)*5|0),l=[];for(let j=0;j<n;j++){const t=PT[hsh(q.id,92+j)*PT.length|0];l.push({n:sysName(q)+' '+['I','II','III','IV','V','VI','VII'][j],r:1.1+j*1.25+hsh(q.id,99+j)*.3,s:t[0]==='gas giant'?.6+hsh(q.id,110+j)*.2:.26+hsh(q.id,120+j)*.2,c:t[1],t:t[0],ph:hsh(q.id,130+j)*6.283,ring:t[0]==='gas giant'&&hsh(q.id,140+j)<.5})}return q.pl=l}
+function shares(b){if(b==='earth'){const tot=civs.reduce((a,c)=>a+(c.alive?c.tileList.length:0),0)||1;return civs.filter(c=>c.alive&&c.tileList.length).map(c=>[c.rgb,c.tileList.length/tot*.97])}
+ const B=S.bodies[b],land=B.t.reduce((a,v)=>a+(v?1:0),0)||1;return civs.filter(c=>B.cnt[c.id]>0).map(c=>[c.rgb,B.cnt[c.id]/land])}
+function pie(g,x,y,r,sh){let a=-Math.PI/2;for(const [rgb,f] of sh){if(f<=0)continue;g.fillStyle=`rgba(${rgb},.5)`;g.beginPath();g.moveTo(x,y);g.arc(x,y,r,a,a+f*6.283);g.closePath();g.fill();a+=f*6.283}}
+function drawPlanets(q,x,y,K,now,z){const g=gctx,F=S.gal.fac,f=q.own>=0?F[q.own]:null,vis=f&&(isH(f)||f.known),pl=planetsOf(q),al=Math.min(1,(z-6)/3);
+ g.globalAlpha=al;const st=hsh(q.id,81),sc=q.home?'255,228,150':st<.2?'255,170,120':st<.7?'255,240,200':'180,205,255',sr=(q.home?.42:.3)*K,gr=g.createRadialGradient(x,y,0,x,y,sr*3);gr.addColorStop(0,`rgba(${sc},1)`);gr.addColorStop(.3,`rgba(${sc},.5)`);gr.addColorStop(1,`rgba(${sc},0)`);g.fillStyle=gr;g.beginPath();g.arc(x,y,sr*3,0,6.283);g.fill();
+ let settled=0;
+ pl.forEach((p,j)=>{const rr=p.r*K;g.strokeStyle='rgba(200,215,240,.13)';g.lineWidth=dpr;g.beginPath();g.arc(x,y,rr,0,6.283);g.stroke();
+  if(p.belt){for(let k=0;k<90;k++){const a=hsh(k,151)*6.283+now*.02,d=rr*(.93+hsh(k,152)*.14),B=S.bodies[2];let col='150,140,130';if(B){const i=B.land||(B.land=[...B.t].map((v,i_)=>v?i_:-1).filter(v=>v>=0));const t=i[hsh(k,153)*i.length|0],o=B.own[t];if(o>=0)col=civs[o].rgb.join(',')}g.fillStyle=`rgba(${col},.85)`;g.fillRect(x+Math.cos(a)*d,y+Math.sin(a)*d,1.6*dpr,1.6*dpr)}return}
+  const a=p.ph+now*.25/p.r,px=x+Math.cos(a)*rr,py=y+Math.sin(a)*rr,pr=Math.max(2*dpr,p.s*K);
+  if(p.ring){g.strokeStyle='rgba(230,210,170,.5)';g.lineWidth=Math.max(1,pr*.18);g.beginPath();g.ellipse(px,py,pr*1.7,pr*.5,-.3,0,6.283);g.stroke()}
+  if(p.earth&&pr>9*dpr){sphere(g,px,py,pr,()=>{const mw=pr*2*W/H,sh=(now*pr*.6)%mw;for(let k=0;k<2;k++){g.drawImage(offB,px-pr-sh+k*mw,py-pr,mw,pr*2);g.drawImage(off,px-pr-sh+k*mw,py-pr,mw,pr*2)}if(cloudCv){g.globalAlpha*=.35;for(let k=0;k<2;k++)g.drawImage(cloudCv,px-pr-((now*pr*.9)%mw)+k*mw,py-pr,mw,pr*2);g.globalAlpha=al}},.75,'rgba(120,190,255,.5)');
+   const ma=now*1.1,mx=px+Math.cos(ma)*pr*2.2,my=py+Math.sin(ma)*pr*2.2,mr=pr*.32;sphere(g,mx,my,mr,()=>texSphere(g,mx,my,mr,bodyTex(0),now*mr*.4),.6);
+   const L8=civs.filter(c=>c.alive&&c.era>=8);for(let k=0;k<Math.min(30,L8.length*4);k++){const c=L8[k%L8.length],sa=now*(.8+hsh(k,321)*.6)+hsh(k,322)*6.283,sd=pr*(1.2+hsh(k,323)*.3);g.fillStyle=`rgb(${c.rgb})`;g.fillRect(px+Math.cos(sa)*sd-1.2*dpr,py+Math.sin(sa)*sd*.45-1.2*dpr,2.4*dpr,2.4*dpr)}
+   settled++;if(z>=16){g.font=`600 ${11*dpr}px "IBM Plex Sans",sans-serif`;g.textAlign='center';g.lineWidth=3*dpr;g.strokeStyle='rgba(3,5,10,.85)';g.strokeText('Earth',px,py+pr+13*dpr);g.fillStyle='#e8f4ff';g.fillText('Earth',px,py+pr+13*dpr)}return}
+  const pg=g.createRadialGradient(px-pr*.35,py-pr*.35,pr*.1,px,py,pr);pg.addColorStop(0,`rgb(${p.c.map(v=>Math.min(255,v+50)).join(',')})`);pg.addColorStop(1,`rgb(${p.c.map(v=>v*.45|0).join(',')})`);g.fillStyle=pg;g.beginPath();g.arc(px,py,pr,0,6.283);g.fill();
+  let sh=null;if(q.home){if(p.earth)sh=shares('earth');else if(p.body)sh=shares(p.body)}else if(vis){const fr_=Math.max(0,Math.min(1,(S.tick-(q.since??-999))/50-j*.6));if(fr_>0)sh=[[f.rgb,fr_]]}
+  if(sh&&sh.length){pie(g,px,py,pr,sh);settled++;g.strokeStyle=`rgba(${sh[0][0]},.9)`;g.lineWidth=Math.max(1,pr*.12);g.beginPath();g.arc(px,py,pr+2*dpr,0,6.283);g.stroke();
+   const ns=q.home&&p.earth?Math.min(16,civs.filter(c=>c.alive&&c.era>=8).length*3):Math.min(4,1+(z>12?2:0));for(let k=0;k<ns;k++){const sa=now*(1.2+k*.13)+k*1.7,sd=pr*(1.45+(k%3)*.18);g.fillStyle=q.home?`rgb(${(civs.filter(c=>c.alive&&c.era>=8)[k%Math.max(1,civs.filter(c=>c.alive&&c.era>=8).length)]||{rgb:[220,230,255]}).rgb})`:'rgba(230,240,255,.9)';g.fillRect(px+Math.cos(sa)*sd-1*dpr,py+Math.sin(sa)*sd*.6-1*dpr,2*dpr,2*dpr)}}
+  if(q.home&&p.earth){const ma=now*1.1,mx=px+Math.cos(ma)*pr*2.2,my=py+Math.sin(ma)*pr*2.2,mr=pr*.32;g.fillStyle='#bdbdb7';g.beginPath();g.arc(mx,my,mr,0,6.283);g.fill();const ms=shares(0);if(ms.length)pie(g,mx,my,mr,ms)}
+  if(z>=16){g.font=`${10*dpr}px "IBM Plex Sans",sans-serif`;g.textAlign='center';g.lineWidth=3*dpr;g.strokeStyle='rgba(3,5,10,.85)';g.strokeText(p.n,px,py+pr+11*dpr);g.fillStyle='rgba(225,232,245,.85)';g.fillText(p.n,px,py+pr+11*dpr)}});
+ g.globalAlpha=1;q.settled=settled}
+
+/* ---------- galaxy drawing ---------- */
+const gcv=$('#galaxy'),gctx=gcv.getContext('2d'),gv={z:1,x:0,y:0};let gVis=true,gNow=0,gFol=false,gCamT=0,gTgt=null,gDrag=null;const glowC={};
+try{new IntersectionObserver(es=>{gVis=es[0].isIntersecting}).observe(gcv)}catch(_){}
+const GSPIN=[.012,.018,-.015];
+function grot(G,gi,t){const a=t*GSPIN[gi],sq=G.arms?.62:.72;return{c:Math.cos(a),s:Math.sin(a),sq}}
+let gR=[];
+function rp(q){const G=S.gal.G[q.g],r=gR[q.g];if(!r)return[q.x,q.y];const dx=q.x-G.cx,dy=(q.y-G.cy)/r.sq;return[G.cx+dx*r.c-dy*r.s,G.cy+(dx*r.s+dy*r.c)*r.sq]}
+function glow(rgb){const k=rgb.join(',');if(glowC[k])return glowC[k];const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d'),gr=g.createRadialGradient(32,32,0,32,32,32);gr.addColorStop(0,`rgba(${k},.34)`);gr.addColorStop(.55,`rgba(${k},.14)`);gr.addColorStop(1,`rgba(${k},0)`);g.fillStyle=gr;g.fillRect(0,0,64,64);return glowC[k]=c}
+function gClamp(){gv.z=Math.max(1,Math.min(120,gv.z));gv.x=Math.max(0,Math.min(GW-GW/gv.z,gv.x));gv.y=Math.max(0,Math.min(GH-GH/gv.z,gv.y))}
+function gZoomAt(f,tx,ty){const nz=Math.max(1,Math.min(120,gv.z*f));gv.x=tx-(tx-gv.x)*gv.z/nz;gv.y=ty-(ty-gv.y)*gv.z/nz;gv.z=nz;gClamp()}
+function gFocus(x,y,z){gv.z=z;gv.x=x-GW/z/2;gv.y=y-GH/z/2;gClamp()}
+let gEarth=false,gEZ=110;
+function gSetFol(v){gFol=v;gTgt=null;gCamT=0;$('#gfol').setAttribute('aria-pressed',String(v));if(v&&gEarth)gSetEarth(false)}
+function gSetEarth(v){gEarth=v;$('#gearth').setAttribute('aria-pressed',String(v));if(v&&gFol)gSetFol(false)}
+function earthPos(now){const q=S.gal.home,[x,y]=rp(q),e=planetsOf(q).find(p=>p.earth),a=e.ph+now*.25/e.r;return[x+Math.cos(a)*e.r,y+Math.sin(a)*e.r]}
+function gLanes(){const Gx=S.gal,L=[];for(const q of Gx.sys){if(q.own<0)continue;let b1=null,d1=70*70,b2=null,d2=45*45;for(const r of Gx.sys){if(r===q||r.own!==q.own)continue;const d=(q.x-r.x)**2+(q.y-r.y)**2;if(d<d1){b2=b1;d2=Math.min(d2,d1);b1=r;d1=d}else if(d<d2){b2=r;d2=d}}
+  if(b1&&q.id<b1.id)L.push([q,b1]);if(b2&&q.id<b2.id)L.push([q,b2])}Gx.lanes=L;Gx.lanesT=S.tick}
+function gCam(dt){if(gEarth){const [tx,ty]=earthPos(gNow),k=Math.min(1,dt*2.5);gv.z+=(gEZ-gv.z)*k;const cx=gv.x+GW/gv.z/2,cy=gv.y+GH/gv.z/2,f=gv.z>gEZ*.8?1:k;gv.x=cx+(tx-cx)*f-GW/gv.z/2;gv.y=cy+(ty-cy)*f-GH/gv.z/2;gClamp();return}
+ if(!gFol||!S.gal.on)return;gCamT-=dt;const Gx=S.gal;
+ if(gCamT<=0||!gTgt){gCamT=6;const war=Gx.ships.filter(sh=>sh.war&&(isH(Gx.fac[sh.f])||Gx.fac[sh.f].known));
+  if(war.length){gTgt={q:war[Math.random()*war.length|0].to,z:3.2}}else if(Gx.fx.length){const e=Gx.fx[Gx.fx.length-1];gTgt={x:e.x,y:e.y,z:3}}else{const sh=Gx.ships.filter(s_=>isH(Gx.fac[s_.f]));gTgt=sh.length?{q:sh[Math.random()*sh.length|0].to,z:2.6}:{x:Gx.home.x,y:Gx.home.y,z:2.2}}}
+ const [tx,ty]=gTgt.q?rp(gTgt.q):[gTgt.x,gTgt.y],k=Math.min(1,dt*1.1),cx=gv.x+GW/gv.z/2,cy=gv.y+GH/gv.z/2;gv.z+=(gTgt.z-gv.z)*k;gv.x=cx+(tx-cx)*k-GW/gv.z/2;gv.y=cy+(ty-cy)*k-GH/gv.z/2;gClamp()}
+function drawGalaxy(now,dt){if(!S||!S.gal||!gVis)return;const wrap=$('#gwrap'),fs=document.fullscreenElement===wrap;const w=wrap.clientWidth;if(!w)return;const h=fs?window.innerHeight:Math.round(w*GH/GW);
+ if(gcv._w!==w||gcv._h!==h){gcv._w=w;gcv._h=h;gcv.style.height=h+'px';gcv.width=Math.round(w*dpr);gcv.height=Math.round(h*dpr)}
+ if(gcv._s!==S.seed){gcv._s=S.seed;gv.z=1;gv.x=0;gv.y=0;$('#gjump').innerHTML=S.gal.G.map((G,i)=>`<button data-gal="${i}">${G.n}</button>`).join('')}
+ gNow=now;const Gx=S.gal,F=Gx.fac,g=gctx,W2=gcv.width,H2=gcv.height,k0=Math.min(W2/GW,H2/GH),ox=(W2-GW*k0)/2,oy=(H2-GH*k0)/2,z=gv.z,K=k0*z;
+ gR=Gx.G.map((G,i)=>grot(G,i,now));gCam(dt||0);
+ const X=x=>ox+(x-gv.x)*K,Y=y=>oy+(y-gv.y)*K,vis=f=>f&&(isH(f)||f.known);
+ g.fillStyle='#03050a';g.fillRect(0,0,W2,H2);
+ const sd=S.seed|0;for(let i=0;i<9;i++){const nx=hsh(i,sd+71)*GW,ny=hsh(i,sd+72)*GH,nr=(90+hsh(i,sd+73)*180)*K,hue=[[120,80,200],[60,120,200],[200,70,130],[40,150,160],[160,90,60]][i%5],gr=g.createRadialGradient(X(nx),Y(ny),0,X(nx),Y(ny),nr);gr.addColorStop(0,`rgba(${hue},.1)`);gr.addColorStop(1,`rgba(${hue},0)`);g.fillStyle=gr;g.fillRect(X(nx)-nr,Y(ny)-nr,nr*2,nr*2)}
+ for(let i=0;i<700;i++){const px=((hsh(i,62)*W2-(gv.x*K*.15))%W2+W2)%W2,py=((hsh(i,63)*H2-(gv.y*K*.15))%H2+H2)%H2,tw=.55+.45*Math.sin(now*(1+hsh(i,64)*3)+i);g.fillStyle=`rgba(255,255,255,${hsh(i,61)*.55*tw})`;const sz=(hsh(i,65)>.96?2:1)*dpr;g.fillRect(px,py,sz,sz)}
+ Gx.G.forEach((G,gi)=>{const rr=G.r*K*.55,cg=g.createRadialGradient(X(G.cx),Y(G.cy),0,X(G.cx),Y(G.cy),rr);cg.addColorStop(0,'rgba(255,238,206,.75)');cg.addColorStop(.18,'rgba(255,214,170,.3)');cg.addColorStop(.5,'rgba(190,160,255,.1)');cg.addColorStop(1,'rgba(120,140,255,0)');g.fillStyle=cg;g.beginPath();g.arc(X(G.cx),Y(G.cy),rr,0,6.283);g.fill()});
+ const ds=Math.max(1,Math.min(2.5,z*.6))*dpr;
+ for(let i=0;i<Gx.dust.length;i++){const d=Gx.dust[i];let gi=d[3];if(gi==null){let bd=1e9;Gx.G.forEach((G,j)=>{const dd=(G.cx-d[0])**2+(G.cy-d[1])**2;if(dd<bd){bd=dd;gi=j}});d[3]=gi}
+  const G=Gx.G[gi],r=gR[gi],dx=d[0]-G.cx,dy=(d[1]-G.cy)/r.sq,x=X(G.cx+dx*r.c-dy*r.s),y=Y(G.cy+(dx*r.s+dy*r.c)*r.sq);if(x<-4||y<-4||x>W2+4||y>H2+4)continue;
+  g.fillStyle=d[2]<.15?'rgba(255,196,160,.6)':d[2]<.5?'rgba(170,190,255,.42)':'rgba(230,232,255,.28)';const z2=d[2]<.04?ds*1.8:ds;g.fillRect(x,y,z2,z2)}
+ const pos=new Map();for(const q of Gx.sys)pos.set(q,rp(q));
+ const gs=26*K;g.globalAlpha=Math.max(.15,Math.min(1,1-(z-6)/8));for(const q of Gx.sys){if(q.own<0)continue;const f=F[q.own];if(!vis(f))continue;const [x,y]=pos.get(q),sx=X(x),sy=Y(y);if(sx<-gs||sy<-gs||sx>W2+gs||sy>H2+gs)continue;g.drawImage(glow(f.rgb),sx-gs,sy-gs,gs*2,gs*2)}g.globalAlpha=1;
+ if(!Gx.lanes||S.tick-Gx.lanesT>=20)gLanes();
+ g.lineWidth=Math.max(.6,Math.min(2,.5*z))*dpr;for(const [a,b] of Gx.lanes){if(a.own<0||a.own!==b.own)continue;const f=F[a.own];if(!vis(f))continue;const [x1,y1]=pos.get(a),[x2,y2]=pos.get(b);g.strokeStyle=`rgba(${f.rgb},.32)`;g.beginPath();g.moveTo(X(x1),Y(y1));g.lineTo(X(x2),Y(y2));g.stroke()}
+ const sr=Math.max(1,Math.min(3,z*.7));
+ const deep=z>=6;for(const q of Gx.sys){const [x0,y0]=pos.get(q),x=X(x0),y=Y(y0),mg=deep?8*K:20;if(x<-mg||y<-mg||x>W2+mg||y>H2+mg)continue;
+  if(deep)drawPlanets(q,x,y,K,now,z);
+  if(q.home){const p=1+.15*Math.sin(now*2);g.fillStyle='#bfe6ff';g.beginPath();g.arc(x,y,4*dpr*p*sr*.7,0,6.283);g.fill();g.strokeStyle='rgba(191,230,255,.6)';g.lineWidth=1.2*dpr;g.beginPath();g.arc(x,y,8*dpr*sr*.7,0,6.283);g.stroke();
+   g.font=`600 ${11*dpr}px "IBM Plex Sans",sans-serif`;g.textAlign='center';g.lineWidth=3*dpr;g.strokeStyle='rgba(3,5,10,.85)';g.strokeText(q.name,x,y-12*dpr*sr*.7);g.fillStyle='#e8f4ff';g.fillText(q.name,x,y-12*dpr*sr*.7);continue}
+  const f=q.own>=0?F[q.own]:null;
+  if(!vis(f)){const st=hsh(q.id,81),c=st<.2?'255,170,120':st<.7?'255,240,200':'180,205,255';g.fillStyle=`rgba(${c},${.45+.2*Math.sin(now*2+q.id)})`;g.beginPath();g.arc(x,y,.9*dpr*sr,0,6.283);g.fill();
+   if(z>=4){g.font=`${9*dpr}px "IBM Plex Sans",sans-serif`;g.textAlign='center';g.fillStyle='rgba(180,190,215,.55)';g.fillText(sysName(q),x,y-5*dpr*sr)}continue}
+  const C=`rgb(${f.rgb})`,cap=f.cap===q,r=(cap?3.6:2.3)*dpr*sr*.8;g.fillStyle=C;g.beginPath();if(isH(f))g.arc(x,y,r,0,6.283);else{g.moveTo(x,y-r*1.25);g.lineTo(x+r,y);g.lineTo(x,y+r*1.25);g.lineTo(x-r,y);g.closePath()}g.fill();
+  if(cap){g.strokeStyle=C;g.lineWidth=1*dpr;g.beginPath();g.arc(x,y,r+3.5*dpr,0,6.283);g.stroke()}
+  if(inUP(f)&&cap){g.strokeStyle='rgba(226,192,108,.9)';g.lineWidth=1.2*dpr;g.setLineDash([2*dpr,2*dpr]);g.beginPath();g.arc(x,y,r+7*dpr,0,6.283);g.stroke();g.setLineDash([])}
+  if(z>=2.4){g.font=`${(cap?11:9.5)*dpr}px "IBM Plex Sans",sans-serif`;g.textAlign='center';g.lineWidth=3*dpr;g.strokeStyle='rgba(3,5,10,.85)';const t=sysName(q);g.strokeText(t,x,y-r-4*dpr);g.fillStyle=cap?'#fff':'rgba(225,232,245,.85)';g.fillText(t,x,y-r-4*dpr)}}
+ const fr=Math.min(1,acc);
+ for(const sh of Gx.ships){const f=F[sh.f];if(!vis(f))continue;const [ax,ay]=pos.get(sh.from),[bx,by]=pos.get(sh.to),arc=sh.from.g!==sh.to.g?60:6,tt=Math.min(1,(sh.t+fr)/sh.dur),P=u=>[X(ax+(bx-ax)*u),Y(ay+(by-ay)*u-Math.sin(u*Math.PI)*arc)];
+  g.strokeStyle=sh.war?'rgba(255,110,90,.5)':`rgba(${f.rgb},.4)`;g.lineWidth=Math.max(1,z*.4)*dpr;g.beginPath();const t0=Math.max(0,tt-.35);for(let u=t0;u<=tt+1e-6;u+=.03){const [xx,yy]=P(u);u===t0?g.moveTo(xx,yy):g.lineTo(xx,yy)}g.stroke();
+  const [x,y]=P(tt),[x2,y2]=P(Math.max(0,tt-.02)),an=Math.atan2(y-y2,x-x2),L=(sh.war?5:4)*dpr*Math.max(1,Math.min(2.2,z*.6));
+  g.fillStyle=sh.war?'#ff7a64':`rgb(${f.rgb})`;g.beginPath();g.moveTo(x+Math.cos(an)*L,y+Math.sin(an)*L);g.lineTo(x+Math.cos(an+2.5)*L*.6,y+Math.sin(an+2.5)*L*.6);g.lineTo(x+Math.cos(an-2.5)*L*.6,y+Math.sin(an-2.5)*L*.6);g.closePath();g.fill();
+  if(z>=3&&sh.name){g.font=`${9*dpr}px "IBM Plex Sans",sans-serif`;g.fillStyle='rgba(225,232,245,.8)';g.fillText(sh.name,x,y-8*dpr)}}
+ for(const e of Gx.fx){const a=e.t/e.life,x=X(e.x),y=Y(e.y);g.strokeStyle=`rgba(${e.col},${1-a})`;g.lineWidth=1.6*dpr;g.beginPath();g.arc(x,y,(3+a*16)*dpr*Math.max(1,z*.5),0,6.283);g.stroke();g.fillStyle=`rgba(${e.col},${(1-a)*.5})`;g.beginPath();g.arc(x,y,(2+a*5)*dpr,0,6.283);g.fill()}
+ g.textAlign='center';
+ for(const f of F){if(!f.alive||f.n<5||!vis(f))continue;let sx=0,sy=0,n=0;for(const q of Gx.sys)if(q.own===f.idx){const [x,y]=pos.get(q);sx+=x;sy+=y;n++}if(!n)continue;
+  const fz=Math.max(10,Math.min(26,(9+Math.sqrt(n)*1.6)*Math.min(2,Math.sqrt(z))))*dpr;g.font=`700 ${fz}px Cinzel,Georgia,serif`;try{g.letterSpacing=(fz*.12)+'px'}catch(_){}
+  g.globalAlpha=z>5?.45:.9;g.lineWidth=3*dpr;g.strokeStyle='rgba(3,5,10,.8)';const t=(isH(f)?nm(f.ref):f.name.replace('the ','')).toUpperCase();g.strokeText(t,X(sx/n),Y(sy/n)-14*dpr);g.fillStyle=`rgb(${f.rgb})`;g.fillText(t,X(sx/n),Y(sy/n)-14*dpr);g.globalAlpha=1}
+ try{g.letterSpacing='0px'}catch(_){}
+ g.font=`600 ${11*dpr}px "IBM Plex Mono",monospace`;g.fillStyle='rgba(180,190,215,.75)';for(const G of Gx.G)g.fillText(G.n.toUpperCase(),X(G.cx),Y(G.cy+G.r*(G.arms?.62:.72)+20));
+ if(Gx.up){g.textAlign='left';g.font=`700 ${12*dpr}px Cinzel,Georgia,serif`;g.fillStyle='#e2c06c';g.fillText(`UNITED PLANETS · ${Gx.up.m.size} MEMBERS`,10*dpr,H2-12*dpr)}
+ if(!Gx.on){if(!gEarth&&z<4){g.fillStyle='rgba(3,5,10,.5)';g.fillRect(0,0,W2,H2)}g.textAlign='center';g.fillStyle='rgba(227,233,242,.92)';g.font=`${13*dpr}px "IBM Plex Sans",sans-serif`;g.fillText('No starship has crossed between the stars yet. Somewhere out there, other minds are waiting.',W2/2,gEarth||z>=4?H2-16*dpr:H2/2)}
+}
+function gNear(e){const [x,y,K]=gPick(e),lim=(14*dpr/K)**2;let best=null,bd=lim;for(const q of S.gal.sys){const [qx,qy]=rp(q),d=(qx-x)**2+(qy-y)**2;if(d<bd){bd=d;best=q}}if(gv.z>=6){const [hx,hy]=rp(S.gal.home);if((hx-x)**2+(hy-y)**2<49)best=S.gal.home}return best}
+function gPick(e){const r=gcv.getBoundingClientRect(),W2=gcv.width,H2=gcv.height,k0=Math.min(W2/GW,H2/GH),ox=(W2-GW*k0)/2,oy=(H2-GH*k0)/2,K=k0*gv.z,px=(e.clientX-r.left)/r.width*W2,py=(e.clientY-r.top)/r.height*H2;return[gv.x+(px-ox)/K,gv.y+(py-oy)/K,K]}
+gcv.addEventListener('wheel',e=>{e.preventDefault();if(e.deltaY<0&&wheelOk()&&(gEarth?gEZ>=110:gv.z>=100)){const [hx,hy]=rp(S.gal.home),cx=gv.x+GW/gv.z/2,cy=gv.y+GH/gv.z/2;if(Math.hypot(hx-cx,hy-cy)<8){goView('solar','in');return}}if(gEarth){gEZ=Math.max(3,Math.min(120,gEZ*(e.deltaY<0?1.25:.8)));return}gSetFol(false);const [x,y]=gPick(e);gZoomAt(e.deltaY<0?1.25:.8,x,y)},{passive:false});
+gcv.addEventListener('pointerdown',e=>{gDrag={x:e.clientX,y:e.clientY,vx:gv.x,vy:gv.y,m:false};try{gcv.setPointerCapture(e.pointerId)}catch(_){}});
+gcv.addEventListener('pointerup',e=>{const d=gDrag;gDrag=null;if(d&&!d.m){if(gv.z>=6){const q=gNear(e);if(q&&q.home){goView('solar','in');return}}if(gEarth){gEZ=Math.min(120,gEZ*1.6);return}const [x,y]=gPick(e);gSetFol(false);gZoomAt(1.6,x,y)}});
+gcv.addEventListener('pointercancel',()=>{gDrag=null});
+gcv.addEventListener('pointerleave',()=>{$('#gtt').hidden=true});
+gcv.addEventListener('pointermove',e=>{if(!S||!S.gal)return;
+ if(gDrag){const dx=e.clientX-gDrag.x,dy=e.clientY-gDrag.y;if(Math.hypot(dx,dy)>5)gDrag.m=true;if(gDrag.m){gSetFol(false);gSetEarth(false);const r=gcv.getBoundingClientRect(),[,,K]=gPick(e);gv.x=gDrag.vx-dx*(gcv.width/r.width)/K;gv.y=gDrag.vy-dy*(gcv.height/r.height)/K;gClamp();$('#gtt').hidden=true;return}}
+ const [x,y,K]=gPick(e),lim=(12*dpr/K)**2;let best=null,bd=lim;for(const q of S.gal.sys){const [qx,qy]=rp(q),d=(qx-x)**2+(qy-y)**2;if(d<bd){bd=d;best=q}}
+ const tt=$('#gtt');if(!best){tt.hidden=true;return}const f=best.own>=0?S.gal.fac[best.own]:null,G=S.gal.G[best.g],known=f&&(isH(f)||f.known);
+ tt.textContent='';const add=(t,b)=>{const d=document.createElement('div');if(b){const s_=document.createElement('b');s_.textContent=t;d.append(s_)}else d.textContent=t;tt.append(d)};
+ add(best.home?best.name:sysName(best)+' system',true);add(best.home?`Home of Earth · ${G.n}`:G.n);{const pl=planetsOf(best);add(`${pl.length} worlds${best.settled!=null&&gv.z>=6?` · ${best.settled} settled`:''}`)}if(!best.home)add(known?`Held by ${f.name}${f.cap===best?' (capital)':''} · ${GERA[f.gera]}`:'Unclaimed, or held by someone not yet met');
+ const wr=$('#gwrap').getBoundingClientRect();let lx=e.clientX-wr.left+14,ly=e.clientY-wr.top+14;if(lx>wr.width-240)lx-=260;if(ly>wr.height-80)ly-=90;tt.style.left=lx+'px';tt.style.top=ly+'px';tt.hidden=false});
+$('#gzin').onclick=()=>{if(gEarth){gEZ=Math.min(120,gEZ*1.6);return}gSetFol(false);gZoomAt(1.6,gv.x+GW/gv.z/2,gv.y+GH/gv.z/2)};
+$('#gzout').onclick=()=>{if(gEarth){gEZ=Math.max(3,gEZ/1.6);return}gSetFol(false);gZoomAt(1/1.6,gv.x+GW/gv.z/2,gv.y+GH/gv.z/2)};
+$('#gfit').onclick=()=>{gSetFol(false);gSetEarth(false);gv.z=1;gClamp()};
+$('#gfol').onclick=()=>gSetFol(!gFol);
+$('#gearth').onclick=()=>{gSetEarth(!gEarth);if(gEarth)$('#gtip').textContent='Following Earth around the Sun. Scroll to zoom in or out, drag to stop.'};
+$('#gjump').addEventListener('click',e=>{const b=e.target.closest('[data-gal]');if(!b)return;gSetFol(false);gSetEarth(false);const G=S.gal.G[+b.dataset.gal];gFocus(G.cx,G.cy,GW/(G.r*2.6))});
+$('#gfs').onclick=()=>{const el=$('#gwrap'),no=()=>{$('#gtip').textContent='Full screen is not available here.'};try{if(document.fullscreenElement)document.exitFullscreen();else if(el.requestFullscreen){const pr=el.requestFullscreen();if(pr&&pr.catch)pr.catch(no)}else no()}catch(_){no()}};
+document.addEventListener('fullscreenchange',()=>{$('#gfs').textContent=document.fullscreenElement===$('#gwrap')?'Exit full screen':'Full screen';gcv._w=0});
+$('#galRows').addEventListener('click',e=>{const row=e.target.closest('[data-fi]');if(!row||!S.gal)return;gSetEarth(false);const f=S.gal.fac[+row.dataset.fi],l=S.gal.sys.filter(q=>q.own===f.idx);const tg=l.length?l:[f.cap];let sx=0,sy=0;for(const q of tg){const [x,y]=rp(q);sx+=x;sy+=y}gSetFol(false);gFocus(sx/tg.length,sy/tg.length,3)});
+function galUI(){if(!S||!S.gal)return;const Gx=S.gal,F=Gx.fac,box=$('#galRows'),shown=F.filter(f=>isH(f)||f.known),hidden=F.filter(f=>!isH(f)&&!f.known&&f.alive).length;
+ box.innerHTML=shown.map(f=>{const en=[...f.met].map(i=>F[i]).filter(g=>g.alive&&gwar(f,g)).map(g=>isH(g)?g.ref.ai:g.name.replace('the ',''));const nmx=isH(f)?f.ref.ai+' · '+nm(f.ref):f.name.replace('the ','');
+  return `<div class="srow" data-fi="${f.idx}" title="Show on the galaxy map" style="--cc:rgb(${f.rgb})"><div><b>${nmx}</b> <span>${f.alive?GERA[f.gera]:'Destroyed'}${isH(f)?'':' · '+f.kind} · ${f.n} systems${inUP(f)?' · <span class="up">United Planets</span>':''}${en.length?' · at war with '+en.join(', '):''}</span></div><div class="bar"><i style="width:${f.alive?Math.min(100,f.gtech/gcost(f.gera)*100):0}%"></i></div></div>`}).join('');
+ $('#gsum').textContent=Gx.on?`${shown.filter(f=>!isH(f)).length} alien civilisations known${hidden?`, ${hidden} still undiscovered`:''}.${Gx.up?' The United Planets has '+Gx.up.m.size+' members.':''}`:'Three galaxies. Alien civilisations are hidden until a human people meets them.'}
+
+/* ---------- zoom between views ---------- */
+let lastSwitch=0;const wheelOk=()=>performance.now()-lastSwitch>450;
+function goView(v,dir){lastSwitch=performance.now();setTour(false);setView(v);const st=$('#vstage');st.classList.remove('zin','zout');void st.offsetWidth;st.classList.add(dir==='in'?'zin':'zout');
+ if(v==='earth'&&dir==='in'){setFollow(false);view.z=1;clampView()}
+ if(v==='galaxy'&&dir==='out'){gSetFol(false);gEZ=40;gSetEarth(true);const [x,y]=rp(S.gal.home);gFocus(x,y,40)}}
+function solarHit(e){const c=$('#space'),r=c.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*c.width,y=(e.clientY-r.top)/r.height*c.height;if(!c.hits)return null;
+ for(const t of c.hits){if(t.v==='sun')continue;if(t.band?Math.abs(x-t.x)<t.r:(x-t.x)**2+(y-t.y)**2<(t.r+6*dpr)**2)return t}const sn=c.hits.find(t=>t.v==='sun');return sn&&(x-sn.x)**2+(y-sn.y)**2<sn.r**2?sn:null}
+function holders(b){const B=S.bodies[b],l=civs.filter(c=>B.cnt[c.id]>0).sort((a,c)=>B.cnt[c.id]-B.cnt[a.id]).slice(0,4).map(c=>`${c.ai} ${B.cnt[c.id]} km²`);return l.length?l.join(' · '):'No one has landed yet'}
+function solarInfo(v){const L=civs.filter(c=>c.alive);
+ if(v==='earth')return['Earth',`${L.length} nations · ${fmtPop(L.reduce((a,c)=>a+c.pop,0))} people${S.un?' · United Earth':''}`,'Click to land'];
+ if(v==='sun')return['The Sun',`Humanity's energy: ${fmtE(L.reduce((a,c)=>a+(c.energy||0),0))}${L.some(c=>c.era>=13)?' · a Dyson swarm is being built':''}`,''];
+ const b={moon:0,mars:1,belt:2,outer:3}[v];return[S.bodies[b].n,holders(b),'Click to visit']}
+const spcv=$('#space');
+spcv.addEventListener('pointermove',e=>{const t=solarHit(e),tt=$('#stt');spcv.hover=t?t.v:null;spcv.style.cursor=t&&t.v!=='sun'?'pointer':'default';if(!t){tt.hidden=true;return}
+ const [a,b,c]=solarInfo(t.v);tt.textContent='';const add=(x,bo)=>{if(!x)return;const d=document.createElement('div');if(bo){const s_=document.createElement('b');s_.textContent=x;d.append(s_)}else d.textContent=x;tt.append(d)};add(a,1);add(b);add(c);
+ const r=spcv.getBoundingClientRect();let lx=e.clientX-r.left+14,ly=e.clientY-r.top+14;if(lx>r.width-250)lx-=270;if(ly>r.height-70)ly-=84;tt.style.left=lx+'px';tt.style.top=ly+'px';tt.hidden=false});
+spcv.addEventListener('pointerleave',()=>{spcv.hover=null;$('#stt').hidden=true});
+spcv.addEventListener('click',e=>{const t=solarHit(e);if(t&&t.v!=='sun'){$('#stt').hidden=true;goView(t.v,'in')}});
+spcv.addEventListener('wheel',e=>{e.preventDefault();if(!wheelOk())return;if(e.deltaY<0){const t=solarHit(e);goView(t&&t.v!=='sun'?t.v:'earth','in')}else goView('galaxy','out')},{passive:false});
+bm.addEventListener('wheel',e=>{e.preventDefault();if(wheelOk()&&e.deltaY>0)goView('solar','out')},{passive:false});
+bm.addEventListener('click',()=>goView('solar','out'));
+
+/* ---------- viewer ---------- */
+let curView='earth',tour=false,tourT=0;const VIEWS=['earth','moon','mars','belt','outer','solar','galaxy'];
+function setView(v){curView=v;const pane=['moon','mars','belt','outer'].includes(v)?'body':v;if(pane==='body'){selBody=['moon','mars','belt','outer'].indexOf(v);bm._k=null;bodyLegend()}
+ document.querySelectorAll('.vstage [data-v],.vinfo [data-v]').forEach(el=>{el.hidden=el.dataset.v!==pane});
+ document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===v)));
+ if(pane==='galaxy'){gcv._w=0;gVis=true}if(pane==='earth')resize();try{localStorage.setItem('wm-view',v)}catch(_){}}
+function randomView(){const o=['earth','earth','solar','moon','mars'];if(civs.some(c=>c.era>=12))o.push('belt','outer');o.push('galaxy');if(S.gal.on)o.push('galaxy','galaxy');let v=o[Math.random()*o.length|0];if(v===curView)v=o[Math.random()*o.length|0];setView(v);
+ if(v==='earth'){setFollow(false);const pool=S.armies.length&&Math.random()<.5?S.armies:S.cities.filter(q=>q.own>=0);if(pool.length){const q=pool[Math.random()*pool.length|0];view.z=4+Math.random()*14;view.x=q.x-W/view.z/2;view.y=q.y-H/view.z/2}else view.z=1;clampView()}
+ if(v==='galaxy'){gSetFol(false);const r=Math.random();if(r<.25)gSetEarth(true);else{gSetEarth(false);const own=S.gal.sys.filter(q=>q.own>=0&&(isH(S.gal.fac[q.own])||S.gal.fac[q.own].known)),pool=own.length?own:S.gal.sys,q=pool[Math.random()*pool.length|0],[x,y]=rp(q);gFocus(x,y,r<.5?1.5+Math.random()*3:8+Math.random()*40)}}}
+function setTour(v){tour=v;tourT=0;$('#vtour').setAttribute('aria-pressed',String(v))}
+document.querySelector('.vtabs').addEventListener('click',e=>{const b=e.target.closest('[data-view]');if(b){setTour(false);setView(b.dataset.view)}});
+$('#vrand').onclick=()=>{setTour(false);randomView()};$('#vtour').onclick=()=>setTour(!tour);
+document.addEventListener('keydown',e=>{if(e.target!==document.body||e.ctrlKey||e.metaKey||e.altKey)return;const k=+e.key;if(k>=1&&k<=7){setTour(false);setView(VIEWS[k-1])}});
+
+/* ---------- controls ---------- */
+let follow=false,camT=0,camTgt=null;
+function setFollow(v){follow=v;camTgt=null;camT=0;$('#zfol').setAttribute('aria-pressed',String(v))}
+function camUpdate(dt){if(!follow||!S)return;camT-=dt;
+ if(camT<=0||!camTgt){camT=6;let best=null,bs=-1;for(const a of S.armies){const w=a.state==='siege'?4:a.state==='battle'?3.5:0;if(w>bs){bs=w;best={x:a.x,y:a.y}}}
+  for(const p of S.pois){const w=p.w-(S.tick-p.t)*.05;if(w>bs){bs=w;best=p}}
+  if(!best&&S.cities.length)best=S.cities[Math.random()*S.cities.length|0];camTgt=best}
+ if(!camTgt)return;const k=Math.min(1,dt*1.2),cx=view.x+W/view.z/2,cy=view.y+H/view.z/2;view.z+=(5-view.z)*k;view.x=cx+(camTgt.x-cx)*k-W/view.z/2;view.y=cy+(camTgt.y-cy)*k-H/view.z/2;clampView()}
+let tps=5,running=true,acc=0,last=performance.now(),uiT=0,chT=0,power=null;
+function setRunning(v){running=v;$('#play').textContent=v?'Pause':'Play';$('#play').setAttribute('aria-pressed',String(!v))}
+function setSpeed(v){tps=v;document.querySelectorAll('[data-sp]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.sp===v)))}
+$('#play').onclick=()=>{if(S.ended)return;setRunning(!running)};
+document.querySelectorAll('[data-sp]').forEach(b=>b.onclick=()=>{setSpeed(+b.dataset.sp);if(!S.ended)setRunning(true)});
+document.querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>{nextNC=+b.dataset.n;newWorld();setRunning(true);ui();drawChart()});
+$('#new').onclick=$('#again').onclick=()=>{newWorld();setRunning(true);ui();drawChart()};
+$('#close').onclick=()=>{$('#over').hidden=true};
+$('#zfol').onclick=()=>setFollow(!follow);
+$('#zfs').onclick=()=>{const el=$('#mapwrap'),no=()=>{$('#hint').textContent='Full screen is not available here.'};try{if(document.fullscreenElement)document.exitFullscreen();else if(el.requestFullscreen){const pr=el.requestFullscreen();if(pr&&pr.catch)pr.catch(no)}else no()}catch(_){no()}};
+document.addEventListener('fullscreenchange',()=>{$('#zfs').textContent=document.fullscreenElement?'Exit full screen':'Full screen';resize()});
+$('#zin').onclick=()=>{setFollow(false);zoomAt(1.6,view.x+W/view.z/2,view.y+H/view.z/2)};
+$('#zout').onclick=()=>{setFollow(false);if(view.z<=1.001){goView('solar','out');return}zoomAt(1/1.6,view.x+W/view.z/2,view.y+H/view.z/2)};
+$('#zfit').onclick=()=>{setFollow(false);view.z=1;clampView()};
+const HINTS={meteor:'Click anywhere to drop a meteor.',plague:'Click a territory to curse it with plague.',bless:'Click a territory to bless it with a golden age.',quake:'Click a territory to shake its cities.',raise:'Click the sea to raise a new island.',flood:'Click land to drown it under the sea.',fertile:'Click land to make it green and fertile.',revolt:'Click inside a nation to start a revolt in its nearest city.'};
+document.querySelectorAll('[data-pw]').forEach(b=>b.onclick=()=>{power=power===b.dataset.pw?null:b.dataset.pw;document.querySelectorAll('[data-pw]').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.pw===power)));
+ $('#hint').textContent=power?HINTS[power]:'Pick a power, then click the map.'});
+$('#peace').onclick=()=>{let any=false;for(const a of alive())for(const b of alive()){if(a.id>=b.id||!S.contact[a.id][b.id])continue;any=true;a.att[b.id]=Math.min(100,a.att[b.id]+40);b.att[a.id]=Math.min(100,b.att[a.id]+40);if(S.war[a.id][b.id])setWar(a,b,false)}
+ if(!any){$('#hint').textContent='No peoples have met yet. There is no one to make peace between.';return}
+ log(-1,'A strange calm falls over the world. Soldiers lay down their weapons and envoys ride out with gifts.','big');for(const c of civs)think(c,true);ui()};
+document.addEventListener('keydown',e=>{if(e.code==='Space'&&e.target===document.body){e.preventDefault();$('#play').click()}});
+function tileXY(e){const r=cv.getBoundingClientRect();return[view.x+(e.clientX-r.left)/r.width*W/view.z,view.y+(e.clientY-r.top)/r.height*H/view.z]}
+function tileAt(e){const[x,y]=tileXY(e).map(Math.floor);return x>=0&&y>=0&&x<W&&y<H?y*W+x:-1}
+let drag=null;
+cv.addEventListener('wheel',e=>{e.preventDefault();if(e.deltaY>0&&view.z<=1.001){if(wheelOk())goView('solar','out');return}setFollow(false);const[tx,ty]=tileXY(e);zoomAt(e.deltaY<0?1.25:.8,tx,ty)},{passive:false});
+cv.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,vx:view.x,vy:view.y,moved:false};try{cv.setPointerCapture(e.pointerId)}catch(_){}});
+cv.addEventListener('pointermove',e=>{
+ if(drag){const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.hypot(dx,dy)>5)drag.moved=true;
+  if(drag.moved&&view.z>1){if(follow)setFollow(false);const r=cv.getBoundingClientRect();view.x=drag.vx-dx/r.width*W/view.z;view.y=drag.vy-dy/r.height*H/view.z;clampView();$('#tip').hidden=true;return}}
+ const i=tileAt(e),tip=$('#tip');if(i<0){tip.hidden=true;return}
+ const o=owner[i],ci=cityIdx[i];tip.textContent='';const add=(t,b)=>{if(!t)return;const d=document.createElement('div');if(b){const s=document.createElement('b');s.textContent=t;d.append(s)}else d.textContent=t;tip.append(d)};
+ if(ci>=0){const q=S.cities[ci];add(q.name+(q.cap?' (capital)':''),true);if(q.own>=0)add(`Founded ${fmtYear(q.born)} · about ${fmtPop(cityPop(q))} people · ${STYLE[civs[q.own].era]} style`)}
+ add(TI[terr[i]][0]+(river[i]&&isLand(terr[i])?' with river':'')+(isLand(terr[i])?` · food ${food(i)}`:''),ci<0);
+ add(o>=0?`Held by ${civs[o].people} (${civs[o].ai})`:isLand(terr[i])?'Unclaimed':'');
+ const r=$('#mapwrap').getBoundingClientRect();let lx=e.clientX-r.left+14,ly=e.clientY-r.top+14;if(lx>r.width-220)lx-=248;if(ly>r.height-70)ly-=84;tip.style.left=lx+'px';tip.style.top=ly+'px';tip.hidden=false});
+cv.addEventListener('pointerup',e=>{const d=drag;drag=null;if(d&&!d.moved)clickMap(e)});
+cv.addEventListener('pointercancel',()=>{drag=null});
+cv.addEventListener('pointerleave',()=>{$('#tip').hidden=true});
+function terra(x,y,rad,fn){const r=Math.ceil(rad);for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=W||yy>=H)continue;const d=Math.hypot(dx,dy);if(d<=rad)fn(yy*W+xx,d)}}
+function wipe(x,y,rad){const gone=S.cities.filter(q=>Math.hypot(q.x-x,q.y-y)<=rad);S.cities=S.cities.filter(q=>!gone.includes(q));
+ for(const g of gone)if(g.cap&&g.own>=0){const nc=S.cities.find(q=>q.own===g.own);if(nc)nc.cap=true}return gone}
+function clickMap(e){const i=tileAt(e);if(i<0||!power||S.ended)return;const x=i%W,y=i/W|0,o=owner[i];
+ if(power==='meteor'){const hit=new Set();
+  for(let dy=-10;dy<=10;dy++)for(let dx=-10;dx<=7;dx++){const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=W||yy>=H)continue;const d=Math.hypot(dx,dy);if(d>10)continue;const j=yy*W+xx;
+   if(owner[j]>=0)hit.add(owner[j]);if(isLand(terr[j])&&d<=7.6){terr[j]=T.ASH;paintBase(j);if(d<=5.5)owner[j]=-1}}
+  const gone=wipe(x,y,6.2);
+  hit.forEach(id=>civs[id].pop*=.88);S.fx.push({x,y,t:0,life:1.6,r:7,col:'255,200,120'});
+  poi(x,y,5);log(-1,`A meteor falls from the sky${terr[i]<=1?' into the sea, and a great wave strikes the coasts':''}.${gone.length?' '+gone.map(q=>q.name).join(', ')+' '+(gone.length>1?'are':'is')+' wiped from the map.':''}`,'war');scan()}
+ else if(power==='raise'){let n=0;terra(x,y,14,(j,d)=>{if(terr[j]===T.DEEP&&d>10){terr[j]=T.SHAL;depth[j]=.3;paintBase(j)}if(d<=10&&terr[j]<=1){terr[j]=d>8.3?T.SAND:T.GRASS;river[j]=0;paintBase(j);n++}});
+  if(!n){$('#hint').textContent='Raise land works on the sea. Click some water.';return}S.fx.push({x,y,t:0,life:1.4,r:5,col:'140,230,150'});log(-1,'The sea boils and a new island rises from the waves.','big');scan()}
+ else if(power==='flood'){let n=0;const hit=new Set();terra(x,y,10,(j)=>{if(isLand(terr[j])||terr[j]===T.ICE){if(owner[j]>=0)hit.add(owner[j]);terr[j]=T.SHAL;depth[j]=.2;river[j]=0;owner[j]=-1;paintBase(j);n++}});
+  if(!n){$('#hint').textContent='Flood works on land. Click somewhere dry.';return}const gone=wipe(x,y,10);hit.forEach(id=>civs[id].pop*=.92);S.fx.push({x,y,t:0,life:1.4,r:5,col:'120,190,255'});
+  log(-1,`The sea rushes in and swallows the land.${gone.length?' '+gone.map(q=>q.name).join(', ')+' sink'+(gone.length>1?'':'s')+' beneath the waves.':''}`,'war');scan()}
+ else if(power==='fertile'){let n=0;terra(x,y,10,(j)=>{if(isLand(terr[j])&&terr[j]!==T.GRASS){terr[j]=T.GRASS;paintBase(j);n++}});
+  if(!n){$('#hint').textContent='Fertile land works on dry ground that is not already grassland.';return}S.fx.push({x,y,t:0,life:1.4,r:4,col:'150,240,120'});log(-1,'Rains fall on barren ground and it blooms into rich grassland.','big')}
+ else if(o<0){$('#hint').textContent='Click inside a territory for that power.';return}
+ else if(power==='revolt'){if(civs.length>=CAP){$('#hint').textContent=`The world already has ${CAP} nations.`;return}if(!rebel(civs[o],{x,y}))$('#hint').textContent='That nation has no city besides its capital to revolt.'}
+ else if(power==='plague')plague(civs[o],true);
+ else if(power==='quake')quake(civs[o],true);
+ else{const c=civs[o];c.golden=30;c.tech+=ERAS[c.era].cost*.1;log(o,`Light falls on ${c.people}. Their harvests swell and their thinkers find new ideas.`,'big')}
+ ui()}
+
+function loop(now){const dt=Math.min(.1,(now-last)/1000);last=now;
+ if(running&&!S.ended){acc+=dt*tps;let n=0;while(acc>=1&&n<6){tick();acc--;n++}if(n>=6)acc=0}
+ if(tour){tourT-=dt;if(tourT<=0){tourT=12;randomView()}}
+ camUpdate(dt);render(dt);uiT+=dt;chT+=dt;if(uiT>.15){uiT=0;ui()}if(chT>.5){chT=0;drawChart();spaceUI();bodyLegend();galUI()}drawSpace(now/1000);drawBody(now/1000);drawGalaxy(now/1000,dt);
+ requestAnimationFrame(loop)}
+newWorld();setSpeed(5);let v0='earth';try{v0=localStorage.getItem('wm-view')||'earth'}catch(_){}setView(VIEWS.includes(v0)?v0:'earth');resize();ui();requestAnimationFrame(loop);
+})();
+</script>
+
+</body></html>

@@ -834,6 +834,13 @@ html,html,body{height:100%}body{min-height:100%;background:var(--bg);color:var(-
   </div>
   <iframe id="fl-frame" title="Frontline Warzone" style="width:100%;height:calc(100% - 41px);border:0;display:block;background:#000;" allow="autoplay; fullscreen; pointer-lock"></iframe>
 </div>
+<div id="page-worldminds" style="display:none;position:fixed;inset:0;z-index:99600;background:#0a0f17;">
+  <div style="display:flex;align-items:center;gap:12px;padding:8px 14px;background:#0a0f17;border-bottom:2px solid #22314a;">
+    <button onclick="closeWorldMinds()" style="background:#101824;color:#e2c06c;border:1px solid #22314a;border-radius:6px;padding:6px 14px;cursor:pointer;font-family:inherit;font-size:13px;">← Back to Test</button>
+    <span style="color:#e2c06c;letter-spacing:2px;font-weight:700;">🌍 WORLD MINDS</span>
+  </div>
+  <iframe id="wm-frame" title="World Minds" style="width:100%;height:calc(100% - 41px);border:0;display:block;background:#0a0f17;" allow="autoplay; fullscreen"></iframe>
+</div>
 <div id="page-arenatest" style="display:none;position:fixed;inset:0;z-index:99600;background:radial-gradient(900px 500px at 50% 0%,#1c2630,#0a0d10);color:#d8e0e8;font-family:inherit;align-items:center;justify-content:center;">
   <button onclick="closeArenaTest()" style="position:fixed;top:14px;left:14px;background:#141a20;color:#c8d4e0;border:1px solid #2c3a48;border-radius:6px;padding:6px 14px;cursor:pointer;font-family:inherit;font-size:13px;">← Back to Arena</button>
   <div id="at-lock" style="width:min(340px,90vw);text-align:center;background:rgba(255,255,255,.04);border:1px solid #2c3a48;border-radius:14px;padding:26px 22px;">
@@ -853,6 +860,12 @@ html,html,body{height:100%}body{min-height:100%;background:var(--bg);color:var(-
       <span style="font-weight:900;letter-spacing:.15em;color:#f2c14e;">▶ PLAY</span>
     </button>
     <div id="at-vote-frontline" style="margin:8px 0 0;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);"></div>
+    <button onclick="openWorldMinds()" style="width:100%;margin-top:14px;text-align:left;display:flex;gap:14px;align-items:center;padding:16px 18px;border-radius:12px;border:1px solid rgba(226,192,108,.45);background:linear-gradient(135deg,#0a0f17,#152030);color:#e3e9f2;cursor:pointer;font-family:inherit;">
+      <span style="font-size:30px;">🌍</span>
+      <span style="flex:1;"><b style="display:block;font-size:17px;letter-spacing:.12em;color:#e2c06c;">WORLD MINDS</b><span style="font-size:13px;opacity:.8;">AI civilisation sim · from the Stone Age to the stars, wars, rebellions, aliens and three galaxies</span></span>
+      <span style="font-weight:900;letter-spacing:.15em;color:#e2c06c;">▶ PLAY</span>
+    </button>
+    <div id="at-vote-worldminds" style="margin:8px 0 0;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);"></div>
   </div>
 </div>
 <div id="page-nightshift" style="display:none;position:fixed;inset:0;z-index:99600;background:#050506;">
@@ -12892,6 +12905,13 @@ function _aresUpdateArenaButton(){
       <div class="ac-desc">Voted into the Arena by the testers.</div>
       <div class="ac-play">▶ PLAY</div>
     </button>
+    <button class="arena-card" id="arena-promoted-worldminds" onclick="openWorldMinds()" style="display:none;--c1:#0a0f17;--c2:#152030;--rgb:226,192,108;">
+      <div class="ac-emoji">🌍</div>
+      <div class="ac-name">WORLD MINDS</div>
+      <div class="ac-tag">COMMUNITY PICK</div>
+      <div class="ac-desc">Voted into the Arena by the testers.</div>
+      <div class="ac-play">▶ PLAY</div>
+    </button>
     <button class="arena-card" onclick="snakeOpen()" style="--c1:#06240f;--c2:#0b3d1a;--rgb:80,220,120;">
       <div class="ac-emoji">🐍</div>
       <div class="ac-name">SNAKE</div>
@@ -14312,8 +14332,24 @@ function closeFrontline(){
   try{ document.exitPointerLock&&document.exitPointerLock(); }catch(e){}
   var t=document.getElementById('page-arenatest'); if(t){ t.style.display='flex'; } else { try{ var hub=document.getElementById('arena-hub'); if(hub)hub.style.display='flex'; }catch(e){} }
 }
+function openWorldMinds(){
+  if(_arenaGameBlocked())return; var page=document.getElementById('page-worldminds'); if(!page)return;
+  if(!_gamePromoted('worldminds')){ var ok=_testOk(); if(!ok){ openArenaTest(); return; } }
+  try{ var t=document.getElementById('page-arenatest'); if(t)t.style.display='none'; }catch(e){}
+  try{ var hub=document.getElementById('arena-hub'); if(hub)hub.style.display='none'; }catch(e){}
+  if(page.parentNode!==document.body)document.body.appendChild(page);
+  page.style.cssText='display:block !important;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:2147483647;background:#0a0f17;';
+  var f=document.getElementById('wm-frame'); if((f.getAttribute('src')||'').indexOf('worldminds')<0)f.src='/games/worldminds.html';
+  setTimeout(function(){try{f.focus()}catch(e){}},300);
+}
+function closeWorldMinds(){
+  var page=document.getElementById('page-worldminds'); if(page)page.style.display='none';
+  var f=document.getElementById('wm-frame'); if(f)f.src='about:blank';
+  var t=document.getElementById('page-arenatest'); if(t){ t.style.display='flex'; } else { try{ var hub=document.getElementById('arena-hub'); if(hub)hub.style.display='flex'; }catch(e){} }
+}
+window.openWorldMinds=openWorldMinds;window.closeWorldMinds=closeWorldMinds;
 var _AT_HASH='dd49477b0b970dde26d58606384cfedd0dc5740b719bffc06442e7d949849deb';
-var TEST_GAMES=[{id:'frontline',name:'Frontline Warzone'}];
+var TEST_GAMES=[{id:'frontline',name:'Frontline Warzone'},{id:'worldminds',name:'World Minds'}];
 var TEST_PROMOTE_AT=5; // net 👍 minus 👎 (one vote per account) needed to join the Arena hub
 function _testTally(id){ var up=0,down=0; try{ var a=getAccounts(); for(var u in a){ var x=a[u]; var v=x&&x.testVotes&&x.testVotes[id]; if(v===1)up++; else if(v===-1)down++; } }catch(e){} return {up:up,down:down,net:up-down}; }
 function _gamePromoted(id){ return _testTally(id).net>=TEST_PROMOTE_AT; }
