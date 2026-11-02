@@ -81,6 +81,23 @@ html,html,body{height:100%}body{min-height:100%;background:var(--bg);color:var(-
 .class-stat{background:rgba(255,255,255,.04);border-radius:10px;padding:.65rem 1rem;text-align:center;}
 .class-stat-num{font-family:Georgia,serif;font-size:1.5rem;font-weight:300;color:#eef4f8;}
 .class-stat-label{font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.08em;}
+/* ── Auth screen polish ── */
+#auth-card{box-shadow:0 24px 70px rgba(0,0,0,.6),0 0 0 1px rgba(124,58,237,.28),0 0 90px rgba(124,58,237,.14);animation:authIn .35s ease-out;max-height:calc(100vh - 24px);overflow-y:auto}
+@keyframes authIn{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:none}}
+#auth-card .ares-logo{font-size:46px!important;font-weight:700;letter-spacing:.01em;background:linear-gradient(135deg,#4ade80 10%,#a78bfa 90%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+#auth-card .auth-input{transition:border-color .15s,box-shadow .15s}
+#auth-card .auth-input:focus{border-color:#8b5cf6;box-shadow:0 0 0 3px rgba(139,92,246,.25);outline:none}
+#auth-card .auth-btn{transition:transform .12s,box-shadow .15s,filter .15s;box-shadow:0 6px 20px rgba(124,58,237,.35)}
+#auth-card .auth-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 10px 26px rgba(124,58,237,.5)}
+#auth-card .auth-btn:active:not(:disabled){transform:translateY(0)}
+#auth-card .auth-btn:disabled{opacity:.8;cursor:wait}
+#auth-card .auth-btn:disabled::after{content:'';display:inline-block;width:13px;height:13px;margin-left:9px;vertical-align:-2px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:authSpin .7s linear infinite}
+@keyframes authSpin{to{transform:rotate(360deg)}}
+#auth-card .auth-type-btn{white-space:nowrap;font-size:12.5px}
+#auth-card .auth-hint.ok{color:#4ade80}#auth-card .auth-hint.bad{color:#f87171}
+#auth-card .auth-error.show{animation:authShake .35s}
+@keyframes authShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+@media (max-width:420px){#auth-card{padding:22px 18px}#auth-card .ares-logo{font-size:40px!important}}
 </style>
 <script>
 // ─── Global safety net ───────────────────────────────────────────────────
@@ -101,6 +118,7 @@ html,html,body{height:100%}body{min-height:100%;background:var(--bg);color:var(-
         + 'border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:14px;'
         + 'box-shadow:0 8px 30px rgba(0,0,0,0.5);font-family:sans-serif;max-width:92vw;';
       el.innerHTML = '<span style="color:#fff;font-size:13px;">⚠️ Something went wrong loading that.</span>'
+        + '<span id="ares-crash-detail" style="color:rgba(255,255,255,0.45);font-size:11px;max-width:40vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>'
         + '<button onclick="location.reload()" style="background:#ff7a3d;color:#1a0f0a;border:none;'
         + 'border-radius:8px;padding:8px 16px;font-weight:700;font-size:13px;cursor:pointer;">Reload</button>'
         + '<button onclick="this.parentElement.remove()" style="background:none;border:none;'
@@ -108,14 +126,18 @@ html,html,body{height:100%}body{min-height:100%;background:var(--bg);color:var(-
       document.body.appendChild(el);
     } catch(e) {}
   }
-  window.addEventListener('error', function(e){
+  var lastDetail='';
+  window.addEventListener('error', function(e){ try{ lastDetail=(e&&e.message?e.message:'')+(e&&e.filename?'':''); var b=document.getElementById('ares-crash-detail'); if(b)b.textContent=lastDetail.slice(0,160); }catch(_){}
     // Ignore noise from third-party embeds (games run in their own sandboxed iframe —
     // an error inside one of those shouldn't alarm the parent page or the user).
     if (e && e.target && e.target.tagName === 'IFRAME') return;
     showRecoveryBanner();
+    try{ var d0=document.getElementById('ares-crash-detail'); if(d0)d0.textContent=lastDetail.slice(0,160); }catch(_){}
   });
-  window.addEventListener('unhandledrejection', function(){
+  window.addEventListener('unhandledrejection', function(ev){
+    try{ var r=ev&&ev.reason; lastDetail=String((r&&r.message)||r||'').slice(0,160); }catch(_){}
     showRecoveryBanner();
+    try{ var d=document.getElementById('ares-crash-detail'); if(d)d.textContent=lastDetail; }catch(_){}
   });
 })();
 
@@ -280,13 +302,13 @@ html,html,body{height:100%}body{min-height:100%;background:var(--bg);color:var(-
     <div id="auth-login-form">
       <div class="auth-field">
         <label class="auth-label">Username</label>
-        <input class="auth-input" id="login-user" type="text" placeholder="Enter username" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()"/>
+        <input class="auth-input" id="login-user" type="text" placeholder="Enter username" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()"/>
       </div>
       <div class="auth-field">
         <label class="auth-label">Password</label>
         <div class="auth-pw-wrap">
           <input class="auth-input" id="login-pass" type="password" placeholder="Enter password" autocomplete="current-password" onkeydown="if(event.key==='Enter')authLogin()"/>
-          <button class="auth-eye" onclick="authTogglePw('login-pass',this)">👁</button>
+          <button type="button" class="auth-eye" aria-label="Show or hide password" onclick="authTogglePw('login-pass',this)">👁</button>
         </div>
       </div>
       <div class="auth-error" id="login-error"></div>
@@ -349,21 +371,21 @@ html,html,body{height:100%}body{min-height:100%;background:var(--bg);color:var(-
         <label class="auth-label">Account Type</label>
         <div class="auth-type-toggle">
           <button class="auth-type-btn active" id="type-student" onclick="setAccountType('child')">🎓 Student</button>
-          <button class="auth-type-btn" id="type-teacher" onclick="setAccountType('teacher')">🍎 Teacher (request)</button>
+          <button class="auth-type-btn" id="type-teacher" onclick="setAccountType('teacher')">🍎 Teacher</button>
           <button class="auth-type-btn" id="type-parent" onclick="setAccountType('parent')">👨‍👩‍👧 Parent</button>
         </div>
         <div class="auth-hint" id="auth-type-hint">Can study, earn XP and be linked to up to 2 parents.</div>
       </div>
       <div class="auth-field">
         <label class="auth-label">Username</label>
-        <input class="auth-input" id="signup-user" type="text" placeholder="Choose a username" maxlength="20" autocomplete="username"/>
-        <div class="auth-hint">3–20 characters, letters and numbers only</div>
+        <input class="auth-input" id="signup-user" type="text" placeholder="Choose a username" maxlength="20" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next" oninput="authCheckUsername(this.value)" onkeydown="if(event.key==='Enter')document.getElementById('signup-pass').focus()"/>
+        <div class="auth-hint" id="signup-user-hint">3–20 characters: letters, numbers, _ or @</div>
       </div>
       <div class="auth-field">
         <label class="auth-label">Password</label>
         <div class="auth-pw-wrap">
-          <input class="auth-input" id="signup-pass" type="password" placeholder="Choose a password" autocomplete="new-password" oninput="authCheckStrength(this.value)"/>
-          <button class="auth-eye" onclick="authTogglePw('signup-pass',this)">👁</button>
+          <input class="auth-input" id="signup-pass" type="password" placeholder="Choose a password" autocomplete="new-password" oninput="authCheckStrength(this.value);authCheckConfirm()"/>
+          <button type="button" class="auth-eye" aria-label="Show or hide password" onclick="authTogglePw('signup-pass',this)">👁</button>
         </div>
         <div class="auth-strength-bar"><div id="auth-strength-fill"></div></div>
         <div class="auth-hint" id="auth-strength-label">Password strength</div>
@@ -371,10 +393,11 @@ html,html,body{height:100%}body{min-height:100%;background:var(--bg);color:var(-
       <div class="auth-field">
         <label class="auth-label">Confirm Password</label>
         <div class="auth-pw-wrap">
-          <input class="auth-input" id="signup-confirm" type="password" placeholder="Repeat password" autocomplete="new-password" onkeydown="if(event.key==='Enter')authSignup()"/>
-          <button class="auth-eye" onclick="authTogglePw('signup-confirm',this)">👁</button>
+          <input class="auth-input" id="signup-confirm" type="password" placeholder="Repeat password" autocomplete="new-password" oninput="authCheckConfirm()" onkeydown="if(event.key==='Enter')authSignup()"/>
+          <button type="button" class="auth-eye" aria-label="Show or hide password" onclick="authTogglePw('signup-confirm',this)">👁</button>
         </div>
       </div>
+      <div class="auth-hint" id="signup-confirm-hint" style="min-height:16px;margin:2px 0 10px;"></div>
       <div class="auth-error" id="signup-error"></div>
       <button class="auth-btn" onclick="authSignup()">Create Account →</button>
       <div class="auth-note">Already have an account? <a onclick="authShowLogin()" style="color:#A78BFA;cursor:pointer;">Log in</a></div>
@@ -1480,6 +1503,10 @@ function renderQuiz(){
           border:1px solid rgba(245,158,11,0.15);">
           🔒 Pro
         </button>`}
+    ${(typeof _srsDueCount==='function'&&_srsDueCount()>0)?`<button onclick="startDailyReview()"
+      style="flex-basis:100%;padding:8px;border-radius:9px;cursor:pointer;font-size:12px;font-weight:800;font-family:inherit;
+      background:rgba(34,197,94,0.12);color:#4ADE80;border:1px solid rgba(34,197,94,0.4);">
+      🧠 Daily Review — ${_srsDueCount()} card${_srsDueCount()===1?'':'s'} due (all subjects)</button>`:''}
   </div>`;
 
   if (mode === 'pro') {
@@ -1585,6 +1612,8 @@ function renderStandardQuiz(modeBar){
         <div class="score-pill pill-red">${shuffledQuiz.length-quizScore} incorrect</div>
         <div class="score-pill ${pillClass}">${pct}%</div>
       </div>
+      ${(shuffledQuiz.length-quizScore)>0?`<div style="font-size:12px;color:rgba(255,255,255,0.55);margin:6px 0 10px;">🧠 Your ${shuffledQuiz.length-quizScore} mistake${shuffledQuiz.length-quizScore===1?'':'s'} ${shuffledQuiz.length-quizScore===1?'is':'are'} saved for spaced review.</div>`:''}
+      ${(typeof _srsDueCount==='function'&&_srsDueCount()>0)?`<button onclick="startDailyReview()" style="display:block;width:100%;max-width:260px;margin:0 auto 10px;padding:10px;border-radius:10px;cursor:pointer;font-weight:800;font-family:inherit;background:rgba(34,197,94,0.12);color:#4ADE80;border:1px solid rgba(34,197,94,0.4);">🧠 Daily Review — ${_srsDueCount()} due</button>`:''}
       <button class="quiz-restart ${restartClass}" onclick="restartQuiz()">↺ Try Again</button>
       <button onclick="showHome()" style="display:block;width:100%;max-width:260px;
         margin:10px auto 0;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);
@@ -1696,23 +1725,58 @@ function speedAnswer(idx){
   setTimeout(()=>renderSpeedQuiz(document.querySelector('.quiz-mode-bar-html')||''),800);
 }
 
+// ── Spaced repetition (Leitner boxes) for flashcards ─────────────────
+var SRS_DAYS=[0,1,3,7,14,30,60];
+function _srsLoad(){ try{ return JSON.parse(localStorage.getItem('ares_srs')||'{}'); }catch(e){ return {}; } }
+function _srsSave(d){ try{ localStorage.setItem('ares_srs',JSON.stringify(d)); }catch(e){} }
+function _srsDay(){ return Math.floor(Date.now()/864e5); }
+function _srsId(q){ var s=String(q.q),h=5381; for(var i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0; return 'c'+(h>>>0).toString(36); }
+// Due cards first (most overdue first), then brand-new cards, then not-yet-due; capped at 20 for a focused session
+function _srsDeck(cards){
+  var d=_srsLoad(),t=_srsDay();
+  var arr=cards.map(function(c){c._seenAgain=0;var e=d[_srsId(c)];var pr=!e?1:(e.due<=t?0:2);return {c:c,pr:pr,due:e?e.due:t,r:Math.random()}});
+  arr.sort(function(x,y){return x.pr-y.pr||(x.pr===0?x.due-y.due:0)||(x.pr===2?x.due-y.due:0)||x.r-y.r});
+  var due=arr.filter(function(x){return x.pr===0}).length,nw=arr.filter(function(x){return x.pr===1}).length;
+  return {cards:arr.slice(0,20).map(function(x){return x.c}),due:due,nw:nw,total:cards.length};
+}
+function _srsRate(card,grade){ // grade: 0 again, 1 hard, 2 good, 3 easy
+  var d=_srsLoad(),id=_srsId(card),e=d[id]||{box:0,n:0},t=_srsDay();
+  e.box=grade===0?0:grade===1?Math.max(1,e.box):Math.min(SRS_DAYS.length-1,e.box+(grade===3?2:1));
+  e.due=t+(grade===0?0:Math.max(1,SRS_DAYS[e.box])); e.n=(e.n||0)+1; e.q=String(card.q).slice(0,400); e.a=String(card.opts[card.ans]).slice(0,300); e.x=String(card.exp||'').slice(0,300); e.last=t; d[id]=e; _srsSave(d); return e;
+}
+// Daily Review: every due card from every subject in one flashcard round (needs card text stored in the SRS entry)
+function startDailyReview(){
+  var d=_srsLoad(),t=_srsDay(),cards=[];
+  for(var k in d){var e=d[k];if(e.due<=t&&e.q&&e.a)cards.push({q:e.q,opts:[e.a,'—'],ans:0,exp:e.x||''})}
+  if(!cards.length){ if(typeof showXpPop==='function')showXpPop('🧠 Nothing due — nice work!'); return; }
+  shuffledQuiz=cards; window.quizMode='flashcard'; window._fcSrc=null; renderQuiz();
+}
+window.startDailyReview=startDailyReview;
+function _srsDueCount(){ var d=_srsLoad(),t=_srsDay(),n=0; for(var k in d)if(d[k].due<=t&&d[k].q)n++; return n; }
+window._srsDueCount=_srsDueCount;
 function renderFlashcardQuiz(modeBar){
-  const cards = shuffledQuiz;
+  if(window._fcSrc!==shuffledQuiz){ window._fcSrc=shuffledQuiz; window._fcIdx=0; window._fcScore=0; window._fcDeck=null; window._fcAgain=0; }
+  if(!window._fcDeck){ window._fcDeck=_srsDeck(shuffledQuiz); window._fcAgain=0; }
+  const deckInfo=window._fcDeck, cards = deckInfo.cards;
   let ci = window._fcIdx || 0;
   let correct = window._fcScore || 0;
-  let revealed = false;
 
   if(ci >= cards.length){
-    const pct = Math.round((correct/cards.length)*100);
+    const pct = cards.length?Math.round((correct/cards.length)*100):0;
+    const d=_srsLoad(),t=_srsDay(); let tom=0,wk=0; for(var k in d){ if(d[k].due===t+1)tom++; if(d[k].due>t&&d[k].due<=t+7)wk++; }
     document.getElementById('tab-quiz').innerHTML = modeBar + `
       <div style="text-align:center;padding:2rem 1rem;">
         <div style="font-size:2rem;margin-bottom:.5rem;">🃏</div>
         <div style="font-size:1.3rem;font-weight:800;color:#fff;margin-bottom:.25rem;">Flashcard Round Done!</div>
-        <div style="font-size:14px;color:#A78BFA;margin-bottom:1rem;">${correct}/${cards.length} you knew · ${pct}%</div>
-        <button onclick="window._fcIdx=0;window._fcScore=0;setQuizMode('flashcard')"
+        <div style="font-size:14px;color:#A78BFA;margin-bottom:.6rem;">${correct}/${cards.length} you knew first time · ${pct}%</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.55);line-height:1.7;margin-bottom:1rem;">
+          🧠 Spaced repetition is on — cards you struggle with come back sooner.<br>
+          📅 Due tomorrow: <b style="color:#fff;">${tom}</b> · Due this week: <b style="color:#fff;">${wk}</b>
+        </div>
+        <button onclick="window._fcIdx=0;window._fcScore=0;window._fcDeck=null;setQuizMode('flashcard')"
           style="background:#7C3AED;color:#fff;border:none;border-radius:10px;
           padding:10px 28px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">
-          🔄 Try Again
+          🔄 Next Round
         </button>
       </div>`;
     awardXP(10, null, 'flashcard');
@@ -1720,9 +1784,12 @@ function renderFlashcardQuiz(modeBar){
   }
 
   const q = cards[ci];
+  const e0=_srsLoad()[_srsId(q)];
+  const tag=!e0?'🆕 New':('📦 Box '+(e0.box+1)+'/'+SRS_DAYS.length);
+  const sub=ci===0?` · ${deckInfo.due} due · ${deckInfo.nw} new`:'';
   document.getElementById('tab-quiz').innerHTML = modeBar + `
-    <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:8px;">
-      Card ${ci+1} of ${cards.length} · ${correct} known
+    <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:8px;display:flex;justify-content:space-between;">
+      <span>Card ${ci+1} of ${cards.length} · ${correct} known${sub}</span><span>${tag}</span>
     </div>
     <div id="fc-card" onclick="revealFC()" style="background:rgba(124,58,237,0.1);
       border:1.5px solid rgba(124,58,237,0.35);border-radius:14px;
@@ -1731,22 +1798,18 @@ function renderFlashcardQuiz(modeBar){
       text-align:center;margin-bottom:12px;transition:all .2s;">
       <div id="fc-question" style="font-size:14px;font-weight:600;color:#fff;line-height:1.5;">
         ${q.q}
-        <div style="margin-top:10px;font-size:11px;color:rgba(255,255,255,0.3);">tap to reveal answer</div>
+        <div style="margin-top:10px;font-size:11px;color:rgba(255,255,255,0.3);">think of your answer, then tap to reveal</div>
       </div>
       <div id="fc-answer" style="display:none;font-size:13px;color:#A78BFA;line-height:1.5;">
         ${q.opts[q.ans]}<br>
         <span style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:6px;display:block;">${q.exp||''}</span>
       </div>
     </div>
-    <div id="fc-actions" style="display:none;gap:10px;display:none;">
-      <button onclick="fcMark(false)"
-        style="flex:1;background:rgba(239,68,68,0.12);border:1.5px solid rgba(239,68,68,0.35);
-        color:#F87171;border-radius:10px;padding:10px;font-size:13px;font-weight:700;
-        cursor:pointer;font-family:inherit;">✗ Didn't know</button>
-      <button onclick="fcMark(true)"
-        style="flex:1;background:rgba(34,197,94,0.12);border:1.5px solid rgba(34,197,94,0.35);
-        color:#4ADE80;border-radius:10px;padding:10px;font-size:13px;font-weight:700;
-        cursor:pointer;font-family:inherit;">✓ Got it!</button>
+    <div id="fc-actions" style="display:none;gap:8px;">
+      <button onclick="fcMark(0)" style="flex:1;background:rgba(239,68,68,0.12);border:1.5px solid rgba(239,68,68,0.35);color:#F87171;border-radius:10px;padding:10px 4px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">✗ Again<br><span style="font-size:10px;opacity:.7;">now</span></button>
+      <button onclick="fcMark(1)" style="flex:1;background:rgba(245,158,11,0.12);border:1.5px solid rgba(245,158,11,0.35);color:#FBBF24;border-radius:10px;padding:10px 4px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">😬 Hard<br><span style="font-size:10px;opacity:.7;">${Math.max(1,SRS_DAYS[Math.max(1,e0?e0.box:0)])}d</span></button>
+      <button onclick="fcMark(2)" style="flex:1;background:rgba(34,197,94,0.12);border:1.5px solid rgba(34,197,94,0.35);color:#4ADE80;border-radius:10px;padding:10px 4px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">✓ Good<br><span style="font-size:10px;opacity:.7;">${Math.max(1,SRS_DAYS[Math.min(SRS_DAYS.length-1,(e0?e0.box:0)+1)])}d</span></button>
+      <button onclick="fcMark(3)" style="flex:1;background:rgba(59,130,246,0.12);border:1.5px solid rgba(59,130,246,0.35);color:#60A5FA;border-radius:10px;padding:10px 4px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">⚡ Easy<br><span style="font-size:10px;opacity:.7;">${Math.max(1,SRS_DAYS[Math.min(SRS_DAYS.length-1,(e0?e0.box:0)+2)])}d</span></button>
     </div>`;
 }
 
@@ -1761,10 +1824,16 @@ function revealFC(){
   if(card){ card.style.background='rgba(124,58,237,0.18)'; card.onclick=null; }
 }
 
-function fcMark(knew){
-  if(knew){ window._fcScore=(window._fcScore||0)+1; awardXP(5,null,'correct'); }
+function fcMark(grade){
+  if(grade===true)grade=2; if(grade===false)grade=0; // backwards compat
+  var deck=window._fcDeck; if(!deck)return;
+  var card=deck.cards[window._fcIdx||0]; if(!card)return;
+  var firstTime=!(card._seenAgain);
+  _srsRate(card,grade);
+  if(grade===0){ // see it again at the end of this round (max once per card)
+    if(!card._seenAgain){ card._seenAgain=1; deck.cards.push(card); }
+  } else if(firstTime){ window._fcScore=(window._fcScore||0)+1; awardXP(grade===3?6:5,null,'correct'); }
   window._fcIdx=(window._fcIdx||0)+1;
-  // Re-render with modeBar
   window.quizMode='flashcard';
   renderQuiz();
 }
@@ -1789,6 +1858,7 @@ function answerQuiz(i){
     document.getElementById('qo-'+q.ans).classList.add('correct');
     fb.className='quiz-fb show wrong-f';
     fb.textContent='✗ Not quite. '+q.exp;
+    try{ _srsRate(q,0); }catch(e){}
     updateStreak(false);
     showShield(null,'wrong',0);
   }
@@ -4114,7 +4184,7 @@ function loadGlobalAccounts(callback, timeoutMs = 4000) {
   ensureGun();
   fetchAllFromSupabase()
     .then(() => callback(getAccounts()))
-    .catch(() => callback(getAccounts()));
+    .catch(e => { console.error('loadGlobalAccounts failed', e); callback(getAccounts(), e); });
 }
 
 // ── Device bans ──────────────────────────────────────────────────────────
@@ -4295,6 +4365,22 @@ function authShowLogin() {
   document.getElementById('tab-login').classList.add('active');
   document.getElementById('tab-signup').classList.remove('active');
   document.getElementById('login-error').classList.remove('show');
+  _authFocus('login-user');
+}
+function _authFocus(id){ setTimeout(function(){ try{ var el=document.getElementById(id); if(el&&el.offsetParent!==null&&!(('ontouchstart' in window)&&window.innerWidth<700&&false)) el.focus(); }catch(e){} }, 60); }
+function authCheckUsername(v) {
+  var h=document.getElementById('signup-user-hint'); if(!h) return;
+  v=(v||'').trim();
+  if(!v){ h.textContent='3–20 characters: letters, numbers, _ or @'; h.className='auth-hint'; return; }
+  if(v.length<3){ h.textContent='Too short — at least 3 characters'; h.className='auth-hint bad'; return; }
+  if(!/^[a-zA-Z0-9_@]+$/.test(v)){ h.textContent='Only letters, numbers, _ and @ are allowed'; h.className='auth-hint bad'; return; }
+  h.textContent='✓ Looks good (usernames aren\'t case-sensitive)'; h.className='auth-hint ok';
+}
+function authCheckConfirm() {
+  var h=document.getElementById('signup-confirm-hint'); if(!h) return;
+  var a=document.getElementById('signup-pass').value, b=document.getElementById('signup-confirm').value;
+  if(!b){ h.textContent=''; h.className='auth-hint'; return; }
+  if(a===b){ h.textContent='✓ Passwords match'; h.className='auth-hint ok'; } else { h.textContent='Passwords don\'t match yet'; h.className='auth-hint bad'; }
 }
 function authShowSignup() {
   document.getElementById('auth-login-form').style.display = 'none';
@@ -4302,6 +4388,7 @@ function authShowSignup() {
   document.getElementById('tab-signup').classList.add('active');
   document.getElementById('tab-login').classList.remove('active');
   document.getElementById('signup-error').classList.remove('show');
+  _authFocus('signup-user');
 }
 function authTogglePw(inputId, btn) {
   const inp = document.getElementById(inputId);
@@ -4373,6 +4460,7 @@ async function authSignup() {
   // From here on, every request carries this user's real, verified
   // identity — the rest of account setup below runs as an authenticated
   // update to their own row, not an anonymous insert.
+  try {
   _applyAuthToken(result.token);
   const cleanUsername = result.username;
 
@@ -4423,6 +4511,11 @@ async function authSignup() {
   } catch(e) {}
   btn.textContent = '✓ Account created!'; btn.disabled = false;
   authEnterApp(cleanUsername);
+  } catch (e) {
+    console.error('Signup finish failed', e);
+    btn.textContent = 'Create Account →'; btn.disabled = false;
+    return authShowError('signup-error', 'Your account was created, but setup hit a snag. Tap Log In and sign in with the same details.');
+  }
   // Welcome shield after brief delay
   setTimeout(()=>{
     showShield('Welcome to Ares, '+username+'! 🎉','correct',0);
@@ -4434,14 +4527,27 @@ async function authSignup() {
 // flaky connection (or a cold-starting function) doesn't strand people on a
 // dead "Checking…" button. 5xx / 404 / network errors are retried; real
 // answers (200, 400, 401, 403, 429…) are returned straight away.
+// If the direct Supabase address can't be reached at all (school/ISP filters often block *.supabase.co),
+// the same call is retried through this site's own domain (vercel.json rewrites /functions/v1/* to Supabase).
 async function _edgeCall(name, payload, tries) {
+  const direct = await _edgeCallAt(SUPABASE_URL, name, payload, tries);
+  if (!direct.failed || !direct.err || !direct.err.network) return direct;
+  try {
+    if (/^https?:$/.test(location.protocol) && location.origin !== SUPABASE_URL) {
+      const via = await _edgeCallAt(location.origin, name, payload, 2);
+      if (!via.failed || (via.err && !via.err.network && via.err.status !== 404)) return via;
+    }
+  } catch(e) {}
+  return direct;
+}
+async function _edgeCallAt(base, name, payload, tries) {
   tries = tries || 3;
   let lastErr = null;
   for (let i = 0; i < tries; i++) {
     const ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
     const timer = setTimeout(() => { try { ctl && ctl.abort(); } catch(e){} }, 15000);
     try {
-      const resp = await fetch(SUPABASE_URL + '/functions/v1/' + name, {
+      const resp = await fetch(base + '/functions/v1/' + name, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY },
         body: JSON.stringify(payload),
@@ -5167,9 +5273,14 @@ function _openAccountLogReal() {
   const searchInput = document.getElementById('admin-search-input');
   if (searchInput) searchInput.value = '';
   _startAdminForceCloseTimer();
-  loadGlobalAccounts(accounts => {
+  loadGlobalAccounts((accounts, err) => {
     _adminAllAccounts = accounts;
     renderAdminPanel();
+    if (err) {
+      const msg = (err && (err.message || err.details)) ? String(err.message || err.details).slice(0, 140) : 'unknown error';
+      const el = document.getElementById('admin-accounts-list');
+      if (el) el.insertAdjacentHTML('afterbegin', '<div style="margin:6px;padding:10px;border-radius:10px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.35);color:#F87171;font-size:12px;line-height:1.5;">⚠️ Couldn\'t load the latest accounts from the server (' + _esc(msg) + '). Showing what this device has cached. <button onclick="_openAccountLogReal()" style="margin-top:6px;display:block;background:#7C3AED;border:none;color:#fff;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">↻ Retry</button></div>');
+    }
   });
 }
 
@@ -5184,7 +5295,8 @@ function renderAdminPanel() {
   const detailEl = document.getElementById('admin-detail-panel');
   const requestsEl = document.getElementById('admin-requests-list');
   if (!accountsListEl || !detailEl || !requestsEl) return;
-  const accounts = _adminAllAccounts;
+  const accounts = _adminAllAccounts || {};
+  Object.keys(accounts).forEach(k => { if (!accounts[k] || typeof accounts[k] !== 'object') accounts[k] = {}; });
   const keys = Object.keys(accounts);
 
   const teacherCount = keys.filter(k=>accounts[k].accountType==='teacher').length;
@@ -5262,7 +5374,8 @@ function renderAdminPanel() {
 
   // ── MIDDLE: zoom-in detail for whatever's selected ──
   if (_adminSelectedUser && accounts[_adminSelectedUser]) {
-    detailEl.innerHTML = _renderAccountDetailHTML(_adminSelectedUser, accounts);
+    try { detailEl.innerHTML = _renderAccountDetailHTML(_adminSelectedUser, accounts); }
+    catch (e) { detailEl.innerHTML = '<div style="padding:1.5rem;color:#F87171;font-size:13px;line-height:1.6;">⚠️ Couldn\'t show @' + _esc(_adminSelectedUser) + ' (' + _esc(String(e && e.message || e)) + ').<br>The rest of the panel still works — pick another account.</div>'; }
   } else {
     detailEl.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.25);padding:3rem 1rem;font-size:13px;">'
       + '👈 Select an account, or a request on the right, to see full details here.</div>';
@@ -5378,7 +5491,7 @@ function _renderAccountDetailHTML(k, accounts) {
           ${a.proRequest?.status==='pending' ? `<div>🕐 Pro Request: <span style="color:#60A5FA;">Pending (${a.proRequest.method||'?'})</span></div>` : ''}
           ${a.banned ? `<div style="grid-column:1/-1;margin-top:3px;">🚫 <strong style="color:#F87171;">BANNED</strong> — <span style="color:rgba(255,255,255,0.45);">${a.banReason||'No reason'}</span> (${a.bannedAt||'?'})</div>` : ''}
           ${a.arenaAccess ? `<div>⚔️ Arena: <span style="color:#10B981;font-weight:700;">GRANTED</span></div>` : ''}
-          <div>🧪 Test: <button onclick="toggleTestAccess('${k}')" style="background:${a.testAccess?'rgba(16,185,129,0.15)':'rgba(255,255,255,0.06)'};border:1px solid ${a.testAccess?'rgba(16,185,129,0.45)':'rgba(255,255,255,0.15)'};color:${a.testAccess?'#10B981':'rgba(255,255,255,0.6)'};border-radius:6px;padding:1px 7px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;">${a.testAccess?'GRANTED · remove':'Grant'}</button></div>
+          ${a.testAccess ? `<div>🧪 Test games: <span style="color:#96aabe;font-weight:700;">GRANTED</span></div>` : ''}
           ${(function(){
             const rats = a.ratings || [];
             if (!rats.length) return '<div>⭐ No ratings yet</div>';
@@ -5387,8 +5500,26 @@ function _renderAccountDetailHTML(k, accounts) {
             return '<div>' + stars + ' <span style=\"color:rgba(255,255,255,0.5);font-size:11px;\">' + avg + '/5 avg (' + rats.length + ' rating' + (rats.length>1?'s':'') + ')</span></div>';
           })()}
         </div>
+        ${!isParent ? `<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+          <button onclick="adminToggleAccess('${k}','arenaAccess')" style="flex:1;min-width:130px;background:${a.arenaAccess?'rgba(16,185,129,0.15)':'rgba(255,255,255,0.06)'};border:1px solid ${a.arenaAccess?'#10B981':'rgba(255,255,255,0.18)'};color:${a.arenaAccess?'#10B981':'rgba(255,255,255,0.7)'};border-radius:8px;padding:8px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">⚔️ Arena: ${a.arenaAccess?'ON':'OFF'}</button>
+          <button onclick="adminToggleAccess('${k}','testAccess')" style="flex:1;min-width:130px;background:${a.testAccess?'rgba(150,170,190,0.2)':'rgba(255,255,255,0.06)'};border:1px solid ${a.testAccess?'#96aabe':'rgba(255,255,255,0.18)'};color:${a.testAccess?'#c8d4e0':'rgba(255,255,255,0.7)'};border-radius:8px;padding:8px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">🧪 Test games: ${a.testAccess?'ON':'OFF'}</button>
+        </div>` : ''}
       </div>`;
 }
+function adminToggleAccess(username, key) {
+  if (!window._adminSession) return;
+  if (key !== 'arenaAccess' && key !== 'testAccess') return;
+  const accounts = getAccounts();
+  if (!accounts[username]) return;
+  accounts[username][key] = !accounts[username][key];
+  if (key === 'testAccess' && !accounts[username][key]) { try { sessionStorage.removeItem('ares_test_ok'); } catch(e) {} }
+  saveAccounts(accounts);
+  if (typeof gunPut === 'function') gunPut(username, accounts[username]);
+  const on = accounts[username][key], nm = key === 'testAccess' ? '🧪 Test games' : '⚔️ Arena';
+  showXpPop(nm + (on ? ' access granted to @' : ' access removed from @') + username);
+  try { _adminAllAccounts = getAccounts(); renderAdminPanel(); } catch(e) {}
+}
+window.adminToggleAccess = adminToggleAccess;
 
 function closeAccountLog() {
   document.getElementById('account-log-modal').style.display = 'none';
@@ -7365,7 +7496,7 @@ async function sendAresMessage() {
 
   try {
     // Try Anthropic first — auto-authenticated in Claude.ai environment
-    try {
+    if (_aresKey) try {
       const r1 = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers:{'Content-Type':'application/json','x-api-key':_aresKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
@@ -7389,34 +7520,17 @@ async function sendAresMessage() {
         parts: [{ text: m.content }]
       }));
       // Try the shared server proxy first (one key, works for everyone, stays secret)
-      try {
-        const flat = sysPrompt + '\n\n' + aresConversation.slice(-12).map(m => (m.role === 'assistant' ? 'Ares' : 'Student') + ': ' + m.content).join('\n') + '\nAres:';
-        const rp = await fetch(SUPABASE_URL + '/functions/v1/ares-ai', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY },
-          body: JSON.stringify({ prompt: flat, maxTokens: 1024 })
-        });
-        if (rp.ok) { const dp = await rp.json(); if (dp && dp.text) reply = dp.text; }
-      } catch (e) { /* proxy unavailable — try user key below */ }
+      const flat = sysPrompt + '\n\n' + aresConversation.slice(-12).map(m => (m.role === 'assistant' ? 'Ares' : 'Student') + ': ' + m.content).join('\n') + '\nAres:';
+      reply = await _aresProxyText(flat, 1024);
 
       // Fall back to the user's own Gemini key (for local use without the proxy)
       if (!reply) {
         if (!_userGeminiKey) throw new Error('NO_API_KEY');
-        const r2 = await fetch(
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=' + _userGeminiKey,
-          {
-            method: 'POST',
-            headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({
-              system_instruction: { parts: [{ text: sysPrompt }] },
-              contents: msgs,
-              generationConfig: { maxOutputTokens: 1024, temperature: 0.7 }
-            })
-          }
-        );
-        const d2 = await r2.json();
-        reply = d2?.candidates?.[0]?.content?.parts?.[0]?.text || null;
-        if (!reply && d2?.error) throw new Error(d2.error.message || 'Gemini error');
+        reply = await _aresGeminiDirect({
+          system_instruction: { parts: [{ text: sysPrompt }] },
+          contents: msgs,
+          generationConfig: { maxOutputTokens: 1024, temperature: 0.7 }
+        }, _userGeminiKey);
       }
     }
 
@@ -7467,7 +7581,7 @@ async function sendAresMessage() {
     typingDiv.remove();
     var _msg = (err && err.message) || '';
     if (_msg === 'NO_API_KEY') {
-      appendAresMessage('bot', '⚠️ Athena AI needs a connection to work. If you\'re viewing this on the hosted site, it should connect automatically — try again in a moment. If that keeps failing, tap the <b>⚙️ Key</b> button above to add your own free Google Gemini key.');
+      appendAresMessage('bot', '⚠️ Athena AI needs a connection to work. If you\'re viewing this on the hosted site, it should connect automatically — try again in a moment. If that keeps failing, tap the <b>⚙️ Key</b> button above to add your own free Google Gemini key.' + (_aresLastAIError ? ' <span style="opacity:.6;font-size:11px">(server said: ' + _aresLastAIError + ')</span>' : ''));
     } else {
       appendAresMessage('bot', '⚠️ Something went wrong reaching the AI (' + _msg + '). Please try again — if it keeps happening, tap the <b>⚙️ Key</b> button above to add your own key.');
     }
@@ -8650,6 +8764,7 @@ function arenaOpen() {
   if (!me.arenaAccess && !window._adminSession) return;
   document.getElementById('arena-hub').style.display = 'flex';
   _aresSizeGameButtons();
+  try{ var _tc=document.getElementById('arena-test-card'); if(_tc)_tc.style.display=''; }catch(e){}
 }
 
 // If only one game button is visible, make it bigger so the row doesn't look empty
@@ -8829,16 +8944,6 @@ function adminAvatarTap(username) {
     openAccountLog();
   }
 }
-
-// ── TEST area permission (admin) ──
-function toggleTestAccess(username) {
-  if (!window._adminSession) return;
-  const accounts = getAccounts(); if (!accounts[username]) return;
-  const had = !!accounts[username].testAccess; accounts[username].testAccess = !had; saveAccounts(accounts);
-  if (typeof gunPut === 'function') gunPut(username, accounts[username]);
-  showXpPop(had ? '🧪 Test access removed from @' + username : '🧪 Test access granted to @' + username); openAccountLog();
-}
-window.toggleTestAccess = toggleTestAccess;
 
 // ── Ban System ────────────────────────────────────────────────────────────
 let _banTargetUser = null;
@@ -9494,6 +9599,42 @@ function clearAresKeySettings(){
 window.openAresKeySettings=openAresKeySettings; window.closeAresKeySettings=closeAresKeySettings;
 window.saveAresKeySettings=saveAresKeySettings; window.clearAresKeySettings=clearAresKeySettings;
 
+// Shared AI backend: Supabase edge function first, then the Vercel /api/ai route; one retry each on network/5xx errors.
+var _aresLastAIError='';
+async function _aresProxyText(prompt, maxTokens){
+  var targets=[
+    {u:SUPABASE_URL+'/functions/v1/ares-ai', h:{'Content-Type':'application/json',apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+SUPABASE_ANON_KEY}},
+    {u:'/api/ai', h:{'Content-Type':'application/json'}},
+    {u:'/functions/v1/ares-ai', h:{'Content-Type':'application/json',apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+SUPABASE_ANON_KEY}}
+  ];
+  for(var i=0;i<targets.length;i++){
+    for(var attempt=0;attempt<2;attempt++){
+      try{
+        var r=await fetch(targets[i].u,{method:'POST',headers:targets[i].h,body:JSON.stringify({prompt:prompt,maxTokens:maxTokens})});
+        if(r.ok){ var d=await r.json(); if(d&&d.text) return d.text; _aresLastAIError='empty reply'; break; }
+        var ed=null; try{ ed=await r.json(); }catch(e){}
+        _aresLastAIError=(ed&&ed.error)?String(ed.error).slice(0,120):('HTTP '+r.status);
+        if(r.status<500) break; // client error / missing route: retrying won't help
+      }catch(e){ _aresLastAIError='network'; }
+      await new Promise(function(res){setTimeout(res,600)});
+    }
+  }
+  return null;
+}
+// Direct Gemini with a model fallback (newer model first, stable one second)
+async function _aresGeminiDirect(body, key){
+  var models=['gemini-3.6-flash','gemini-2.5-flash'],lastErr='AI request failed — please try again.';
+  for(var i=0;i<models.length;i++){
+    try{
+      var r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+models[i]+':generateContent?key='+key,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+      var d=await r.json();
+      var t=d&&d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts&&d.candidates[0].content.parts[0]&&d.candidates[0].content.parts[0].text;
+      if(t) return t;
+      if(d&&d.error) lastErr=d.error.message||lastErr;
+    }catch(e){ lastErr=e.message||lastErr; }
+  }
+  throw new Error(lastErr);
+}
 // Unified AI call: try Anthropic (if key present), fall back to Gemini (embedded key). Returns plain text.
 async function aresAICall(prompt, maxTokens){
   maxTokens = maxTokens || 1000;
@@ -9514,36 +9655,12 @@ async function aresAICall(prompt, maxTokens){
     }catch(e){ /* fall through to Gemini */ }
   }
   // 2) Shared server proxy (one key, works for everyone, stays secret)
-  try{
-    var rp = await fetch(SUPABASE_URL + '/functions/v1/ares-ai', {
-      method:'POST',
-      headers:{'Content-Type':'application/json', apikey: SUPABASE_ANON_KEY},
-      body:JSON.stringify({ prompt: prompt, maxTokens: maxTokens })
-    });
-    if(rp.ok){
-      var dp = await rp.json();
-      if(dp && dp.text) return dp.text;
-    }
-  }catch(e){ /* proxy not available — fall through */ }
+  var pt=await _aresProxyText(prompt,maxTokens); if(pt) return pt;
 
   // 3) User's own Gemini key (for local/offline use without the proxy)
   var gkey = (typeof aresGetGeminiKey==='function' ? aresGetGeminiKey() : (localStorage.getItem('ares_gemini_key')||''));
-  if(!gkey){
-    // No Anthropic result, no proxy, and no user key — tell the caller a key is needed
-    throw new Error('NO_API_KEY');
-  }
-  try{
-    var rg = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key='+gkey,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({ contents:[{role:'user',parts:[{text:prompt}]}], generationConfig:{ maxOutputTokens:maxTokens, temperature:0.7 } })
-    });
-    var dg = await rg.json();
-    var tg = dg && dg.candidates && dg.candidates[0] && dg.candidates[0].content && dg.candidates[0].content.parts && dg.candidates[0].content.parts[0] && dg.candidates[0].content.parts[0].text;
-    if(tg) return tg;
-    if(dg && dg.error) throw new Error(dg.error.message||'AI request failed');
-  }catch(e){ throw e; }
-  throw new Error('AI request failed — please try again.');
+  if(!gkey){ throw new Error('NO_API_KEY'); }
+  return await _aresGeminiDirect({ contents:[{role:'user',parts:[{text:prompt}]}], generationConfig:{ maxOutputTokens:maxTokens, temperature:0.7 } }, gkey);
 }
 function aresSaveApiKey(key) {
   localStorage.setItem('ares_api_key', key.trim());
@@ -12730,7 +12847,7 @@ function _aresUpdateArenaButton(){
       <div class="ac-desc">Watch the cameras, guard the doors, survive until 6 AM.</div>
       <div class="ac-play">▶ PLAY</div>
     </button>
-    <button class="arena-card" onclick="openArenaTest()" style="--c1:#101418;--c2:#1c2630;--rgb:150,170,190;">
+    <button class="arena-card" id="arena-test-card" onclick="openArenaTest()" style="--c1:#101418;--c2:#1c2630;--rgb:150,170,190;">
       <div class="ac-emoji">🔒</div>
       <div class="ac-name">TEST</div>
       <div class="ac-tag">LOCKED · PERMISSION OR PASSWORD</div>
@@ -14149,7 +14266,7 @@ window.openNightShift=openNightShift;window.closeNightShift=closeNightShift;
 function _arenaGameBlocked(){ try{ if(currentUser){ var a=getAccounts()[currentUser]; if(a&&a.accountType==='parent'){ if(typeof showXpPop==='function')showXpPop('🔒 Games are not available on parent accounts'); return true; } } }catch(e){} return false; }
 function openFrontline(){
   if(_arenaGameBlocked())return; var page=document.getElementById('page-frontline'); if(!page)return;
-  var ok=_arenaTestAllowed(); try{ ok=ok||sessionStorage.getItem('ares_test_ok')==='1'; }catch(e){} if(!ok){ openArenaTest(); return; }
+  var ok=_testOk(); if(!ok){ openArenaTest(); return; }
   try{ var t=document.getElementById('page-arenatest'); if(t)t.style.display='none'; }catch(e){}
   try{ var hub=document.getElementById('arena-hub'); if(hub)hub.style.display='none'; }catch(e){}
   if(page.parentNode!==document.body)document.body.appendChild(page);
@@ -14164,21 +14281,24 @@ function closeFrontline(){
   try{ document.exitPointerLock&&document.exitPointerLock(); }catch(e){}
   var t=document.getElementById('page-arenatest'); if(t){ t.style.display='flex'; } else { try{ var hub=document.getElementById('arena-hub'); if(hub)hub.style.display='flex'; }catch(e){} }
 }
-function _arenaTestAllowed(){ try{ if(window._adminSession) return true; var a=currentUser&&getAccounts()[currentUser]; return !!(a&&a.testAccess); }catch(e){ return false; } }
-var _AT_HASH='fe2592b42a727e977f055947385b709cc82b16b9a87f88c6abf3900d65d0cdc3';
+var _AT_HASH='dd49477b0b970dde26d58606384cfedd0dc5740b719bffc06442e7d949849deb';
+function _testAllowed(){ try{ if(window._adminSession)return true; var a=currentUser&&getAccounts()[currentUser]; return !!(a&&a.testAccess&&a.accountType!=='parent'); }catch(e){ return false; } }
+function _testDenied(){ if(_testAllowed())return false; if(typeof showXpPop==='function')showXpPop('🔒 Test games need admin access'); return true; }
+function _testOk(){ try{ return _testAllowed()||sessionStorage.getItem('ares_test_ok')==='1'; }catch(e){ return _testAllowed(); } }
+function _testOkOld(){ try{ return _testAllowed()&&sessionStorage.getItem('ares_test_ok')===(window._adminSession?'admin':String(currentUser)); }catch(e){ return false; } }
 function openArenaTest(){
   if(_arenaGameBlocked())return; var page=document.getElementById('page-arenatest'); if(!page)return;
   try{ var hub=document.getElementById('arena-hub'); if(hub)hub.style.display='none'; }catch(e){}
   if(page.parentNode!==document.body)document.body.appendChild(page);
   page.style.display='flex'; page.style.zIndex='2147483647';
-  var ok=_arenaTestAllowed(); try{ ok=ok||sessionStorage.getItem('ares_test_ok')==='1'; }catch(e){}
+  var ok=_testOk();
   document.getElementById('at-lock').style.display=ok?'none':'block'; document.getElementById('at-room').style.display=ok?'block':'none';
   document.getElementById('at-err').textContent=''; var i=document.getElementById('at-pw'); i.value=''; if(!ok)setTimeout(function(){try{i.focus()}catch(e){}},100);
 }
 async function arenaTestUnlock(){
   var i=document.getElementById('at-pw'), v=(i.value||'').trim(), h='';
   try{ var b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(v)); h=Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,'0')}).join(''); }catch(e){}
-  if(h===_AT_HASH){ try{ sessionStorage.setItem('ares_test_ok','1'); }catch(e){} document.getElementById('at-lock').style.display='none'; document.getElementById('at-room').style.display='block'; }
+  if(h===_AT_HASH){ try{ sessionStorage.setItem('ares_test_ok','1'); }catch(e){} document.getElementById('at-err').textContent=''; document.getElementById('at-lock').style.display='none'; document.getElementById('at-room').style.display='block'; }
   else { document.getElementById('at-err').textContent='Wrong password'; i.value=''; i.focus(); }
 }
 function closeArenaTest(){ var page=document.getElementById('page-arenatest'); if(page)page.style.display='none'; try{ var hub=document.getElementById('arena-hub'); if(hub)hub.style.display='flex'; }catch(e){} }
