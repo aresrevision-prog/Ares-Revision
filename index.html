@@ -839,7 +839,7 @@ html,html,body{height:100%}body{min-height:100%;background:var(--bg);color:var(-
   <div id="at-lock" style="width:min(340px,90vw);text-align:center;background:rgba(255,255,255,.04);border:1px solid #2c3a48;border-radius:14px;padding:26px 22px;">
     <div style="font-size:34px;">🔒</div>
     <div style="font-size:20px;font-weight:800;letter-spacing:.2em;margin:8px 0 4px;">TEST</div>
-    <div style="font-size:13px;opacity:.7;margin-bottom:16px;">Enter the password to continue.</div>
+    <div style="font-size:13px;opacity:.7;margin-bottom:16px;">Enter the password to continue, or ask an admin for Test access.</div>
     <input id="at-pw" type="password" inputmode="numeric" autocomplete="off" maxlength="12" onkeydown="if(event.key==='Enter')arenaTestUnlock()" style="width:100%;box-sizing:border-box;padding:11px 12px;border-radius:9px;border:1px solid #2c3a48;background:#0c1116;color:#fff;font-size:18px;letter-spacing:.3em;text-align:center;font-family:inherit;">
     <div id="at-err" style="height:18px;font-size:12px;color:#ff7a6a;margin-top:8px;"></div>
     <button onclick="arenaTestUnlock()" style="width:100%;margin-top:6px;padding:12px;border-radius:9px;border:none;background:#96aabe;color:#0a0d10;font-weight:900;letter-spacing:.25em;cursor:pointer;font-family:inherit;">UNLOCK</button>
@@ -8764,7 +8764,7 @@ function arenaOpen() {
   if (!me.arenaAccess && !window._adminSession) return;
   document.getElementById('arena-hub').style.display = 'flex';
   _aresSizeGameButtons();
-  try{ var _tc=document.getElementById('arena-test-card'); if(_tc)_tc.style.display=_testAllowed()?'':'none'; }catch(e){}
+  try{ var _tc=document.getElementById('arena-test-card'); if(_tc)_tc.style.display=''; }catch(e){}
 }
 
 // If only one game button is visible, make it bigger so the row doesn't look empty
@@ -12850,7 +12850,7 @@ function _aresUpdateArenaButton(){
     <button class="arena-card" id="arena-test-card" onclick="openArenaTest()" style="--c1:#101418;--c2:#1c2630;--rgb:150,170,190;">
       <div class="ac-emoji">🔒</div>
       <div class="ac-name">TEST</div>
-      <div class="ac-tag">LOCKED · PASSWORD</div>
+      <div class="ac-tag">LOCKED · PERMISSION OR PASSWORD</div>
       <div class="ac-desc">Private test area.</div>
       <div class="ac-play">▶ UNLOCK</div>
     </button>
@@ -14265,12 +14265,13 @@ function closeNightShift(){
 window.openNightShift=openNightShift;window.closeNightShift=closeNightShift;
 function _arenaGameBlocked(){ try{ if(currentUser){ var a=getAccounts()[currentUser]; if(a&&a.accountType==='parent'){ if(typeof showXpPop==='function')showXpPop('🔒 Games are not available on parent accounts'); return true; } } }catch(e){} return false; }
 function openFrontline(){
-  if(_arenaGameBlocked()||_testDenied())return; var page=document.getElementById('page-frontline'); if(!page)return;
+  if(_arenaGameBlocked())return; var page=document.getElementById('page-frontline'); if(!page)return;
   var ok=_testOk(); if(!ok){ openArenaTest(); return; }
   try{ var t=document.getElementById('page-arenatest'); if(t)t.style.display='none'; }catch(e){}
   try{ var hub=document.getElementById('arena-hub'); if(hub)hub.style.display='none'; }catch(e){}
   if(page.parentNode!==document.body)document.body.appendChild(page);
   page.style.cssText='display:block !important;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:2147483647;background:#000;';
+  try{ window._flNet={ url: SUPABASE_URL, key: SUPABASE_ANON_KEY }; }catch(e){}
   var f=document.getElementById('fl-frame'); if((f.getAttribute('src')||'').indexOf('frontline')<0)f.src='/games/frontline.html';
   setTimeout(function(){try{f.focus()}catch(e){}},300);
 }
@@ -14283,9 +14284,10 @@ function closeFrontline(){
 var _AT_HASH='dd49477b0b970dde26d58606384cfedd0dc5740b719bffc06442e7d949849deb';
 function _testAllowed(){ try{ if(window._adminSession)return true; var a=currentUser&&getAccounts()[currentUser]; return !!(a&&a.testAccess&&a.accountType!=='parent'); }catch(e){ return false; } }
 function _testDenied(){ if(_testAllowed())return false; if(typeof showXpPop==='function')showXpPop('🔒 Test games need admin access'); return true; }
-function _testOk(){ try{ return _testAllowed()&&sessionStorage.getItem('ares_test_ok')===(window._adminSession?'admin':String(currentUser)); }catch(e){ return false; } }
+function _testOk(){ try{ return _testAllowed()||sessionStorage.getItem('ares_test_ok')==='1'; }catch(e){ return _testAllowed(); } }
+function _testOkOld(){ try{ return _testAllowed()&&sessionStorage.getItem('ares_test_ok')===(window._adminSession?'admin':String(currentUser)); }catch(e){ return false; } }
 function openArenaTest(){
-  if(_arenaGameBlocked()||_testDenied())return; var page=document.getElementById('page-arenatest'); if(!page)return;
+  if(_arenaGameBlocked())return; var page=document.getElementById('page-arenatest'); if(!page)return;
   try{ var hub=document.getElementById('arena-hub'); if(hub)hub.style.display='none'; }catch(e){}
   if(page.parentNode!==document.body)document.body.appendChild(page);
   page.style.display='flex'; page.style.zIndex='2147483647';
@@ -14296,8 +14298,7 @@ function openArenaTest(){
 async function arenaTestUnlock(){
   var i=document.getElementById('at-pw'), v=(i.value||'').trim(), h='';
   try{ var b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(v)); h=Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,'0')}).join(''); }catch(e){}
-  if(!_testAllowed()){ document.getElementById('at-err').textContent='No access'; return; }
-  if(h===_AT_HASH){ try{ sessionStorage.setItem('ares_test_ok',window._adminSession?'admin':String(currentUser)); }catch(e){} document.getElementById('at-err').textContent=''; document.getElementById('at-lock').style.display='none'; document.getElementById('at-room').style.display='block'; }
+  if(h===_AT_HASH){ try{ sessionStorage.setItem('ares_test_ok','1'); }catch(e){} document.getElementById('at-err').textContent=''; document.getElementById('at-lock').style.display='none'; document.getElementById('at-room').style.display='block'; }
   else { document.getElementById('at-err').textContent='Wrong password'; i.value=''; i.focus(); }
 }
 function closeArenaTest(){ var page=document.getElementById('page-arenatest'); if(page)page.style.display='none'; try{ var hub=document.getElementById('arena-hub'); if(hub)hub.style.display='flex'; }catch(e){} }
