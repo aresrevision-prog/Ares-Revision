@@ -841,6 +841,13 @@ html,html,body{height:100%}body{min-height:100%;background:var(--bg);color:var(-
   </div>
   <iframe id="wm-frame" title="World Minds" style="width:100%;height:calc(100% - 41px);border:0;display:block;background:#0a0f17;" allow="autoplay; fullscreen"></iframe>
 </div>
+<div id="page-portsable" style="display:none;position:fixed;inset:0;z-index:99600;background:#1a0f08;">
+  <div style="display:flex;align-items:center;gap:12px;padding:6px 12px;background:#1a0f08;border-bottom:1px solid #3a2111;font-family:system-ui,sans-serif;">
+    <button onclick="closePortSable()" style="background:#3a2111;color:#e0a526;border:1px solid #6d4122;border-radius:6px;padding:6px 14px;cursor:pointer;font-family:inherit;font-size:13px;">← Back to Test</button>
+    <span style="color:#e0a526;letter-spacing:2px;font-weight:700;">☎️ PORT SABLE</span>
+  </div>
+  <iframe id="ps-frame" title="Port Sable" style="width:100%;height:calc(100% - 41px);border:0;display:block;background:#1a0f08;" allow="autoplay; fullscreen"></iframe>
+</div>
 <div id="page-empireheat" style="display:none;position:fixed;inset:0;z-index:99600;background:#07060a;">
   <div style="display:flex;align-items:center;gap:12px;padding:8px 14px;background:#07060a;border-bottom:2px solid #3a1f2a;">
     <button onclick="closeEmpireHeat()" style="background:#14101a;color:#f6c21a;border:1px solid #3a1f2a;border-radius:6px;padding:6px 14px;cursor:pointer;font-family:inherit;font-size:13px;">← Back to Test</button>
@@ -879,6 +886,12 @@ html,html,body{height:100%}body{min-height:100%;background:var(--bg);color:var(-
       <span style="font-weight:900;letter-spacing:.15em;color:#f6c21a;">▶ PLAY</span>
     </button>
     <div id="at-vote-empireheat" style="margin:8px 0 0;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);"></div>
+    <button onclick="openPortSable()" style="width:100%;margin-top:14px;text-align:left;display:flex;gap:14px;align-items:center;padding:16px 18px;border-radius:12px;border:1px solid rgba(224,165,38,.45);background:linear-gradient(135deg,#1a0f08,#3a2111);color:#f0e8dc;cursor:pointer;font-family:inherit;">
+      <span style="font-size:30px;">☎️</span>
+      <span style="flex:1;"><b style="display:block;font-size:17px;letter-spacing:.12em;color:#e0a526;">PORT SABLE</b><span style="font-size:13px;opacity:.8;">1926 mob board game · run the city from your desk: phone the bosses, move toy soldiers, cross the bridges, guard your door</span></span>
+      <span style="font-weight:900;letter-spacing:.15em;color:#e0a526;">▶ PLAY</span>
+    </button>
+    <div id="at-vote-portsable" style="margin:8px 0 0;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);"></div>
   </div>
 </div>
 <div id="page-nightshift" style="display:none;position:fixed;inset:0;z-index:99600;background:#050506;">
@@ -12918,6 +12931,13 @@ function _aresUpdateArenaButton(){
       <div class="ac-desc">Voted into the Arena by the testers.</div>
       <div class="ac-play">▶ PLAY</div>
     </button>
+    <button class="arena-card" id="arena-promoted-portsable" onclick="openPortSable()" style="display:none;--c1:#1a0f08;--c2:#3a2111;--rgb:224,165,38;">
+      <div class="ac-emoji">☎️</div>
+      <div class="ac-name">PORT SABLE</div>
+      <div class="ac-tag">COMMUNITY PICK</div>
+      <div class="ac-desc">Voted into the Arena by the testers.</div>
+      <div class="ac-play">▶ PLAY</div>
+    </button>
     <button class="arena-card" id="arena-promoted-empireheat" onclick="openEmpireHeat()" style="display:none;--c1:#120a14;--c2:#2a1426;--rgb:246,194,26;">
       <div class="ac-emoji">🗽</div>
       <div class="ac-name">EMPIRE HEAT</div>
@@ -14384,8 +14404,24 @@ function closeEmpireHeat(){
   var t=document.getElementById('page-arenatest'); if(t){ t.style.display='flex'; } else { try{ var hub=document.getElementById('arena-hub'); if(hub)hub.style.display='flex'; }catch(e){} }
 }
 window.openEmpireHeat=openEmpireHeat;window.closeEmpireHeat=closeEmpireHeat;
+function openPortSable(){
+  if(_arenaGameBlocked())return; var page=document.getElementById('page-portsable'); if(!page)return;
+  if(!_gamePromoted('portsable')){ var ok=_testOk(); if(!ok){ openArenaTest(); return; } }
+  try{ var t=document.getElementById('page-arenatest'); if(t)t.style.display='none'; }catch(e){}
+  try{ var hub=document.getElementById('arena-hub'); if(hub)hub.style.display='none'; }catch(e){}
+  if(page.parentNode!==document.body)document.body.appendChild(page);
+  page.style.cssText='display:block !important;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:2147483647;background:#1a0f08;';
+  var f=document.getElementById('ps-frame'); if((f.getAttribute('src')||'').indexOf('portsable')<0)f.src='/games/portsable.html';
+  setTimeout(function(){try{f.focus()}catch(e){}},300);
+}
+function closePortSable(){
+  var page=document.getElementById('page-portsable'); if(page)page.style.display='none';
+  var f=document.getElementById('ps-frame'); if(f)f.src='about:blank';
+  var t=document.getElementById('page-arenatest'); if(t){ t.style.display='flex'; } else { try{ var hub=document.getElementById('arena-hub'); if(hub)hub.style.display='flex'; }catch(e){} }
+}
+window.openPortSable=openPortSable;window.closePortSable=closePortSable;
 var _AT_HASH='dd49477b0b970dde26d58606384cfedd0dc5740b719bffc06442e7d949849deb';
-var TEST_GAMES=[{id:'frontline',name:'Frontline Warzone'},{id:'worldminds',name:'World Minds'},{id:'empireheat',name:'Empire Heat'}];
+var TEST_GAMES=[{id:'frontline',name:'Frontline Warzone'},{id:'worldminds',name:'World Minds'},{id:'empireheat',name:'Empire Heat'},{id:'portsable',name:'Port Sable'}];
 var TEST_PROMOTE_AT=5; // net 👍 minus 👎 (one vote per account) needed to join the Arena hub
 function _testTally(id){ var up=0,down=0; try{ var a=getAccounts(); for(var u in a){ var x=a[u]; var v=x&&x.testVotes&&x.testVotes[id]; if(v===1)up++; else if(v===-1)down++; } }catch(e){} return {up:up,down:down,net:up-down}; }
 function _gamePromoted(id){ return _testTally(id).net>=TEST_PROMOTE_AT; }
