@@ -195,7 +195,7 @@ function ac(){if(muted)return null;try{AC=AC||new (window.AudioContext||window.w
 function boom(dur,vol,freq,q){const c=ac();if(!c)return;const n=Math.floor(c.sampleRate*dur),b=c.createBuffer(1,n,c.sampleRate),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,3);const so=c.createBufferSource();so.buffer=b;const f=c.createBiquadFilter();f.type='lowpass';f.frequency.value=freq;f.Q.value=q||1;const g=c.createGain();g.gain.value=vol;so.connect(f);f.connect(g);g.connect(c.destination);so.start()}
 function tone(fr,dur,vol){const c=ac();if(!c)return;const o=c.createOscillator(),g=c.createGain();o.frequency.value=fr;g.gain.value=vol;g.gain.setValueAtTime(vol,c.currentTime+dur-.03);g.gain.linearRampToValueAtTime(0,c.currentTime+dur);o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+dur)}
 const sfx={dial:()=>{for(let i=0;i<7;i++)setTimeout(()=>boom(.025,.35,3000),i*105)},ring:()=>{tone(440,.8,.07);tone(480,.8,.07)},click:()=>boom(.04,.15,2500),step:()=>boom(.14,.7,170),bang:()=>{boom(.5,1,240);boom(.2,.6,1500)},crack:()=>{boom(.9,1.1,500);boom(.35,.8,3000)},shot:()=>{boom(.5,1.4,1500);boom(.8,1,120)},pop:()=>boom(.08,.3,2600),march:()=>boom(.06,.16,700)};
-const KEY='port-sable-v10';
+const KEY='port-sable-v11';
 const SEEDS=[["Cannery Row",100,495],["Cathedral Quarter",480,75],["Bankside",885,500],["Tanner's Cut",100,85],["Coal Yard",280,110],["Rope Walk",300,240],["Chandler Street",660,105],["Ironside",860,330],["The Docks",250,480],["Saltgate Market",470,345],["Bluecoat Yard",470,205],["Millbank",665,490],["Printers\u2019 Row",110,225],["Lantern Row",650,360],["Crown Hill",850,85],["Fishgate",95,360],["Foundry Row",270,365],["Old Mint",650,235],["Tollgate",840,210],["Sawmill Flats",780,450]];
 const BANK=[0,1,2,0,0,0,1,2,0,1,1,2,0,2,1,0,0,1,1,2],BRIDGES=[[5,10],[16,9],[9,13],[18,7]];
 const HARBOUR=[[322,552],[345,505],[420,455],[520,450],[600,490],[628,552]],LAND=[[24,20],[936,20],[936,552],[24,552]];
@@ -219,7 +219,7 @@ function fresh(){
  IDS.forEach(d=>{n[d]={trust:trust[d],fear:0,cd:0,stage:0,known:false,due:0,gave:false}});
  const t=TILES.map(x=>({o:null,m:x.d?GARRISON[x.d]:0,f:0,hq:null}));
  Object.entries(HOME).forEach(([w,i])=>{const q=t[i];q.o=w;q.m=5;q.f=w==='you'?5:0;q.hq=w});
- return {week:1,meet:3,cash:320,heat:0,t,n,sel:HOME.you,send:'all',orders:[],pool:0,mem:{hale:'',stroud:''},inbox:[],items:[],secrets:[],leaked:{},used:{},truce:{},angry:{hale:0,stroud:0},out:{},log:[`Week 1. The Commission sits in ${LAST_WEEK} weeks.`],view:'home',talk:null,event:null,plan:{},evSeen:[],result:null};
+ return {week:1,meet:3,cash:320,heat:0,t,n,sel:HOME.you,send:'all',orders:[],pool:0,diff:1,lastC:{you:1,hale:1,stroud:1},mem:{hale:'',stroud:''},inbox:[],items:[],secrets:[],leaked:{},used:{},truce:{},angry:{hale:0,stroud:0},out:{},log:[`Week 1. The Commission sits in ${LAST_WEEK} weeks.`],view:'home',talk:null,event:null,plan:{},evSeen:[],result:null};
 }
 function save(){try{if(S.view!=='end'&&S.view!=='march'&&S.view!=='dial')localStorage.setItem(KEY,JSON.stringify(S));else localStorage.removeItem(KEY)}catch(e){}}
 function load(){try{const j=localStorage.getItem(KEY);if(j)return JSON.parse(j)}catch(e){}return null}
@@ -332,7 +332,7 @@ function playWeek(list){
 function weekRest(){
  S.view='home';
 if(checkOver()){render();return}
- RIVALS.forEach(r=>{if(S.out[r])return;const q=base(r);if(q)q.m+=3+Math.min(4,Math.floor(own(r).length/3))+(S.angry[r]>0?1:0);if(S.angry[r]>0)S.angry[r]--;
+ RIVALS.forEach(r=>{if(S.out[r])return;const q=base(r);if(q)q.m+=3+[0,3,6][S.diff==null?1:S.diff]+Math.min(4,Math.floor(own(r).length/3))+(S.angry[r]>0?1:0);if(S.angry[r]>0)S.angry[r]--;
   if(S.week>=3&&Math.random()<.14){const opt=IDS.filter(d=>{const h=tileOf(d);return !h.o&&TILES[SPOT[d]].nb.some(j=>S.t[j].o===r)&&S.n[d].cd===0});if(opt.length){const d=rnd(opt);const h=tileOf(d);h.o=r;log(`${D[d].npc.name} has sided with ${RIVAL[r].name}.`)}}});
  IDS.forEach(d=>{const n=S.n[d];
   n.trust=clamp(n.trust-1,0,100);n.fear=Math.max(0,n.fear-4);if(n.cd>0)n.cd--;
@@ -344,7 +344,7 @@ if(checkOver()){render();return}
  S.t.forEach(q=>{q.f=q.o==='you'?q.m:0});
  S.week++;
  if(S.week>LAST_WEEK){finish();render();return}
- log(`Week ${S.week}. Income +$${inc}.`);
+ {const c=counts(),L=S.lastC||c,d=k=>{const v=c[k]-(L[k]||0);return `${c[k]}${v?` (${v>0?'+':''}${v})`:''}`};log(`Week ${S.week}. Income +$${inc}. Districts: you ${d('you')}, Hale ${d('hale')}, Stroud ${d('stroud')}.`);S.lastC=c}
  {const b=$('#banner');if(b&&!FAST){b.textContent=`Week ${S.week}`;b.classList.remove('go');void b.offsetWidth;b.classList.add('go')}}
  if(S.inbox.length){log(`Missed call from ${RIVAL[S.inbox[0].from].name}.`);S.inbox=[]}
  S.meet=3;S.talk=null;S.view='home';plan();
@@ -585,6 +585,7 @@ function renderHome(){
  $('#panel').innerHTML=`<div class="scroll">
   ${!book&&S.week===1&&S.meet===3&&own('you').length===1?`<div><h2>One district. Two rival families.</h2><p class="note">You're at your desk. Buy soldiers and place them on your districts. Click your toy soldiers on the board, then a neighbouring district to give an order. When you end the week, every crew marches and fights at once. Click the phone on your desk to call the people who run each big district: win them over and their turf and men join you without a fight. Rivers split the city, so crews can only cross at bridges. Guard your HQ: if it falls, you die. Take a rival's HQ and their family is finished. Otherwise hold the most districts when the Commission sits in week ${LAST_WEEK}.</p></div>`:''}
   ${S.inbox.length?`<div class="phone">${phoneSvg(false)}<div><h2>The phone is ringing</h2><p class="note">${RIVAL[S.inbox[0].from].name} is on the line.</p><button type="button" class="main" id="answer">Answer</button></div></div>`:''}
+  ${!book&&S.week===1?`<div class="opts" role="group" aria-label="Difficulty">${['Easy','Normal','Hard'].map((n,i)=>`<button type="button" data-diff="${i}" class="${(S.diff==null?1:S.diff)===i?'main':''}">${n}</button>`).join('')}</div>`:''}
   ${book?'':`<div class="buy"><button type="button" id="buy" ${S.cash>=40?'':'disabled'}>Buy a soldier ($40)</button><p class="note">${S.pool?`<b>${S.pool} in your hand.</b> Click one of your districts to put ${S.pool===1?'it':'them'} on the board.`:'Bought soldiers go in your hand, then you place them.'}</p></div>`}
   ${book?'':selCard()}
   ${book?'':`<h3>Street talk</h3><div class="feed">${S.log.slice(0,6).map(l=>`<div>${esc(l)}</div>`).join('')}</div>`}
@@ -736,7 +737,7 @@ function drawMap(){
  reach.forEach(j=>{pathOf(TILES[j].poly);ctx.lineWidth=5;ctx.setLineDash([9,7]);ctx.strokeStyle=S.t[j].o==='you'?'#fff7d6':'#b5120a';ctx.stroke();ctx.setLineDash([])});
  if(hover!=null){pathOf(TILES[hover].poly);ctx.lineWidth=4;ctx.strokeStyle='#16211d';ctx.stroke()}
  if(sel!=null){pathOf(TILES[sel].poly);ctx.lineWidth=6;ctx.strokeStyle='#fff7d6';ctx.stroke()}
- {const wg=ctx.createLinearGradient(0,450,0,552);wg.addColorStop(0,'#7c9a9b');wg.addColorStop(1,'#567578');pathOf(HARBOUR);ctx.fillStyle=wg;ctx.fill();ctx.fillStyle='#567578';ctx.fillRect(324,549,302,6)}
+ {const wg=ctx.createLinearGradient(0,450,0,552);wg.addColorStop(0,'#7c9a9b');wg.addColorStop(1,'#567578');pathOf(HARBOUR);ctx.fillStyle=wg;ctx.fill();ctx.fillStyle='#567578';ctx.fillRect(324,549,302,4);ctx.fillStyle='#5f7f83';ctx.fillRect(310,553,330,18)}
  [[372,487,18],[430,458,20],[478,452,22],[528,456,20],[580,482,18]].forEach(([x,y,l])=>{ctx.fillStyle='#4a3522';ctx.fillRect(x-2,y,5,l)});
  ctx.beginPath();HARBOUR.forEach((q,i)=>i?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1]));ctx.strokeStyle='#33261a';ctx.lineWidth=2.5;ctx.stroke();
  ctx.strokeStyle='rgba(255,255,255,.16)';ctx.lineWidth=1.5;for(let y=470;y<548;y+=13){ctx.beginPath();for(let x=360;x<=590;x+=14){const yy=y+Math.sin(x/19+y)*2.5;if(inPoly(HARBOUR,x,yy))ctx.lineTo(x,yy);else ctx.moveTo(x,yy)}ctx.stroke()}
@@ -1121,6 +1122,7 @@ $('#panel').addEventListener('click',e=>{
  else if(b.id==='bye')leave();
  else if(b.id==='end')endWeek();
  else if(b.id==='cancel')cancelOrders();
+ else if(b.dataset.diff!==undefined){S.diff=+b.dataset.diff;render()}
  else if(b.id==='buy'){spend(40);S.pool++;render()}
  else if(b.id==='answer')answerCall();
  else if(b.id==='pickup')pickUp();
