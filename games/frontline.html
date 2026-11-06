@@ -1115,7 +1115,7 @@ const _rc = new THREE.Raycaster();
 function traceShot(o, d, far, shooter, ex) {
   const w = castWorld(o, d, far); let best = w ? w.dist : far, res = w ? { point: w.point, normal: w.normal, mat: w.mat } : null;
   _rc.set(o, d); _rc.near = 0; _rc.far = best;
-  const cands = []; for (const h of hitboxes) { const e = h.userData.ent; if (!e.dead && e.id !== shooter) cands.push(h); }
+  const cands = []; for (const h of hitboxes) { const e = h.userData.ent; if (!e.dead && !e.inVeh && e.id !== shooter) cands.push(h); }
   for (const v of vehicles) if (!v.dead && v !== ex && v.driver !== shooter) cands.push(v.hit);
   for (const hl of helis) if (!hl.dead && hl !== ex) cands.push(hl.fus);
   const hs = _rc.intersectObjects(cands, false);
@@ -1299,8 +1299,8 @@ function makeTransport(x, z, yaw, team, gunship) {
   v.hit = hitBox(g, 2.6, 2.6, 6.5, 1.9); v.hit.userData.veh = v; vehicles.push(v); placeVeh(v); return v;
 }
 function placeVeh(v) { v.g.position.copy(v.pos); v.g.rotation.set(0, v.yaw, 0); }
-function damageVehicle(v, dmg, by) {
-  if (v.dead) return; v.hp -= dmg; if (by === me.id) hitmarker(v.hp <= 0);
+function damageVehicle(v, dmg, by, fromNet) {
+  if (v.dead) return; if (NET.on && !fromNet) { if (by !== me.id) return; netSend('vd', { v: v.nid, d: Math.round(dmg) }); } v.hp -= dmg; if (by === me.id) hitmarker(v.hp <= 0);
   if (v.driver === me.id && by !== me.id) { shakeAmt = Math.max(shakeAmt, .05); }
   if (v.hp <= 0) { v.dead = true; v.respawnT = 30; explosion(v.pos.clone().setY(v.pos.y + 1.2), v.type === 'tank' ? 8 : 6, 170, by, 'vehicle');
     v.g.traverse(o => { if (o.isMesh && o.material && o.material.color && o.material.visible !== false) { o.material = o.material.clone(); o.material.color.multiplyScalar(.15); if (o.material.map) o.material.map = null; } });
@@ -1311,7 +1311,7 @@ function damageVehicle(v, dmg, by) {
     if (v.gunner) v.gunner.root.visible = false; }
 }
 function resetVehicle(v) { scene.remove(v.g); vehicles.splice(vehicles.indexOf(v), 1); if (v.gunner) scene.remove(v.gunner.root); const [x, z, y] = v.home; if (v.type === 'tank') makeTank(x, z, y, v.team, v.ai); else if (v.type === 'heli') makeTransport(x, z, y, v.team); else makeJeep(x, z, y, v.team, v.armed, v.ai); }
-function vehFire(from, to, sid, ex) { const d = to.clone().sub(from).normalize(); const r = traceShot(from, d, 160, sid, ex); const end = r ? r.point : from.clone().addScaledVector(d, 160); tracer(from, end); if (from.distanceTo(cam.position) < 90) snd('mg', from); FIRE.emit(from.x, from.y, from.z, 0, 0, 0, .05, .5, .3, 1, 4, 2.4, 1); if (r) applyHit(r, 15, 1.6, sid, from, 'gun'); nearMiss(from, end, sid, r); }
+function vehFire(from, to, sid, ex) { const d = to.clone().sub(from).normalize(); const r = traceShot(from, d, 160, sid, ex); const end = r ? r.point : from.clone().addScaledVector(d, 160); if (sid === me.id && NET.on && NET.shots.length < 6) NET.shots.push([...from.toArray(), ...end.toArray()].map(v => +v.toFixed(2))); tracer(from, end); if (from.distanceTo(cam.position) < 90) snd('mg', from); FIRE.emit(from.x, from.y, from.z, 0, 0, 0, .05, .5, .3, 1, 4, 2.4, 1); if (r) applyHit(r, 15, 1.6, sid, from, 'gun'); nearMiss(from, end, sid, r); }
 function vehTerrainMove(v, dt, steepTol, probeTol) {
   const fx = Math.sin(v.yaw), fz = Math.cos(v.yaw), old = v.pos.clone(); const nx = v.pos.x + fx * v.speed * dt, nz = v.pos.z + fz * v.speed * dt; const step = Math.abs(v.speed * dt) + 1e-4, sg = Math.sign(v.speed) || 1;
   const hN = th(nx, nz), hO = th(old.x, old.z), probe = th(nx + fx * 2.2 * sg, nz + fz * 2.2 * sg);
@@ -1319,7 +1319,12 @@ function vehTerrainMove(v, dt, steepTol, probeTol) {
   if (!blocked) { v.pos.x = nx; v.pos.z = nz; const before = v.pos.clone(); v.pos.y = hN; collide(v.pos, null, 1.6, v.type === 'tank' ? 2.0 : 1.5); if (Math.hypot(before.x - v.pos.x, before.z - v.pos.z) > .03) blocked = true; }
   return { blocked, old };
 }
+function netVehApply(v, dt) { const n = v.net; if (!n) return; v.pos.lerp(n.p, 1 - Math.exp(-10 * dt)); v.yaw += angDiff(v.yaw, n.yaw) * Math.min(1, dt * 10); v.speed = n.sp;
+  v.g.position.copy(v.pos); v.g.rotation.set(n.rx || 0, v.yaw, n.rz || 0, 'YXZ'); if (v.turret && n.ty !== undefined) v.turret.rotation.y += angDiff(v.turret.rotation.y, n.ty) * Math.min(1, dt * 10); if (v.gun && n.gp !== undefined) v.gun.rotation.x = n.gp;
+  if (v.rotor) { v.spin = n.spin || 0; v.rotor.rotation.y += dt * 28 * v.spin; v.tail.rotation.x += dt * 40 * v.spin; spinRotor(v.rotor, v.spin); v.landed = n.ld; } if (v.wheels) v.wheels.forEach(w => w.rotation.x += v.speed * dt / .45);
+  if (performance.now() - n.t > 4000) { v.netDriver = null; v.driver = null; v.net = null; } }
 function updVehicle(v, dt) {
+  if (v.netDriver && !v.dead) return netVehApply(v, dt);
   if (v.type === 'heli') return updTransport(v, dt);
   if (v.dead) { v.respawnT -= dt; if (v.respawnT <= 0) resetVehicle(v); else if (Math.random() < dt * 8) SMOKE.emit(v.pos.x, v.pos.y + 1.6, v.pos.z, rnd(-.3, .3), rnd(1.5, 2.5), rnd(-.3, .3), rnd(3, 5), .8, 3, .6, .1, .09, .08, .3, .3); return; }
   const tank = v.type === 'tank'; let throttle = 0, steerIn = 0, brake = false;
@@ -1396,10 +1401,10 @@ function updTransport(v, dt) {
   if (v.spin > .5 && v.pos.y - g < 8) for (let i = 0; i < 2; i++) { const a = Math.random() * 6.28, r = rnd(2, 6); DIRT.emit(v.pos.x + Math.cos(a) * r, g + .2, v.pos.z + Math.sin(a) * r, Math.cos(a) * 8, .6, Math.sin(a) * 8, rnd(.6, 1), .5, 2.5, .35 * (1 - (v.pos.y - g) / 8), .38, .3, .22, 0, 1.5); }
   v.g.position.copy(v.pos); v.g.rotation.set(v.tilt.x, v.yaw, v.tilt.z, 'YXZ');
 }
-function nearestFreeVehicle() { let best = null, bd = 4.2; vehicles.forEach(v => { if (v.dead || v.ai || v.driver || (isTeam() && v.team !== me.team)) return; const d = Math.hypot(v.pos.x - me.pos.x, v.pos.z - me.pos.z) - (v.type === 'jeep' ? 0 : 1.5); if (d < bd) { bd = d; best = v; } }); return best; }
+function nearestFreeVehicle() { let best = null, bd = 4.2; vehicles.forEach(v => { if (v.dead || v.ai || v.driver || v.netDriver || (isTeam() && v.team !== me.team)) return; const d = Math.hypot(v.pos.x - me.pos.x, v.pos.z - me.pos.z) - (v.type === 'jeep' ? 0 : 1.5); if (d < bd) { bd = d; best = v; } }); return best; }
 const VNAME = { jeep: 'jeep', tank: 'tank', heli: 'transport helicopter' };
-function enterVehicle(v) { me.veh = v; v.driver = me.id; me.yaw = v.yaw + Math.PI; me.pitch = -.2; me.crouch = false; $('vehhud').classList.remove('hide'); $('ammo').classList.add('hide'); announce(v.type === 'heli' ? 'Hold Space to take off · E drops a supply crate' : v.type === 'tank' ? 'Mouse aims the turret · click or E fires the main gun' : 'W/S drive · A/D steer' + (v.armed ? ' · click or E to fire' : ''), true); }
-function exitVehicle(force) { const v = me.veh; if (!v) return; if (!force && v.type === 'heli' && !v.landed) { announce('Land before getting out', false); return; } v.driver = null; me.veh = null; const side = new V(Math.cos(v.yaw), 0, -Math.sin(v.yaw)).multiplyScalar(v.type === 'tank' ? -2.8 : -2.2); me.pos.copy(v.pos).add(side); me.pos.y = Math.max(th(me.pos.x, me.pos.z), me.pos.y); collide(me.pos, null); me.yaw = v.yaw + Math.PI; me.pitch = 0; $('vehhud').classList.add('hide'); $('ammo').classList.remove('hide'); if (AU.ac) { AU.rotor.g.gain.setTargetAtTime(0, AU.ac.currentTime, .3); AU.engG.gain.setTargetAtTime(0, AU.ac.currentTime, .2); } }
+function enterVehicle(v) { me.veh = v; v.driver = me.id; netSend('vo', { v: v.nid, on: 1 }); me.yaw = v.yaw + Math.PI; me.pitch = -.2; me.crouch = false; $('vehhud').classList.remove('hide'); $('ammo').classList.add('hide'); announce(v.type === 'heli' ? 'Hold Space to take off · E drops a supply crate' : v.type === 'tank' ? 'Mouse aims the turret · click or E fires the main gun' : 'W/S drive · A/D steer' + (v.armed ? ' · click or E to fire' : ''), true); }
+function exitVehicle(force) { const v = me.veh; if (!v) return; if (!force && v.type === 'heli' && !v.landed) { announce('Land before getting out', false); return; } v.driver = null; netSend('vo', { v: v.nid, on: 0 }); me.veh = null; const side = new V(Math.cos(v.yaw), 0, -Math.sin(v.yaw)).multiplyScalar(v.type === 'tank' ? -2.8 : -2.2); me.pos.copy(v.pos).add(side); me.pos.y = Math.max(th(me.pos.x, me.pos.z), me.pos.y); collide(me.pos, null); me.yaw = v.yaw + Math.PI; me.pitch = 0; $('vehhud').classList.add('hide'); $('ammo').classList.remove('hide'); if (AU.ac) { AU.rotor.g.gain.setTargetAtTime(0, AU.ac.currentTime, .3); AU.engG.gain.setTargetAtTime(0, AU.ac.currentTime, .2); } }
 let vehCool = 0;
 function playerVehicleFire(dt) { const v = me.veh; if (!v || !v.armed) return; vehCool -= dt; const firing = mouseDown || eFire;
   const dir = new V(0, 0, -1).applyQuaternion(cam.quaternion); const h = castWorld(cam.position, dir, 220); const aim = h ? h.point : cam.position.clone().addScaledVector(dir, 220);
@@ -1973,19 +1978,24 @@ function netCfg() { try { const p = window.parent; return p && p !== window && p
 function netSend(ev, p) { if (!NET.on || !NET.chan) return; p.i = me.id; try { NET.chan.send({ type: 'broadcast', event: ev, payload: p }); } catch (e) { } }
 function addRemote(id, name, team) { let e = ents.get(id); if (e && team && e.team !== team) { removeRemote(id); e = null; } if (e) return e;
   let h = 0; for (const c of id) h = h * 31 + c.charCodeAt(0) >>> 0; e = addEnt(id, name || 'Player', team || 'B', h % 8); Object.assign(e, { remote: true, bot: false, last: performance.now(), speed: 0, aimW: 0, aimPitch: 0 }); updScore(); return e; }
-function removeRemote(id) { const e = ents.get(id); if (!e) return; scene.remove(e.root); for (let i = hitboxes.length - 1; i >= 0; i--) if (hitboxes[i].userData.ent === e) hitboxes.splice(i, 1); ents.delete(id); score.delete(id); updScore(); }
-function onNetState(p) { const e = addRemote(p.i, p.n, p.t); e.last = performance.now(); if (p.n && e.name !== p.n) { e.name = p.n; sc(p.i, p.n); }
+function removeRemote(id) { vehicles.forEach(v => { if (v.netDriver === id) { v.netDriver = null; v.driver = null; v.net = null; } }); const e = ents.get(id); if (!e) return; scene.remove(e.root); for (let i = hitboxes.length - 1; i >= 0; i--) if (hitboxes[i].userData.ent === e) hitboxes.splice(i, 1); ents.delete(id); score.delete(id); updScore(); }
+function netVeh(i) { return vehicles.find(v => v.nid === i); }
+function onNetState(p) { const e = addRemote(p.i, p.n, p.t); e.last = performance.now();
+  e.inVeh = !!p.vh; e.root.visible = !p.vh || e.dead; if (p.vh) { const v = netVeh(p.vh.i); if (v && !v.dead) { if (v.driver === me.id) { exitVehicle(true); } v.netDriver = p.i; v.driver = p.i; v.net = v.net || { p: new V() }; Object.assign(v.net, { yaw: p.vh.yw, sp: p.vh.sp, rx: p.vh.rx, rz: p.vh.rz, ty: p.vh.ty, gp: p.vh.gp, spin: p.vh.sn, ld: !!p.vh.ld, t: performance.now() }); v.net.p.set(p.vh.x, p.vh.y, p.vh.z); } }
+  else vehicles.forEach(v => { if (v.netDriver === p.i) { v.netDriver = null; v.driver = null; v.net = null; } }); if (p.n && e.name !== p.n) { e.name = p.n; sc(p.i, p.n); }
   e.tpos.set(p.x, p.y, p.z); e.yaw = p.yw + Math.PI; e.aimPitch = p.p; e.crouch = !!p.c; e.speed = p.v; e.aimW = p.a ? 1 : .4;
   if (p.d && !e.dead) { e.dead = true; e.deadT = 0; deathPush(e, null, 'gun'); } if (!p.d && e.dead) { e.dead = false; e.dv = null; e.dy = 0; e.root.rotation.set(0, 0, 0); e.pos.copy(e.tpos); e.root.visible = true; }
   if (p.sh) for (const q of p.sh) { const a = new V(q[0], q[1], q[2]), b = new V(q[3], q[4], q[5]); tracer(a, b); snd('shot', a); impact(b, null, 'dirt'); e.firedT = gameT; } }
 function netTick(dt) { if (!NET.on) return; NET.acc += dt; if (NET.acc < .1) return; NET.acc = 0;
-  netSend('s', { n: me.name, t: me.team, x: +me.pos.x.toFixed(2), y: +me.pos.y.toFixed(2), z: +me.pos.z.toFixed(2), yw: +me.yaw.toFixed(3), p: +me.pitch.toFixed(2), c: me.crouch ? 1 : 0, v: +Math.hypot(me.vel.x, me.vel.z).toFixed(1), d: me.dead ? 1 : 0, a: adsT > .5 ? 1 : 0, sh: NET.shots.length ? NET.shots.splice(0) : undefined }); }
+  netSend('s', { n: me.name, t: me.team, x: +me.pos.x.toFixed(2), y: +me.pos.y.toFixed(2), z: +me.pos.z.toFixed(2), yw: +me.yaw.toFixed(3), p: +me.pitch.toFixed(2), c: me.crouch ? 1 : 0, v: +Math.hypot(me.vel.x, me.vel.z).toFixed(1), d: me.dead ? 1 : 0, a: adsT > .5 ? 1 : 0, sh: NET.shots.length ? NET.shots.splice(0) : undefined, vh: me.veh ? { i: me.veh.nid, x: +me.veh.pos.x.toFixed(2), y: +me.veh.pos.y.toFixed(2), z: +me.veh.pos.z.toFixed(2), yw: +me.veh.yaw.toFixed(3), sp: +(me.veh.speed || 0).toFixed(1), rx: +me.veh.g.rotation.x.toFixed(3), rz: +me.veh.g.rotation.z.toFixed(3), ty: me.veh.turret ? +me.veh.turret.rotation.y.toFixed(3) : undefined, gp: me.veh.gun ? +me.veh.gun.rotation.x.toFixed(3) : undefined, sn: me.veh.spin !== undefined ? +me.veh.spin.toFixed(2) : undefined, ld: me.veh.landed ? 1 : 0 } : undefined }); }
 async function netJoin(room) { const cfg = netCfg(); if (!cfg) throw new Error('Online play only works inside Ares Revision.');
   NET.sb = NET.sb || cfg.lib.createClient(cfg.url, cfg.key, { auth: { persistSession: false } }); NET.room = room;
   const ch = NET.sb.channel('frontline-' + room, { config: { broadcast: { self: false, ack: false }, presence: { key: me.id } } }); NET.chan = ch;
   ch.on('broadcast', { event: 's' }, ({ payload: p }) => onNetState(p))
     .on('broadcast', { event: 'h' }, ({ payload: p }) => { if (p.t === me.id) takeDamage(p.d, new V(p.x, me.pos.y, p.z), p.i, !!p.hd, p.k || 'gun'); })
     .on('broadcast', { event: 'k' }, ({ payload: p }) => { registerKill(p.k, p.v, !!p.hd, p.kd || 'gun'); if (p.k === me.id) hitmarker(true, !!p.hd); })
+    .on('broadcast', { event: 'vo' }, ({ payload: p }) => { const v = netVeh(p.v); if (!v) return; if (p.on) { if (v.driver === me.id) exitVehicle(true); v.netDriver = p.i; v.driver = p.i; } else if (v.netDriver === p.i) { v.netDriver = null; v.driver = null; v.net = null; } })
+    .on('broadcast', { event: 'vd' }, ({ payload: p }) => { const v = netVeh(p.v); if (v) damageVehicle(v, p.d, p.i, true); })
     .on('broadcast', { event: 'c4' }, ({ payload: p }) => explosion(new V(p.x, p.y, p.z), 6.5, 240, p.i, 'c4'))
     .on('broadcast', { event: 'n' }, ({ payload: p }) => throwNade(new V(p.x, p.y, p.z), new V(p.dx, p.dy, p.dz), p.i, true))
     .on('broadcast', { event: 'r' }, ({ payload: p }) => fireRocket(new V(...p.f), new V(...p.d), p.i, p.s, p.k, true))
@@ -2356,7 +2366,8 @@ function start(m) { wi = 0; applyLoadout(); if (!PROPS.length) spawnProps(); bat
   applyQuality(); mode = m; GOAL = m === 'tdm' ? 50 : m === 'front' ? Infinity : m === 'online' ? 30 : 25; const onT = me.team; me.team = m === 'ffa' ? null : m === 'online' ? onT : 'A'; if (m === 'online') streaks[3].need = 99; score.clear(); teamScore.A = teamScore.B = 0; sc(me.id, me.name, me.team);
   const n = +$('botn').value; if (m === 'front') { const own = OWNERS[String(clamp(camp.f, -2, 2))]; SECTORS.forEach((s, i) => setOwner(s, own[i] === 'N' ? null : own[i])); showSectors(true); }
   if (m !== 'online') { resetSquad(); spawnBots(n, m !== 'ffa' ? n : 0); } if (m !== 'front') placeAssets();
-  if (m === 'online') { } else if (m !== 'ffa') { makeJeep(-70, -15, Math.PI / 2, 'A', false); makeJeep(-70, 27, Math.PI / 2, 'A', true); makeJeep(-66, -22, Math.PI / 2, 'A', true, true); makeJeep(66, 22, -Math.PI / 2, 'B', true, true); makeJeep(70, -15, -Math.PI / 2, 'B', false);
+  if (m === 'online') { makeJeep(-70, -15, Math.PI / 2, 'A', false); makeJeep(-70, 27, Math.PI / 2, 'A', true); makeTank(-66, 0, Math.PI / 2, 'A', false); makeTransport(-70, 12, Math.PI / 2, 'A');
+    makeJeep(70, 15, -Math.PI / 2, 'B', false); makeJeep(70, -27, -Math.PI / 2, 'B', true); makeTank(66, 0, -Math.PI / 2, 'B', false); makeTransport(70, -12, -Math.PI / 2, 'B'); vehicles.forEach((v, i) => v.nid = i); } else if (m !== 'ffa') { makeJeep(-70, -15, Math.PI / 2, 'A', false); makeJeep(-70, 27, Math.PI / 2, 'A', true); makeJeep(-66, -22, Math.PI / 2, 'A', true, true); makeJeep(66, 22, -Math.PI / 2, 'B', true, true); makeJeep(70, -15, -Math.PI / 2, 'B', false);
     makeTank(-66, 0, Math.PI / 2, 'A', false); makeTank(66, 0, -Math.PI / 2, 'B', true); makeTransport(-70, 12, Math.PI / 2, 'A'); if (hasPass('gunship')) makeTransport(-72, 30, Math.PI / 2, 'A', true); }
   else { makeJeep(-70, 27, Math.PI / 2, null, false); makeJeep(70, -15, -Math.PI / 2, null, true); makeTank(66, 0, -Math.PI / 2, null, false); makeTransport(-70, 12, Math.PI / 2, null); }
   pModel = makeSoldier(me.name, me.team || 'A', true, 3, FACE.tex ? FACE : null); if (hasTrophy('ipad') && IPAD.scr) packIpad(pModel); pModel.tag.visible = false; if (hasPass('camo')) pModel.m.traverse(o => { if (o.isMesh && /Outfit/.test(o.name)) o.material.color.setHex(0x3a3a3a); }); PENT.team = me.team; pModel.body.userData = { ent: PENT, head: false }; pModel.head.userData = { ent: PENT, head: true }; hitboxes.push(pModel.body, pModel.head);
