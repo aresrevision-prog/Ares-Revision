@@ -1209,6 +1209,14 @@ const VTX = (() => { const S = 128, c = document.createElement('canvas'), h = do
 function wheelMesh(g, r, w, x, y, z, segs = 20) { const t = vmesh(g, new THREE.CylinderGeometry(r, r, w, segs), MAT.tire, x, y, z, 0, 0, Math.PI / 2); const hb = new THREE.Mesh(new THREE.CylinderGeometry(r * .55, r * .6, w * 1.04, 12), VTX.rim); t.add(hb); const cap = new THREE.Mesh(new THREE.CylinderGeometry(r * .18, r * .18, w * 1.12, 8), VTX.steel); t.add(cap);
   for (let k = 0; k < 6; k++) { const nut = new THREE.Mesh(new THREE.CylinderGeometry(.025, .025, w * 1.1, 6), VTX.steel); const a = k / 6 * 6.283; nut.position.set(Math.cos(a) * r * .34, 0, Math.sin(a) * r * .34); t.add(nut); }
   const tr = new THREE.Mesh(new THREE.TorusGeometry(r * .96, w * .2, 6, segs), MAT.tire); tr.rotation.x = Math.PI / 2; tr.scale.set(1, 1, 2.2); t.add(tr); return t; }
+const HELI = (() => { const glass = M({ color: LIN(0x26343c), roughness: .06, metalness: .8, transparent: true, opacity: .82 }); const blur = new THREE.MeshBasicMaterial({ color: 0x0c0c0c, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide });
+  const blade = M({ color: LIN(0x1c1d1e), roughness: .5, metalness: .3 }), tip = M({ color: LIN(0xd8c040), roughness: .6 }), exh = M({ color: LIN(0x2a2420), roughness: .4, metalness: .6, emissive: LIN(0x200800) }); return { glass, blur, blade, tip, exh }; })();
+function lathe(pts, segs = 28) { const g = new THREE.LatheGeometry(pts.map(p => new THREE.Vector2(p[0], p[1])), segs); g.rotateX(Math.PI / 2); return g; }
+function heliRotor(parent, y, z, r, n, chord) { const rotor = new THREE.Group(); rotor.position.set(0, y, z); parent.add(rotor); vmesh(rotor, CY(.26, .3, .22, 14), VTX.steel, 0, 0, 0); vmesh(rotor, CY(.08, .08, .4, 8), VTX.steel, 0, -.25, 0);
+  for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2, arm = new THREE.Group(); arm.rotation.y = a; rotor.add(arm); const b = new THREE.Mesh(rbox(chord, .045, r - .3, .015), HELI.blade); b.position.set(0, .02, (r - .3) / 2 + .3); b.rotation.z = .04; b.castShadow = true; arm.add(b);
+    const t = new THREE.Mesh(rbox(chord, .05, .35, .01), HELI.tip); t.position.set(0, .02, r - .2); arm.add(t); const lk = new THREE.Mesh(rbox(.12, .08, .3, .02), VTX.steel); lk.position.set(0, 0, .35); arm.add(lk); }
+  const disc = new THREE.Mesh(new THREE.RingGeometry(.35, r, 48), HELI.blur.clone()); disc.rotation.x = -Math.PI / 2; disc.position.y = .03; rotor.add(disc); rotor.userData.disc = disc; rotor.userData.blades = rotor.children.filter(c => c.type === 'Group'); return rotor; }
+function spinRotor(rotor, spin) { const d = rotor.userData.disc; if (d) { d.material.opacity = clamp((spin - .35) * .5, 0, .32); } }
 function makeJeep(x, z, yaw, team, armed, ai) {
   const g = new THREE.Group(); scene.add(g); const paint = team === 'B' ? MAT.armorB : MAT.armorA;
   vmesh(g, rbox(1.9, .5, 4.1, .12, 3), paint, 0, .82, 0); vmesh(g, rbox(1.78, .3, 1.35, .12, 3), paint, 0, 1.2, 1.3, .04);
@@ -1259,18 +1267,31 @@ function makeTank(x, z, yaw, team, ai) { const heavy = !ai && team === me.team &
 }
 function makeTransport(x, z, yaw, team, gunship) {
   const g = new THREE.Group(); scene.add(g); const paint = team === 'B' ? MAT.armorB : MAT.armorA;
-  vmesh(g, new THREE.CapsuleGeometry(1.15, 3.2, 10, 24), paint, 0, 1.9, .2, Math.PI / 2).scale.set(1, 1, .85);
-  vmesh(g, new THREE.SphereGeometry(1.0, 24, 16, 0, Math.PI * 2, 0, Math.PI * .62), M({ color: LIN(0x3a5060), roughness: .08, metalness: .7 }), 0, 2.0, 1.95, 1.25).scale.set(.9, .7, .8);
-  for (const s of [-1, 1]) for (const a of [-.35, .35]) vmesh(g, rbox(.05, .05, 1.2, .02), MAT.dark, s * .55 * Math.cos(a), 2.55, 2.0, .7, 0, 0);
-  vmesh(g, rbox(1.5, .55, 1.9, .2), paint, 0, 3.0, -.2); for (const s of [-1, 1]) { vmesh(g, CY(.22, .26, .6, 12), MAT.dark, s * .55, 3.1, -1.25, Math.PI / 2); vmesh(g, CY(.17, .17, .05, 12), MAT.black, s * .55, 3.1, -1.56, Math.PI / 2); }
-  vmesh(g, CY(.22, .45, 5.4, 14), paint, 0, 2.3, -4, Math.PI / 2 + .06); vmesh(g, rbox(.14, 1.6, 1.0, .06), paint, 0, 3.05, -6.6, -.3);
-  vmesh(g, rbox(2.2, .08, .6, .03), paint, 0, 2.3, -6.1); vmesh(g, rbox(.08, .08, .12, .02), VTX.navR, -1.12, 2.3, -6.1); vmesh(g, rbox(.08, .08, .12, .02), VTX.navG, 1.12, 2.3, -6.1);
-  for (const s of [-1, 1]) { vmesh(g, CY(.06, .06, 3.8, 10), VTX.steel, s * 1.05, .22, .3, Math.PI / 2); vmesh(g, new THREE.SphereGeometry(.06, 8, 6), VTX.steel, s * 1.05, .22, 2.2); for (const zz of [-.8, 1.2]) vmesh(g, CY(.045, .045, .75, 8), VTX.steel, s * .92, .58, zz, 0, 0, s * .32);
-    vmesh(g, rbox(.05, .85, 1.35, .04), MAT.black, s * 1.12, 1.95, -.2); vmesh(g, rbox(.04, .4, .5, .03), MAT.glass, s * 1.1, 2.15, 1.1); vmesh(g, CY(.25, .25, .02, 18), M({ color: team === 'B' ? LIN(0x9a3a2a) : LIN(0x3a5a8a), roughness: .7 }), s * 1.0, 1.8, -2.1, 0, 0, Math.PI / 2 - s * .15); }
-  vmesh(g, CY(.5, .6, .45, 16), MAT.dark, 0, 3.4, .2); vmesh(g, CY(.12, .12, .5, 10), VTX.steel, 0, 3.55, .2);
-  const rotor = new THREE.Group(); rotor.position.set(0, 3.75, .2); g.add(rotor); vmesh(rotor, CY(.22, .22, .14, 12), VTX.steel, 0, 0, 0);
-  for (let i = 0; i < 4; i++) { const b = new THREE.Mesh(rbox(.3, .04, 3.9, .015), MAT.dark); b.geometry.translate(0, 0, 2.0); b.rotation.y = i * Math.PI / 2; b.castShadow = true; rotor.add(b); }
-  const tail = new THREE.Group(); tail.position.set(.2, 3.0, -6.6); g.add(tail); vmesh(tail, CY(.08, .08, .12, 10), VTX.steel, 0, 0, 0, 0, 0, Math.PI / 2); for (let i = 0; i < 2; i++) { const b = vmesh(tail, rbox(.03, 1.4, .13, .01), MAT.dark, .06, 0, 0); b.rotation.x = i * Math.PI / 2; }
+  // fuselage: lathe profile, nose at +z
+  const fz = lathe([[0, -1.9], [.75, -1.75], [1.05, -1.2], [1.12, 0], [1.1, 1.0], [.98, 1.7], [.72, 2.25], [.38, 2.6], [0, 2.7]]); const fus = vmesh(g, fz, paint, 0, 1.85, 0); fus.scale.set(1, .95, 1);
+  vmesh(g, rbox(2.08, .3, 3.6, .1), paint, 0, 1.0, .2); vmesh(g, rbox(1.9, .22, 3.2, .08), MAT.dark, 0, .82, .2);
+  // canopy: glass nose and greenhouse panels with frame
+  vmesh(g, new THREE.SphereGeometry(1.0, 28, 16, 0, Math.PI * 2, 0, Math.PI * .5), HELI.glass, 0, 2.05, 1.85, Math.PI / 2 - .25).scale.set(.95, .62, .88);
+  for (const a of [-.55, 0, .55]) vmesh(g, rbox(.04, .04, 1.1, .015), MAT.dark, Math.sin(a) * .82, 2.3 + Math.cos(a) * .1 - .1, 1.95, -.55, 0, -a * .4);
+  vmesh(g, new THREE.TorusGeometry(.92, .035, 6, 28, Math.PI), MAT.dark, 0, 2.02, 1.42, 0, 0, 0).scale.set(1.05, .78, 1);
+  for (const s2 of [-1, 1]) { vmesh(g, rbox(.03, .55, .7, .03), HELI.glass, s2 * 1.07, 2.15, 1.05, 0, s2 * .12, 0); vmesh(g, rbox(.03, .45, .55, .03), HELI.glass, s2 * 1.1, 2.15, -.3);
+    vmesh(g, rbox(.04, .95, 1.5, .04), MAT.dark, s2 * 1.12, 1.85, -.6); for (const zz of [-1.32, .12]) vmesh(g, rbox(.05, .9, .04, .01), VTX.steel, s2 * 1.14, 1.85, zz);
+    vmesh(g, CY(.03, .03, 1.6, 6), VTX.steel, s2 * 1.16, 2.38, -.6, Math.PI / 2); vmesh(g, CY(.25, .25, .02, 18), M({ color: team === 'B' ? LIN(0x9a3a2a) : LIN(0x3a5a8a), roughness: .7 }), s2 * 1.1, 1.75, -1.75, 0, 0, Math.PI / 2 - s2 * .12);
+    // skids
+    vmesh(g, CY(.065, .065, 3.9, 12), VTX.steel, s2 * 1.1, .2, .25, Math.PI / 2); vmesh(g, CY(.065, .065, .5, 10), VTX.steel, s2 * 1.1, .33, 2.27, Math.PI / 2 - .5);
+    for (const zz of [-.85, 1.15]) { vmesh(g, CY(.05, .05, .8, 8), VTX.steel, s2 * .96, .6, zz, 0, 0, s2 * .35); vmesh(g, CY(.05, .05, .5, 8), VTX.steel, s2 * .55, .95, zz, 0, 0, Math.PI / 2); } }
+  // engine deck, intakes, exhaust
+  vmesh(g, rbox(1.35, .55, 2.4, .25), paint, 0, 3.0, -.35); for (const s2 of [-1, 1]) { vmesh(g, lathe([[0, -.35], [.24, -.3], [.27, .2], [.18, .35]], 16), MAT.dark, s2 * .5, 3.05, .95); vmesh(g, CY(.17, .17, .02, 16), MAT.black, s2 * .5, 3.05, 1.3, Math.PI / 2); vmesh(g, lathe([[.2, -.3], [.2, .2], [.15, .35]], 14), HELI.exh, s2 * .5, 3.12, -1.55); }
+  for (let k = 0; k < 6; k++) vmesh(g, rbox(1.1, .02, .05, .01), MAT.black, 0, 3.28, -1.2 + k * .2);
+  vmesh(g, CY(.45, .55, .4, 18), MAT.dark, 0, 3.4, .2);
+  // tail boom, fins, stabiliser, tail rotor housing
+  vmesh(g, lathe([[.48, 0], [.42, 1.2], [.28, 3.6], [.2, 4.9]], 18), paint, 0, 2.35, -1.7, Math.PI, 0, 0); vmesh(g, rbox(.12, 1.35, .95, .06), paint, 0, 3.0, -6.55, -.35);
+  vmesh(g, rbox(.1, .5, .35, .04), paint, 0, 2.0, -6.4, .5); vmesh(g, rbox(2.1, .07, .55, .03), paint, 0, 2.38, -5.6); for (const s2 of [-1, 1]) vmesh(g, rbox(.06, .35, .45, .02), paint, s2 * 1.06, 2.45, -5.6);
+  vmesh(g, rbox(.08, .08, .12, .02), VTX.navR, -1.1, 2.38, -5.6); vmesh(g, rbox(.08, .08, .12, .02), VTX.navG, 1.1, 2.38, -5.6); vmesh(g, CY(.05, .05, .06, 8), VTX.lamp, 0, 3.7, -6.85);
+  vmesh(g, CY(.012, .006, 1.4, 4), MAT.black, -.35, 3.6, -.9); vmesh(g, rbox(.3, .02, .1, .01), MAT.black, .3, 3.32, .9);
+  const rotor = heliRotor(g, 3.75, .2, 3.9, 4, .32);
+  const tail = new THREE.Group(); tail.position.set(.2, 3.0, -6.6); g.add(tail); vmesh(tail, CY(.09, .09, .14, 10), VTX.steel, 0, 0, 0, 0, 0, Math.PI / 2); for (let i = 0; i < 2; i++) { const b = vmesh(tail, rbox(.03, 1.45, .14, .01), HELI.blade, .07, 0, 0); b.rotation.x = i * Math.PI / 2; }
+  { const d = new THREE.Mesh(new THREE.CircleGeometry(.72, 24), HELI.blur.clone()); d.rotation.y = Math.PI / 2; d.position.x = .08; tail.add(d); tail.userData.disc = d; }
   const crates = []; for (let i = 0; i < 4; i++) crates.push(vmesh(g, new THREE.BoxGeometry(.6, .5, .6), MAT.crate, (i % 2 - .5) * .7, 1.2, (i < 2 ? -.6 : .2)));
   if (!gunship) for (const sd of [-1, 1]) { vmesh(g, rbox(.9, .08, .3, .03), paint, sd * 1.35, 1.25, .4); vmesh(g, CY(.13, .13, .9, 12), MAT.dark, sd * 1.7, 1.1, .5, Math.PI / 2); }
   if (gunship) { crates.forEach(c => c.visible = false); for (const sd of [-1, 1]) { vmesh(g, rbox(1.4, .1, .4, .04), paint, sd * 1.5, 1.4, .4); const pod = vmesh(g, CY(.17, .17, 1.2, 14), MAT.dark, sd * 2.1, 1.22, .5, Math.PI / 2); for (let k = 0; k < 7; k++) { const a = k / 7 * 6.283, h = new THREE.Mesh(CY(.035, .035, .02, 8), MAT.black); h.position.set(k ? Math.cos(a) * .1 : 0, .6, k ? Math.sin(a) * .1 : 0); pod.add(h); } } vmesh(g, CY(.18, .18, .25, 12), MAT.dark, 0, .95, 2.6); vmesh(g, CY(.04, .04, .9, 8), MAT.black, 0, .9, 3.0, Math.PI / 2); }
@@ -1343,7 +1364,7 @@ function updVehicle(v, dt) {
 function updTransport(v, dt) {
   if (v.dead) { if (v.pos.y > th(v.pos.x, v.pos.z) + .5) { v.vel.y -= 14 * dt; v.pos.addScaledVector(v.vel, dt); v.yaw += dt * 4; if (Math.random() < .4) SMOKE.emit(v.pos.x, v.pos.y + 2, v.pos.z, 0, 1, 0, 2, 1, 3, .7, .08, .08, .08); if (v.pos.y <= th(v.pos.x, v.pos.z) + .5) explosion(v.pos.clone(), 8, 200, 'world', 'heli'); } v.respawnT -= dt; if (v.respawnT <= 0) resetVehicle(v); v.g.position.copy(v.pos); v.g.rotation.y = v.yaw; return; }
   const piloted = v.driver === me.id; v.spin += ((piloted ? 1 : 0) - v.spin) * dt * 1.3;
-  v.rotor.rotation.y += dt * 28 * v.spin; v.tail.rotation.x += dt * 40 * v.spin;
+  v.rotor.rotation.y += dt * 28 * v.spin; v.tail.rotation.x += dt * 40 * v.spin; spinRotor(v.rotor, v.spin); if (v.tail.userData.disc) v.tail.userData.disc.material.opacity = clamp((v.spin - .35) * .4, 0, .25);
   const g = th(v.pos.x, v.pos.z);
   if (piloted) {
     const lift = v.spin > .75 ? ((keys.Space ? 1 : 0) - ((keys.KeyC || keys.ControlLeft) ? 1 : 0)) : -.3;
@@ -1414,11 +1435,25 @@ function updSupplyReq(dt) { if (!isTeam()) return; if (supReq) { supReq.t -= dt;
 const helis = [];
 function spawnHeli(team, owner) {
   const g = new THREE.Group(); scene.add(g); const friendly = owner === me.id || (isTeam() && team === me.team); const body = friendly ? MAT.armorA : MAT.armorB;
-  const fus = vmesh(g, new THREE.CapsuleGeometry(.9, 2.6, 6, 14), body, 0, 0, 0, Math.PI / 2); vmesh(g, new THREE.SphereGeometry(.75, 14, 10), MAT.glass, 0, .2, 1.7);
-  vmesh(g, new THREE.CylinderGeometry(.18, .35, 4.5, 10), body, 0, .3, -3.6, Math.PI / 2); vmesh(g, new THREE.BoxGeometry(.1, 1.2, .7), body, 0, .8, -5.6);
-  for (const s of [-1, 1]) { vmesh(g, new THREE.BoxGeometry(.08, .08, 3), MAT.dark, s * .8, -1.15, 0); vmesh(g, new THREE.BoxGeometry(.6, .3, .9), MAT.dark, s * 1.4, -.2, .3); }
-  const rotor = new THREE.Group(); rotor.position.y = 1.15; g.add(rotor); for (let i = 0; i < 2; i++) { const b = vmesh(rotor, new THREE.BoxGeometry(.3, .04, 9), MAT.dark, 0, 0, 0); b.rotation.y = i * Math.PI / 2; }
-  const tail = new THREE.Group(); tail.position.set(.15, .8, -5.6); g.add(tail); for (let i = 0; i < 2; i++) { const b = vmesh(tail, new THREE.BoxGeometry(.03, 1.6, .15), MAT.dark, 0, 0, 0); b.rotation.x = i * Math.PI / 2; }
+  const fus = new THREE.Mesh(new THREE.CapsuleGeometry(.9, 2.6, 4, 8), new THREE.MeshBasicMaterial({ visible: false })); fus.rotation.x = Math.PI / 2; g.add(fus);
+  vmesh(g, lathe([[0, -1.6], [.55, -1.4], [.72, -.5], [.72, .9], [.5, 1.9], [.22, 2.4], [0, 2.5]], 24), body, 0, 0, 0).scale.set(.85, 1.1, 1);
+  vmesh(g, rbox(.9, .5, 2.2, .15), body, 0, -.45, .3);
+  // tandem canopy (gunner in front, pilot raised behind)
+  vmesh(g, new THREE.SphereGeometry(.55, 20, 12, 0, Math.PI * 2, 0, Math.PI * .5), HELI.glass, 0, .42, 1.45, 0).scale.set(.95, .9, 1.35); vmesh(g, new THREE.SphereGeometry(.55, 20, 12, 0, Math.PI * 2, 0, Math.PI * .5), HELI.glass, 0, .66, .55, 0).scale.set(.95, .95, 1.3);
+  for (const zz of [1.45, .55]) vmesh(g, new THREE.TorusGeometry(.53, .03, 5, 20, Math.PI), MAT.dark, 0, zz === 1.45 ? .42 : .66, zz, 0, Math.PI / 2, 0).scale.set(1, 1, .95);
+  // chin turret with cannon
+  vmesh(g, new THREE.SphereGeometry(.24, 14, 10), MAT.dark, 0, -.62, 1.85); vmesh(g, CY(.04, .05, 1.1, 8), MAT.black, 0, -.68, 2.35, Math.PI / 2 - .1);
+  // engines and exhausts on the shoulders
+  for (const s2 of [-1, 1]) { vmesh(g, lathe([[0, -.9], [.26, -.7], [.3, .5], [.22, .8]], 16), body, s2 * .62, .55, -.1); vmesh(g, CY(.2, .2, .02, 14), MAT.black, s2 * .62, .55, .7, Math.PI / 2); vmesh(g, rbox(.32, .26, .4, .08), HELI.exh, s2 * .68, .52, -1.1, 0, s2 * .4, 0);
+    // stub wings with rocket pods and missiles
+    vmesh(g, rbox(1.6, .1, .55, .04), body, s2 * 1.15, -.05, .15, 0, 0, s2 * -.06); for (const [wx, isPod] of [[1.25, true], [1.8, false]]) { if (isPod) { const pod = vmesh(g, lathe([[0, -.55], [.17, -.5], [.17, .45], [.12, .55]], 14), MAT.dark, s2 * wx, -.3, .2); } else for (const dy of [-.22, -.42]) for (const dx of [-.09, .09]) { vmesh(g, CY(.06, .06, .9, 8), M({ color: LIN(0x5a5a50), roughness: .6 }), s2 * wx + dx, dy, .25, Math.PI / 2); vmesh(g, new THREE.ConeGeometry(.06, .14, 8), MAT.dark, s2 * wx + dx, dy, .77, Math.PI / 2); } }
+    vmesh(g, CY(.05, .05, .9, 8), VTX.steel, s2 * .6, -.75, .1, 0, 0, s2 * .5); vmesh(g, CY(.18, .18, .12, 12), MAT.tire, s2 * .95, -1.12, .9, 0, 0, Math.PI / 2); }
+  vmesh(g, CY(.18, .18, .1, 12), MAT.tire, 0, -.85, -3.9, 0, 0, Math.PI / 2);
+  // tail boom, fin, stabiliser
+  vmesh(g, lathe([[.42, 0], [.32, 1.6], [.18, 4.1]], 16), body, 0, .2, -1.4, Math.PI, 0, 0); vmesh(g, rbox(.12, 1.35, .8, .05), body, 0, .85, -5.55, -.3); vmesh(g, rbox(1.6, .07, .5, .03), body, 0, .1, -5.2);
+  vmesh(g, rbox(.08, .08, .12, .02), VTX.navR, -.82, .1, -5.2); vmesh(g, rbox(.08, .08, .12, .02), VTX.navG, .82, .1, -5.2); vmesh(g, CY(.18, .2, .22, 14), MAT.dark, 0, 1.25, .25);
+  const rotor = heliRotor(g, 1.42, .25, 4.6, 4, .34);
+  const tail = new THREE.Group(); tail.position.set(.15, .8, -5.6); g.add(tail); vmesh(tail, CY(.08, .08, .12, 10), VTX.steel, 0, 0, 0, 0, 0, Math.PI / 2); for (let i = 0; i < 4; i++) { const b = vmesh(tail, rbox(.03, 1.5, .12, .01), HELI.blade, .06, 0, 0); b.rotation.x = i * Math.PI / 4; }
   const a0 = Math.random() * Math.PI * 2;
   const h = { g, rotor, tail, team: isTeam() ? team : null, owner, pos: new V(Math.cos(a0) * 90, 30, Math.sin(a0) * 90), ang: a0, life: 45, hp: 800, dead: false, cool: 0, target: null, think: 0, vel: new V(), fus };
   fus.userData.heli = h; helis.push(h); announce(friendly ? 'Friendly attack helicopter inbound' : 'Enemy attack helicopter inbound', friendly);
@@ -1428,7 +1463,7 @@ function updHeli(h, dt) {
   if (h.dead) { h.vel.y -= 12 * dt; h.pos.addScaledVector(h.vel, dt); h.g.rotation.y += dt * 4; h.g.position.copy(h.pos); h.rotor.rotation.y += dt * 10; if (Math.random() < .4) SMOKE.emit(h.pos.x, h.pos.y, h.pos.z, 0, 1, 0, 2.5, 1, 3, .8, .07, .07, .07); if (h.pos.y < th(h.pos.x, h.pos.z) + 1) { explosion(h.pos.clone(), 8, 200, h.owner, 'heli'); removeHeli(h); } return; }
   h.life -= dt; const out = h.life <= 0;
   const want = out ? new V(Math.cos(h.ang) * 140, 35, Math.sin(h.ang) * 140) : new V(Math.cos(h.ang) * 24, 21 + Math.sin(gameT / 2) * 2, Math.sin(h.ang) * 24); if (!out) h.ang += dt * .16;
-  h.vel.lerp(want.clone().sub(h.pos).clampLength(0, 22), Math.min(1, dt * 1.2)); h.pos.addScaledVector(h.vel, dt); h.rotor.rotation.y += dt * 30; h.tail.rotation.x += dt * 40;
+  h.vel.lerp(want.clone().sub(h.pos).clampLength(0, 22), Math.min(1, dt * 1.2)); h.pos.addScaledVector(h.vel, dt); h.rotor.rotation.y += dt * 30; h.tail.rotation.x += dt * 40; spinRotor(h.rotor, 1);
   h.think -= dt; if (h.think <= 0) { h.think = .5; h.target = findTarget({ id: h.owner, team: h.team, pos: h.pos.clone().setY(0) }, 70, h.pos.clone().setY(h.pos.y - 1.2), null); }
   const look = h.target ? h.target.t.pos : h.pos.clone().add(h.vel); const yaw = Math.atan2(look.x - h.pos.x, look.z - h.pos.z); h.g.rotation.y += angDiff(h.g.rotation.y, yaw) * Math.min(1, dt * 2.5); h.g.rotation.x = Math.min(.3, h.vel.length() * .012); h.g.position.copy(h.pos);
   if (h.target && !out) { h.cool -= dt; if (h.cool <= 0) { h.cool = .09; const tp = h.target.t.pos.clone().setY(h.target.t.pos.y + 1); const from = h.pos.clone().add(new V(0, -1.2, 0)); vehFire(from, tp.add(new V(rnd(-1, 1), rnd(-.5, .5), rnd(-1, 1)).multiplyScalar(Math.random() < .3 ? .3 : 2.5)), h.owner, h); } }
@@ -2363,8 +2398,16 @@ function openCrate(btn) { if (crateBusy || PROFILE.coins < CRATE_PRICE) return; 
   setTimeout(() => { const v = SKINS_W[win], own = PROFILE.skinsOwned = PROFILE.skinsOwned || [], dup = own.includes(win); if (dup) PROFILE.coins += DUP_REFUND; else own.push(win); saveProfile(); updCoins(); snd('ready');
     $('cratemsg').innerHTML = `<b style="color:${RAR[v.rar].col}">${v.name}</b> · ${v.rar}${dup ? ` · duplicate, +${DUP_REFUND} coins back` : ' · new skin!'}`; crateBusy = false;
     setTimeout(() => { if (shopTab === 'skins' && !crateBusy) { const msg = $('cratemsg').innerHTML; renderShop('skins'); $('cratemsg').innerHTML = msg; const v2 = SKINS_W[win]; $('reelstrip').innerHTML = `<div class="ri" style="border-color:${RAR[v2.rar].col};margin:8px auto"><div class="sw" data-sk="${win}"></div><b>${v2.name}</b></div>`; paintSwatches(); } }, 1600); }, 4400); }
+async function onlineCode(v, m) { let look = null; try { look = window.parent !== window && window.parent._flLookupCode; } catch (e) { }
+  if (!look || !v) { m.textContent = 'That code doesn\'t exist'; m.style.color = 'var(--red)'; return; } m.textContent = 'Checking…'; m.style.color = 'var(--dim)';
+  const r = await look(v); const say = (t, ok) => { const el = $('hmsg') || m; el.textContent = t; el.style.color = ok ? 'var(--grn)' : 'var(--red)'; };
+  if (!r || r.error) { say(r && r.error ? 'Could not check codes right now' : 'That code doesn\'t exist or has expired'); return; } if (r.expires_at && new Date(r.expires_at) < new Date()) { say('That code has expired'); return; }
+  PROFILE.codes = PROFILE.codes || []; if (PROFILE.codes.includes(v)) { say('You already used that code'); return; } PROFILE.codes.push(v);
+  let msg = ''; if (r.reward === 'honors') { PROFILE.honors = (PROFILE.honors || 0) + r.amount; msg = `+${r.amount} Honors added`; } else if (r.reward === 'coins') { PROFILE.coins += r.amount; updCoins(); msg = `+${r.amount} coins added`; }
+  else if (r.reward === 'skin' && SKINS_W[r.skin]) { const own = PROFILE.skinsOwned = PROFILE.skinsOwned || []; if (!own.includes(r.skin)) own.push(r.skin); msg = `${SKINS_W[r.skin].name} skin unlocked`; }
+  saveProfile(); snd('ready'); renderShop(shopTab); say(msg, true); }
 function redeemCode() { { const v0 = ($('hcode').value || '').trim().toLowerCase(); if (v0 === 'midas') { const own = PROFILE.skinsOwned = PROFILE.skinsOwned || [], m0 = $('hmsg'); if (own.includes('gold')) { m0.textContent = 'You already have the Gold skin'; m0.style.color = 'var(--red)'; return; } own.push('gold'); PROFILE.skin = 'gold'; saveProfile(); applyLoadout(); snd('ready'); renderShop(shopTab); const m2 = $('hmsg'); m2.textContent = 'Gold skin unlocked and equipped'; m2.style.color = 'var(--grn)'; return; } } const v = ($('hcode').value || '').trim().toLowerCase(), m = $('hmsg'); PROFILE.codes = PROFILE.codes || [];
-  if (!HONOR_CODES[v]) { m.textContent = 'That code doesn\'t exist'; m.style.color = 'var(--red)'; return; } if (PROFILE.codes.includes(v)) { m.textContent = 'You already used that code'; m.style.color = 'var(--red)'; return; }
+  if (!HONOR_CODES[v]) { onlineCode(v, m); return; } if (PROFILE.codes.includes(v)) { m.textContent = 'You already used that code'; m.style.color = 'var(--red)'; return; }
   PROFILE.codes.push(v); PROFILE.honors = (PROFILE.honors || 0) + HONOR_CODES[v]; saveProfile(); snd('ready'); renderShop('honors'); const m2 = $('hmsg'); m2.textContent = `+${HONOR_CODES[v]} Honors added`; m2.style.color = 'var(--grn)'; }
 function openShop() { $('shop').classList.remove('hide'); renderShop(); }
 $('shopbody').onclick = e => { const b0 = e.target.closest('button[data-a]'); if (b0 && b0.dataset.a === 'code') { redeemCode(); return; }
