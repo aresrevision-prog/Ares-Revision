@@ -170,6 +170,7 @@ svg.rk{vertical-align:middle;flex:none;filter:drop-shadow(0 1px 1px #000)}
 .islot .iic{font-size:28px}.islot b{font-family:var(--cond);font-size:17px;text-transform:uppercase}.islot small{color:var(--dim);font-family:var(--body);font-size:12px}
 .islot.on{border-color:var(--acc)}.islot.tro{border-color:var(--blu);background:rgba(111,178,255,.08)}.islot.tro:hover{background:rgba(111,178,255,.18)}.islot.lock{opacity:.5}
 #netinfo{position:absolute;left:20px;top:196px;font-size:13px;color:var(--grn);text-shadow:0 1px 2px #000}
+.codebox{margin:14px 0 6px;padding:12px;border:1px solid rgba(111,178,255,.35);background:rgba(111,178,255,.06);display:flex;flex-direction:column;gap:8px}.codebox .row{display:flex;gap:8px}.codebox input{flex:1;text-transform:uppercase;letter-spacing:.15em}.codebox .cbal{float:right;color:var(--blu);font-family:var(--cond)}#hmsg{font-family:var(--cond);letter-spacing:.06em}
 </style>
 
 <canvas id="c"></canvas>
@@ -204,7 +205,7 @@ svg.rk{vertical-align:middle;flex:none;filter:drop-shadow(0 1px 1px #000)}
     <div class="row"><button id="tdm" disabled>Team Deathmatch</button><button id="ffa" disabled>Free-for-all</button></div>
     <div class="coinrow"><span id="mcoins"></span><button id="mshop">Armory</button><button id="mface">My face</button></div>
     <span id="load">Building the battlefield…</span><div id="err"></div>
-    <div class="keys"><b>WASD</b> move · <b>Mouse</b> or <b>Arrow keys</b> look · <b>Click</b> or <b>E</b> fire · <b>Right-click</b> or <b>Q</b> aim · <b>Shift</b> sprint · <b>Space</b> jump / climb · <b>C</b> crouch (slide while sprinting) · <b>R</b> reload · <b>1 2 3</b> primary, marksman, launcher · <b>G</b> grenade · <b>Offensive:</b> capture the sectors in order to push the front · <b>T</b> form squad, then give orders (follow, hold, attack task, disband) · <b>X</b> hold to plant or defuse a charge · <b>F</b> first / third person · <b>V</b> enter vehicle · <b>4–7</b> killstreaks · <b>Tab</b> scores · <b>Esc</b> pause<br>
+    <div class="keys"><b>WASD</b> move · <b>Mouse</b> or <b>Arrow keys</b> look · <b>Click</b> or <b>E</b> fire · <b>Right-click</b> or <b>Q</b> aim · <b>Shift</b> sprint · <b>Space</b> jump / climb · <b>C</b> crouch (slide while sprinting) · <b>R</b> reload · <b>1 2 3</b> primary, marksman, launcher · <b>G</b> grenade · <b>B</b> throw C4 · <b>Z</b> detonate C4 · <b>X</b> pick up weapons · <b>Offensive:</b> capture the sectors in order to push the front · <b>T</b> form squad, then give orders (follow, hold, attack task, disband) · <b>X</b> hold to plant or defuse a charge · <b>F</b> first / third person · <b>V</b> enter vehicle · <b>4–7</b> killstreaks · <b>Tab</b> scores · <b>Esc</b> pause<br>
     <b>Helicopter:</b> Space up · C down · W/S fly · A/D turn · E drop supplies · <b>Tank:</b> mouse aims · click/E main gun · right-click MG</div>
   </div>
   <aside id="profile"></aside>
@@ -1133,7 +1134,7 @@ function hurt(tid, dmg, aid, head, src, kind) {
   if (over || dmg <= 0) return;
   if (tid === me.id) return takeDamage(dmg, src, aid, head, kind);
   const e = ents.get(tid); if (!e || e.dead) return;
-  if (e.remote) { if (aid === me.id && !/grenade|rocket|tank|artillery|airstrike|explosion|shell|at4|gl/.test(kind || '')) { netSend('h', { t: tid, d: Math.round(dmg), hd: head ? 1 : 0, k: kind || 'gun', x: +me.pos.x.toFixed(1), z: +me.pos.z.toFixed(1) }); hitmarker(false, head); } return; }
+  if (e.remote) { if (aid === me.id && !/grenade|rocket|tank|artillery|airstrike|explosion|shell|at4|gl|c4/.test(kind || '')) { netSend('h', { t: tid, d: Math.round(dmg), hd: head ? 1 : 0, k: kind || 'gun', x: +me.pos.x.toFixed(1), z: +me.pos.z.toFixed(1) }); hitmarker(false, head); } return; }
   e.hp -= dmg; e.lastHurt = gameT; e.flinch = 1; if (e.hp > 0 && Math.random() < .4) say(e, 'hit'); e.supp = Math.min(1.6, e.supp + .4); if (src && !e.tgt) { e.lastSeen = src.clone().setY(src.y + 1.2); e.lastSeenT = gameT; } if (aid === me.id) hitmarker(e.hp <= 0, head);
   if (e.hp <= 0) { e.dead = true; e.hp = 0; e.deadT = 0; e.path = null; deathPush(e, src, kind); registerKill(aid, e.id, head, kind); later(4, () => botRespawn(e)); }
 }
@@ -1146,7 +1147,7 @@ function takeDamage(dmg, fromPos, killerId, head, kind) {
 function updHp() { $('hpt').textContent = 'Health ' + Math.max(0, Math.round(me.hp)); $('hpb').style.width = Math.max(0, me.hp / maxHp() * 100) + '%'; if (SET.quality !== 'high') { const a = Math.max(0, (60 - me.hp) / 60); $('vig').style.boxShadow = `inset 0 0 220px rgba(170,0,0,${a * .85})`; } }
 function dmgIndicator(from) { const d = document.createElement('div'); d.className = 'dd'; const ang = Math.atan2(from.x - me.pos.x, from.z - me.pos.z); const rel = ang - me.yaw + Math.PI; d.style.transform = `rotate(${-rel}rad)`; $('dmgdir').appendChild(d); setTimeout(() => d.style.opacity = 0, 600); setTimeout(() => d.remove(), 1700); }
 function hitmarker(kill, head) { const h = $('hitm'); h.className = kill ? 'kill' : head ? 'hs' : ''; h.style.opacity = 1; clearTimeout(h._t); h._t = setTimeout(() => h.style.opacity = 0, kill ? 350 : 140); snd(kill ? 'kill' : 'hit'); }
-const ICON = { gun: '▸', grenade: '✸', rocket: '➶', artillery: '☄', airstrike: '✈', heli: '✈', vehicle: '⛟', tank: '⛟', explosion: '✸' };
+const ICON = { c4: '✹', gun: '▸', grenade: '✸', rocket: '➶', artillery: '☄', airstrike: '✈', heli: '✈', vehicle: '⛟', tank: '⛟', explosion: '✸' };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 function registerKill(kid, vid, head, kind) {
   const real = kid === me.id || ents.has(kid); const k = real ? sc(kid) : null, v = sc(vid); const suicide = kid === vid || !kid;
@@ -1592,7 +1593,7 @@ function vmLocalToWorld(g, p) { vm.updateMatrixWorld(true); const q = p.clone().
 function swap(i) { if (i === wi || reloading || i >= WEAPONS.length) return; wi = i; VMG.forEach((g, k) => g.visible = k === i); swapT = .35; updAmmo(); }
 function startReload() { const w = WEAPONS[wi], s = wstate[wi]; if (reloading || s.mag === w.mag || s.res <= 0 || me.dead) return; reloading = reloadMax = w.reload; snd('reload'); updAmmo(); }
 function finishReload() { const w = WEAPONS[wi], s = wstate[wi]; const take = Math.min(w.mag - s.mag, s.res); s.mag += take; s.res -= take; const wh = VMG[wi].userData.warhead; if (wh) wh.visible = s.mag > 0; updAmmo(); }
-function updAmmo() { const lw = wstate[wi].mag <= Math.ceil(WEAPONS[wi].mag * .25); $('lowammo').textContent = wstate[wi].mag === 0 ? (wstate[wi].res ? 'Reload' : 'No ammo') : lw && WEAPONS[wi].mag > 2 ? 'Low ammo' : ''; $('mag').textContent = wstate[wi].mag; $('res').textContent = '/ ' + wstate[wi].res; $('wname').textContent = WEAPONS[wi].name + (reloading ? ' · reloading' : '') + '  ' + '●'.repeat(me.nades) + '○'.repeat(Math.max(0, maxNades() - me.nades)); }
+function updAmmo() { const lw = wstate[wi].mag <= Math.ceil(WEAPONS[wi].mag * .25); $('lowammo').textContent = wstate[wi].mag === 0 ? (wstate[wi].res ? 'Reload' : 'No ammo') : lw && WEAPONS[wi].mag > 2 ? 'Low ammo' : ''; $('mag').textContent = wstate[wi].mag; $('res').textContent = '/ ' + wstate[wi].res; $('wname').textContent = WEAPONS[wi].name + (reloading ? ' · reloading' : '') + '  ' + '●'.repeat(me.nades) + '○'.repeat(Math.max(0, maxNades() - me.nades)) + (hasC4() ? `  C4 ×${C4.left}` : ''); }
 function ejectCasing() { const g = VMG[wi]; if (!g.userData.port || view === 3) return; const p = vmLocalToWorld(g, g.userData.port); const r = new V(1, 0, 0).applyQuaternion(cam.quaternion); const u = new V(0, 1, 0).applyQuaternion(cam.quaternion); ringAdd(CAS, { p, v: r.multiplyScalar(rnd(1.8, 2.6)).addScaledVector(u, rnd(1.2, 2)).add(me.vel.clone().multiplyScalar(.8)), r: new THREE.Euler(rnd(0, 6), rnd(0, 6), 0), life: 2, s: 1 }); }
 function fire() {
   const w = WEAPONS[wi], s = wstate[wi], now = performance.now();
@@ -1636,6 +1637,8 @@ addEventListener('keydown', e => {
   if (e.code === 'KeyC' || e.code === 'ControlLeft') { if (sprinting()) startSlide(); else me.crouch = !me.crouch; }
   if (e.code === 'KeyT' && !e.repeat) squadKey();
   if (e.code === 'KeyI' && !e.repeat) toggleInventory();
+  if (e.code === 'KeyB' && !e.repeat) throwC4();
+  if (e.code === 'KeyZ' && !e.repeat) detonateC4();
   if (e.code === 'KeyG' && me.nades > 0) { me.nades--; const d = new V(0, 0, -1).applyQuaternion(cam.quaternion); throwNade(cam.position.clone().addScaledVector(d, .6), d.multiplyScalar(17).add(new V(0, 3, 0)).add(me.vel), me.id); updAmmo(); }
   if (e.code === 'Digit4') useStreak(0); if (e.code === 'Digit5') useStreak(1); if (e.code === 'Digit6') useStreak(2); if (e.code === 'Digit7') useStreak(3);
 });
@@ -1818,7 +1821,7 @@ function packIpad(s) { if (!s || s.ipadPacked || !s.bones.Spine2) return; s.ipad
 ['pointerdown', 'keydown', 'touchstart'].forEach(ev => addEventListener(ev, () => { if (IPAD.video && IPAD.video.paused && IPAD.video.src) IPAD.video.play().catch(() => { }); }, { passive: true }));
 let invOpen = false;
 function invHTML() { const slot = (icon, name, sub, act, cls = '') => `<button class="islot ${cls}" ${act ? `data-act="${act}"` : 'disabled'}><span class="iic">${icon}</span><b>${name}</b><small>${sub}</small></button>`;
-  let h = '<h4>Weapons</h4><div class="igrid">'; WEAPONS.forEach((w, i) => { h += slot(['🔫', '🎯', '🚀'][i] || '🔫', w.name, `${wstate[i].mag} / ${wstate[i].res}${i === wi ? ' · in hand' : ''}`, 'w' + i, i === wi ? 'on' : ''); }); h += slot('💣', 'Grenades', `${me.nades} left`, null) + '</div>';
+  let h = '<h4>Weapons</h4><div class="igrid">'; WEAPONS.forEach((w, i) => { h += slot(['🔫', '🎯', '🚀'][i] || '🔫', w.name, `${wstate[i].mag} / ${wstate[i].res}${i === wi ? ' · in hand' : ''}`, 'w' + i, i === wi ? 'on' : ''); }); h += slot('💣', 'Grenades', `${me.nades} left`, null) + (hasC4() ? slot('🧨', 'C4', `${C4.left} left · B throw, Z detonate`, null) : slot('🧨', 'C4', `Unlock for ${C4_PRICE} Honors`, null, 'lock')) + '</div>';
   h += '<h4>Trophies</h4><div class="igrid">'; h += hasTrophy('ipad') ? slot('📱', 'iPad', 'Click to watch', 'ipad', 'tro') : slot('❔', 'Hidden', 'Find the easter egg', null, 'lock'); h += '</div>'; return h; }
 function toggleInventory(on) { if (!playing || cine) return; if (on === undefined) on = !invOpen; if (!on && !$('ipadview').classList.contains('hide')) toggleIpadView(false); invOpen = on; $('inv').classList.toggle('hide', !on);
   if (on) { $('invbody').innerHTML = invHTML(); mouseDown = rmb = eFire = false; for (const k in keys) keys[k] = false; try { document.exitPointerLock(); } catch (e) { } } else lockPointer(); }
@@ -1830,7 +1833,39 @@ async function loadIpadVideo() { if (!IPAD.scr) return; let blob = await mediaGe
   const v = IPAD.video || (IPAD.video = Object.assign(document.createElement('video'), { muted: true, loop: true, playsInline: true, autoplay: true, crossOrigin: 'anonymous' })); v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); if (!v.isConnected) { v.style.cssText = 'position:fixed;left:0;top:0;width:2px;height:2px;opacity:0;pointer-events:none'; document.body.appendChild(v); }
   v.onerror = () => { const alt = window.BAKED && (BAKED.videoWebm || BAKED.video); if (alt && v.src !== alt) { v.src = alt; v.play().catch(() => { }); } }; IPAD.url = URL.createObjectURL(blob); v.onloadedmetadata = () => { const port = v.videoHeight > v.videoWidth; IPAD.scr.scale.set(port ? .165 / .235 : 1, port ? .235 / .165 : 1, 1); IPAD.body.scale.set(port ? .185 / .26 : 1, port ? .26 / .185 : 1, 1); }; v.src = IPAD.url; v.play().catch(() => { });
   const t = new THREE.VideoTexture(v); t.encoding = THREE.sRGBEncoding; IPAD.scr.material.map = t; IPAD.scr.material.color.setHex(0xffffff); IPAD.scr.material.needsUpdate = true; }
-function spawnProps() { buildIpad(); PROPS.forEach(o => scene.remove(o.m)); PROPS.length = 0; const add = (k, x0, x1, z0, z1, n) => { for (let i = 0; i < n; i++) { const p = randWalk(x0, x1, z0, z1); if (p) makeProp(k, p); } };
+/* ---- C4 (Honors unlock) and weapon pickups around the map ---- */
+const C4_PRICE = 150, HONOR_CODES = { ares: 100, freehonors: 250, freerelease: 500 };
+const hasC4 = () => (PROFILE.unlocks || []).includes('c4');
+const C4 = { left: 0, list: [] }; const C4_MAT = M({ color: LIN(0x6a6a52), roughness: .9 }), C4_LED = new THREE.MeshBasicMaterial({ color: new THREE.Color(6, .4, .2) });
+function makeC4Mesh() { const g = new THREE.Group(); const b = new THREE.Mesh(rbox(.22, .07, .14, .02), C4_MAT); b.castShadow = true; g.add(b); const t = new THREE.Mesh(rbox(.07, .03, .05, .01), MAT.dark); t.position.set(.05, .05, 0); g.add(t); const l = new THREE.Mesh(new THREE.BoxGeometry(.02, .015, .02), C4_LED); l.position.set(.05, .07, .015); g.add(l); g.userData.led = l; for (const x of [-.06, .02]) { const w = new THREE.Mesh(CY(.004, .004, .14, 4), M({ color: x < 0 ? 0xaa2020 : 0x2040aa })); w.rotation.z = Math.PI / 2; w.position.set(0, .04, x); g.add(w); } return g; }
+function throwC4() { if (!playing || me.dead || me.veh || C4.left <= 0 || cine) return; C4.left--; updAmmo(); const d = new V(0, 0, -1).applyQuaternion(cam.quaternion); const m = makeC4Mesh(); m.position.copy(cam.position).addScaledVector(d, .5); scene.add(m);
+  C4.list.push({ m, v: d.multiplyScalar(13).add(new V(0, 2.5, 0)).add(me.vel), stuck: null, off: null }); snd('reload'); announce(`C4 thrown · press Z to detonate (${C4.list.length} placed)`, true); }
+function updC4(dt) { for (const c of C4.list) { const p = c.m.position; c.m.userData.led.visible = Math.sin(gameT * 10) > 0;
+    if (c.stuck) { if (c.stuck.dead) { c.stuck = null; c.free = true; } else { p.copy(c.off).applyMatrix4(c.stuck.g.matrixWorld); continue; } }
+    if (c.rest) continue; c.v.y -= 16 * dt; const step = c.v.clone().multiplyScalar(dt), L = step.length();
+    for (const v of vehicles) if (!v.dead && v.pos.distanceTo(p) < (v.type === 'tank' ? 3 : 2.2) && p.y < v.pos.y + 3) { c.stuck = v; v.g.updateMatrixWorld(true); c.off = p.clone().applyMatrix4(v.g.matrixWorld.clone().invert()); snd('clank', p); break; }
+    if (c.stuck) continue; const h = L > 1e-4 ? castWorld(p, step.clone().multiplyScalar(1 / L), L + .05) : null;
+    if (h) { p.copy(h.point).addScaledVector(h.normal || UP, .04); c.rest = true; snd('clank', p); if (h.normal) c.m.quaternion.setFromUnitVectors(UP, h.normal); continue; }
+    p.add(step); const g = th(p.x, p.z) + .04; if (p.y < g) { p.y = g; c.rest = true; snd('clank', p); } } }
+function detonateC4() { if (!C4.list.length) return; snd('ready'); later(.25, () => { for (const c of C4.list.splice(0)) { scene.remove(c.m); const p = c.m.position.clone(); explosion(p, 6.5, 240, me.id, 'c4'); if (c.stuck && !c.stuck.dead && vehHostile(c.stuck, me.id)) damageVehicle(c.stuck, 900, me.id); netSend('c4', { x: +p.x.toFixed(2), y: +p.y.toFixed(2), z: +p.z.toFixed(2) }); } }); }
+function clearC4() { for (const c of C4.list) scene.remove(c.m); C4.list.length = 0; C4.left = hasC4() ? 2 : 0; }
+// weapon cases scattered around the map: hold X to swap the weapon in that slot until you die
+const PICKS = [], PICK_POOL = ['m249', 'm870', 'm82', 'scar', 'm32', 'at4', 'mp5', 'm14', 'ak'], tempEquip = { on: false };
+function pickLabel(text) { const c = mkCanvas(256, 64, g => { g.font = 'bold 34px Barlow Condensed, sans-serif'; g.textAlign = 'center'; g.fillStyle = 'rgba(0,0,0,.55)'; g.fillRect(28, 8, 200, 46); g.fillStyle = '#f2c14e'; g.fillText(text, 128, 44); }); const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex(c), depthTest: true, transparent: true })); sp.scale.set(1.4, .35, 1); return sp; }
+function makePick(k, p) { const g = new THREE.Group(); const box = new THREE.Mesh(rbox(1.0, .22, .34, .03), MAT.crate); box.position.y = .11; box.castShadow = box.receiveShadow = true; g.add(box); const lid = new THREE.Mesh(rbox(1.0, .05, .34, .02), MAT.crate); lid.position.set(0, .3, -.14); lid.rotation.x = -1.1; g.add(lid);
+  const gun = buildView(k); gun.traverse(o => { if (o.isMesh && (o.material === VMAT.glove || o.material === VMAT.sleeve)) o.visible = false; }); gun.scale.setScalar(1.15); gun.rotation.set(0, Math.PI / 2, 0); gun.position.set(.05, .3, 0); g.add(gun);
+  const lb = pickLabel(WDB[k].name); lb.position.y = 1.0; g.add(lb); g.position.copy(p); g.rotation.y = Math.random() * 6; scene.add(g); return { k, g, p: p.clone(), gun, hide: 0 }; }
+function spawnPicks() { PICKS.forEach(q => scene.remove(q.g)); PICKS.length = 0; const spots = [[-12, 12, -14, 14], [-12, 12, -14, 14], [20, 34, -50, 50], [-34, -20, -50, 50], [-12, 12, -70, -40], [-12, 12, 40, 70], [40, 58, -40, 40], [-58, -40, -40, 40], [-30, 30, -60, 60]];
+  spots.forEach((r, i) => { const p = randWalk(...r); if (p) PICKS.push(makePick(PICK_POOL[i % PICK_POOL.length], p)); }); }
+let pickHold = 0;
+function updPicks(dt) { let near = null, nd = 2.2; for (const q of PICKS) { if (q.hide > 0) { q.hide -= dt; if (q.hide <= 0) q.g.visible = true; continue; } q.gun.rotation.y = Math.PI / 2 + Math.sin(gameT * 1.2) * .25; const d = Math.hypot(q.p.x - me.pos.x, q.p.z - me.pos.z); if (d < nd && !me.dead && !me.veh) { near = q; nd = d; } }
+  const xp = $('xprompt'); if (!near) { pickHold = 0; return false; } pickHold = keys.KeyX ? pickHold + dt : 0; xp.classList.remove('hide'); xp.innerHTML = `Hold <b>X</b> to take the ${WDB[near.k].name}<i><b style="width:${Math.min(100, pickHold / .6 * 100)}%"></b></i>`;
+  if (pickHold >= .6) { pickHold = 0; takePick(near); } return true; }
+function takePick(q) { const d = WDB[q.k], slot = d.slot; q.hide = 45; q.g.visible = false; if (!tempEquip.on) { tempEquip.on = true; tempEquip.saved = PROFILE.equip.slice(); }
+  const keep = wstate.map(x => ({ ...x })); PROFILE.equip[slot] = q.k; applyLoadout(); PROFILE.equip = tempEquip.saved.slice(); wstate.forEach((x, i) => { if (i !== slot && keep[i]) Object.assign(x, keep[i]); });
+  wi = slot; VMG.forEach((g, i) => g.visible = i === wi); swapT = .35; updAmmo(); snd('reload'); announce(`Picked up ${d.name} · yours until you die`, true); }
+function dropTempWeapons() { if (!tempEquip.on) return; tempEquip.on = false; PROFILE.equip = tempEquip.saved.slice(); applyLoadout(); }
+function spawnProps() { buildIpad(); spawnPicks(); PROPS.forEach(o => scene.remove(o.m)); PROPS.length = 0; const add = (k, x0, x1, z0, z1, n) => { for (let i = 0; i < n; i++) { const p = randWalk(x0, x1, z0, z1); if (p) makeProp(k, p); } };
   add('barrel', -12, 12, -14, 14, 6); add('red', -14, 14, -16, 16, 4); add('crate', -12, 12, -12, 12, 5); add('can', -10, 10, -10, 10, 4);
   for (const sx of [-1, 1]) { add('barrel', sx * 50, sx * 66, -24, 24, 4); add('red', sx * 40, sx * 62, -30, 30, 3); add('crate', sx * 48, sx * 66, -20, 20, 4); add('can', sx * 46, sx * 64, -20, 20, 3); add('red', sx * 22, sx * 34, -40, 40, 2); } }
 function rayProp(o, d, far) { let best = null; for (const q of PROPS) { if (q.dead) continue; const oc = o.clone().sub(q.p), b = oc.dot(d), c = oc.lengthSq() - q.r * q.r * .8, h = b * b - c; if (h < 0) continue; const t = -b - Math.sqrt(h); if (t > 0 && t < far && (!best || t < best.t)) best = { t, q }; } return best; }
@@ -1876,6 +1911,7 @@ async function netJoin(room) { const cfg = netCfg(); if (!cfg) throw new Error('
   ch.on('broadcast', { event: 's' }, ({ payload: p }) => onNetState(p))
     .on('broadcast', { event: 'h' }, ({ payload: p }) => { if (p.t === me.id) takeDamage(p.d, new V(p.x, me.pos.y, p.z), p.i, !!p.hd, p.k || 'gun'); })
     .on('broadcast', { event: 'k' }, ({ payload: p }) => { registerKill(p.k, p.v, !!p.hd, p.kd || 'gun'); if (p.k === me.id) hitmarker(true, !!p.hd); })
+    .on('broadcast', { event: 'c4' }, ({ payload: p }) => explosion(new V(p.x, p.y, p.z), 6.5, 240, p.i, 'c4'))
     .on('broadcast', { event: 'n' }, ({ payload: p }) => throwNade(new V(p.x, p.y, p.z), new V(p.dx, p.dy, p.dz), p.i, true))
     .on('broadcast', { event: 'r' }, ({ payload: p }) => fireRocket(new V(...p.f), new V(...p.d), p.i, p.s, p.k, true))
     .on('broadcast', { event: 'x' }, ({ payload: p }) => { const c = new V(p.x, th(p.x, p.z), p.z); if (p.a === 'arty') barrage(c, p.i, 10, 8); else airstrike(c, p.i, teamOf(p.i)); })
@@ -2213,7 +2249,7 @@ function step(dt) {
   if (!me.dead && me.hp < maxHp() && gameT - me.lastHurt > 4) { me.hp = Math.min(maxHp(), me.hp + 30 * dt); updHp(); }
   uavT = Math.max(0, uavT - dt);
   tagT -= dt; if (tagT <= 0 && !me.veh) { tagT = .1; _rc.set(cam.position, new V(0, 0, -1).applyQuaternion(cam.quaternion)); _rc.far = 80; const hs2 = _rc.intersectObjects(hitboxes.filter(h => !h.userData.ent.dead && h.userData.ent !== PENT), false); if (hs2.length) { const e = hs2[0].object.userData.ent; if (!(isTeam() && e.team === me.team) && losClear(cam.position, hs2[0].point)) e.tagT = gameT + .4; } }
-  updEnts(dt); vehicles.slice().forEach(v => updVehicle(v, dt)); updDrops(dt); updSupplyReq(dt); ambientArty(dt); updOps(dt); updIpad(dt); updProps(dt); netTick(dt);
+  updEnts(dt); vehicles.slice().forEach(v => updVehicle(v, dt)); updDrops(dt); updSupplyReq(dt); ambientArty(dt); updOps(dt); if (!updPicks(dt)) updIpad(dt); updC4(dt); updProps(dt); netTick(dt);
   drawMini(); drawCompass();
   if (AU.ac) { const l = AU.ac.listener, fw = new V(0, 0, -1).applyQuaternion(cam.quaternion); if (l.positionX) { l.positionX.value = cam.position.x; l.positionY.value = cam.position.y; l.positionZ.value = cam.position.z; l.forwardX.value = fw.x; l.forwardY.value = fw.y; l.forwardZ.value = fw.z; l.upX.value = 0; l.upY.value = 1; l.upZ.value = 0; }
     if (!(me.veh && me.veh.type === 'heli')) { let rd = 1e9; helis.forEach(h => rd = Math.min(rd, h.pos.distanceTo(cam.position))); AU.rotor.g.gain.setTargetAtTime(helis.length ? Math.max(0, .35 - rd / 200) : 0, AU.ac.currentTime, .2); } }
@@ -2233,7 +2269,7 @@ function render() {
 }
 
 /* ---------------- spawn / menus ---------------- */
-function respawn() { me.pos.copy(spawnPoint(me.team)); me.vel.set(0, 0, 0); me.yaw = isTeam() ? (me.team === 'A' ? -Math.PI / 2 : Math.PI / 2) : rnd(0, 6); me.pitch = 0; me.hp = maxHp(); me.dead = false; me.crouch = false; me.nades = maxNades(); me.streak = 0; me.mantle = null; me.slide = null;
+function respawn() { dropTempWeapons(); clearC4(); me.pos.copy(spawnPoint(me.team)); me.vel.set(0, 0, 0); me.yaw = isTeam() ? (me.team === 'A' ? -Math.PI / 2 : Math.PI / 2) : rnd(0, 6); me.pitch = 0; me.hp = maxHp(); me.dead = false; me.crouch = false; me.nades = maxNades(); me.streak = 0; me.mantle = null; me.slide = null;
   streaks.forEach(s => { s.ready = false; s.used = false; }); wstate.forEach((s, i) => { s.mag = WEAPONS[i].mag; s.res = WEAPONS[i].res; }); VMG.forEach(g => { if (g.userData.warhead) g.userData.warhead.visible = true; }); reloading = 0; updAmmo(); updHp(); drawStreaks(); $('msg').innerHTML = ''; }
 function showPause(on) { paused = on; $('pause').classList.toggle('hide', !on); mouseDown = false; rmb = false; eFire = false; for (const k in keys) keys[k] = false; if (!on) lockPointer(); }
 function applyQuality() { sun.shadow.mapSize.set(SET.ultra ? 4096 : 2048, SET.ultra ? 4096 : 2048); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; } sun.shadow.radius = SET.ultra ? 3 : 1; const low = SET.quality !== 'high'; R.setPixelRatio(low ? Math.min(devicePixelRatio, .85) : Math.min(devicePixelRatio, 1.25)); if (low) { R.shadowMap.enabled = false; sun.castShadow = false; fireLights.forEach(f => scene.remove(f.l)); fireLights.length = 0; scene.remove(flareLight); scene.remove(boomLights[1]); boomLights.length = 1; scene.traverse(o => { if (o.material) [].concat(o.material).forEach(m => m.needsUpdate = true); }); } resize(); }
@@ -2265,10 +2301,15 @@ function renderShop(tab = shopTab) { shopTab = tab; document.querySelectorAll('#
   if (tab === 'weapons') for (const [slot, label] of [[0, 'Primary · key 1'], [1, 'Marksman and sniper · key 2'], [2, 'Launcher · key 3']]) { h += `<h4>${label}</h4><div class="cards">`; for (const [k, d] of Object.entries(WDB)) if (d.slot === slot) h += weaponCard(k, d); h += '</div>'; }
   if (tab === 'upgrades') { h += '<div class="cards">'; for (const [k, u] of Object.entries(UPG)) { const own = hasUpg(k); h += `<div class="card2 ${own ? 'on' : ''}"><div class="ch"><b>${u.name}</b><span>Upgrade</span></div><p class="dsc">${u.desc}</p>${own ? '<button class="eq" disabled>Owned</button>' : `<button class="buy" data-a="upg" data-k="${k}" ${PROFILE.coins < u.price ? 'disabled' : ''}><i class="coin"></i>${u.price.toLocaleString('en-GB')}</button>`}</div>`; } h += '</div>'; }
   if (tab === 'passes') { h += `<p class="note">Gamepasses are bought with Honors, a separate currency from coins. You have <b><i class="credit"></i>${PROFILE.honors || 0} Honors</b>.</p><div class="cards">`; for (const [k, p] of Object.entries(PASSES)) { const can = (PROFILE.honors || 0) >= p.honors; h += `<div class="card2 pass ${hasPass(k) ? 'on' : ''}"><div class="ch"><b>${p.name}</b><span>Gamepass</span></div><p class="dsc">${p.desc}</p><div class="cr"><i class="credit"></i>${p.honors} Honors</div>${hasPass(k) ? '<button class="eq" disabled>Owned</button>' : `<button class="buy" data-a="pass" data-k="${k}" ${can ? '' : 'disabled'}>${can ? 'Unlock' : 'Not enough Honors'}</button>`}</div>`; } h += '</div>'; }
-  if (tab === 'honors') { h += '<p class="note">Honors unlock Gamepasses. Card payments aren\'t set up yet, so these packs can\'t be bought right now.</p><div class="cards">'; for (const pk of HONOR_PACKS) h += `<div class="card2 pass ${pk.best ? 'on' : ''}"><div class="ch"><b><i class="credit"></i>${pk.n.toLocaleString('en-GB')} Honors</b><span>${pk.tag || 'Pack'}</span></div><p class="dsc">${pk.note}</p><div class="cr">${pk.price}</div><button disabled>Coming soon</button></div>`; h += '</div>'; }
+  if (tab === 'honors') { h += `<div class="codebox"><b>Have a code?</b> <span class="cbal"><i class="credit"></i>${PROFILE.honors || 0} Honors</span><div class="row"><input id="hcode" maxlength="20" placeholder="Enter code" autocomplete="off"><button class="buy" data-a="code">Redeem</button></div><span id="hmsg"></span></div>`;
+    h += `<div class="cards"><div class="card2 pass ${hasC4() ? 'on' : ''}"><div class="ch"><b>C4 explosives</b><span>Equipment</span></div><p class="dsc">Carry 2 C4 charges every life. Press B to throw one: it sticks to walls, the ground and vehicles. Press Z to blow them all.</p><div class="cr"><i class="credit"></i>${C4_PRICE} Honors</div>${hasC4() ? '<button class="eq" disabled>Owned</button>' : `<button class="buy" data-a="c4" ${(PROFILE.honors || 0) >= C4_PRICE ? '' : 'disabled'}>${(PROFILE.honors || 0) >= C4_PRICE ? 'Unlock' : 'Not enough Honors'}</button>`}</div></div><h4>Honor packs</h4>`;
+    h += '<p class="note">Honors unlock Gamepasses. Card payments aren\'t set up yet, so these packs can\'t be bought right now.</p><div class="cards">'; for (const pk of HONOR_PACKS) h += `<div class="card2 pass ${pk.best ? 'on' : ''}"><div class="ch"><b><i class="credit"></i>${pk.n.toLocaleString('en-GB')} Honors</b><span>${pk.tag || 'Pack'}</span></div><p class="dsc">${pk.note}</p><div class="cr">${pk.price}</div><button disabled>Coming soon</button></div>`; h += '</div>'; }
   $('shopbody').innerHTML = h; }
+function redeemCode() { const v = ($('hcode').value || '').trim().toLowerCase(), m = $('hmsg'); PROFILE.codes = PROFILE.codes || [];
+  if (!HONOR_CODES[v]) { m.textContent = 'That code doesn\'t exist'; m.style.color = 'var(--red)'; return; } if (PROFILE.codes.includes(v)) { m.textContent = 'You already used that code'; m.style.color = 'var(--red)'; return; }
+  PROFILE.codes.push(v); PROFILE.honors = (PROFILE.honors || 0) + HONOR_CODES[v]; saveProfile(); snd('ready'); renderShop('honors'); const m2 = $('hmsg'); m2.textContent = `+${HONOR_CODES[v]} Honors added`; m2.style.color = 'var(--grn)'; }
 function openShop() { $('shop').classList.remove('hide'); renderShop(); }
-$('shopbody').onclick = e => { const b = e.target.closest('button[data-a]'); if (!b) return; const k = b.dataset.k, a = b.dataset.a;
+$('shopbody').onclick = e => { const b0 = e.target.closest('button[data-a]'); if (b0 && b0.dataset.a === 'code') { redeemCode(); return; } if (b0 && b0.dataset.a === 'c4') { if (!hasC4() && (PROFILE.honors || 0) >= C4_PRICE) { PROFILE.honors -= C4_PRICE; PROFILE.unlocks = (PROFILE.unlocks || []).concat('c4'); saveProfile(); snd('ready'); if (playing && !me.dead) { C4.left = 2; updAmmo(); } } renderShop(); return; } const b = e.target.closest('button[data-a]'); if (!b) return; const k = b.dataset.k, a = b.dataset.a;
   if (a === 'buy' && PROFILE.coins >= WDB[k].price && (WDB[k].req || 0) <= myRank()) { PROFILE.coins -= WDB[k].price; PROFILE.owned.push(k); PROFILE.equip[WDB[k].slot] = k; snd('ready'); }
   if (a === 'equip') PROFILE.equip[WDB[k].slot] = k;
   if (a === 'pass' && !hasPass(k) && (PROFILE.honors || 0) >= PASSES[k].honors) { PROFILE.honors -= PASSES[k].honors; PROFILE.passes.push(k); snd('ready'); }
