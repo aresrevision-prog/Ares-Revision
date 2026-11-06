@@ -2006,7 +2006,10 @@ function updDeadPhys(e, dt) { if (!e.dv) return; e.dvy -= 9.8 * dt; e.dy += e.dv
   e.pos.y = e.tpos.y = g; if (e.dy <= 0) { e.dy = 0; e.dvy = 0; e.dv.multiplyScalar(Math.pow(.02, dt)); } e.ryaw += (e.spin || 0) * dt; if (e.dy === 0) e.spin *= Math.pow(.05, dt); }
 /* ---------------- online play (Supabase Realtime, via the Ares site) ---------------- */
 const NET = { on: false, chan: null, sb: null, acc: 0, shots: [], room: '' };
-function netCfg() { try { const p = window.parent; return p && p !== window && p._flNet && p.supabase ? { ...p._flNet, lib: p.supabase } : null; } catch (e) { return null; } }
+const FL_NET = { url: 'https://lakjmdyzuqrwcncxybcw.supabase.co', key: 'sb_publishable__m0zTZ3-ThJVk0pktI65Ag_yDFPPD5s' };
+let SB_LIB = null;
+function loadSupabase() { return new Promise(res => { if (window.supabase) { SB_LIB = window.supabase; return res(true); } const sc = document.createElement('script'); sc.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js'; sc.onload = () => { SB_LIB = window.supabase || null; res(!!SB_LIB); }; sc.onerror = () => res(false); document.head.appendChild(sc); }); }
+function netCfg() { try { const p = window.parent; if (p && p !== window && p._flNet && p.supabase) return { ...p._flNet, lib: p.supabase }; } catch (e) { } return SB_LIB ? { ...FL_NET, lib: SB_LIB } : null; }
 function netSend(ev, p) { if (!NET.on || !NET.chan) return; p.i = me.id; try { NET.chan.send({ type: 'broadcast', event: ev, payload: p }); } catch (e) { } }
 function addRemote(id, name, team) { let e = ents.get(id); if (e && team && e.team !== team) { removeRemote(id); e = null; } if (e) return e;
   let h = 0; for (const c of id) h = h * 31 + c.charCodeAt(0) >>> 0; e = addEnt(id, name || 'Player', team || 'B', h % 8); Object.assign(e, { remote: true, bot: false, last: performance.now(), speed: 0, aimW: 0, aimPitch: 0 }); updScore(); return e; }
@@ -2442,6 +2445,7 @@ function openCrate(btn) { if (crateBusy || PROFILE.coins < CRATE_PRICE) return; 
     $('cratemsg').innerHTML = `<b style="color:${RAR[v.rar].col}">${v.name}</b> · ${v.rar}${dup ? ` · duplicate, +${DUP_REFUND} coins back` : ' · new skin!'}`; crateBusy = false;
     setTimeout(() => { if (shopTab === 'skins' && !crateBusy) { const msg = $('cratemsg').innerHTML; renderShop('skins'); $('cratemsg').innerHTML = msg; const v2 = SKINS_W[win]; $('reelstrip').innerHTML = `<div class="ri" style="border-color:${RAR[v2.rar].col};margin:8px auto"><div class="sw" data-sk="${win}"></div><b>${v2.name}</b></div>`; paintSwatches(); } }, 1600); }, 4400); }
 async function onlineCode(v, m) { let look = null; try { look = window.parent !== window && window.parent._flLookupCode; } catch (e) { }
+  if (!look && netCfg()) look = async c => { try { const cfg = netCfg(); NET.sb = NET.sb || cfg.lib.createClient(cfg.url, cfg.key, { auth: { persistSession: false } }); const { data, error } = await NET.sb.from('game_codes').select('code,reward,amount,skin,expires_at').eq('code', c).maybeSingle(); return error ? { error: error.message } : data; } catch (e) { return { error: e.message }; } };
   if (!look || !v) { m.textContent = 'That code doesn\'t exist'; m.style.color = 'var(--red)'; return; } m.textContent = 'Checking…'; m.style.color = 'var(--dim)';
   const r = await look(v); const say = (t, ok) => { const el = $('hmsg') || m; el.textContent = t; el.style.color = ok ? 'var(--grn)' : 'var(--red)'; };
   if (!r || r.error) { say(r && r.error ? 'Could not check codes right now' : 'That code doesn\'t exist or has expired'); return; } if (r.expires_at && new Date(r.expires_at) < new Date()) { say('That code has expired'); return; }
@@ -2485,6 +2489,7 @@ $('vdel').onclick = async () => { try { await mediaSet('ipad', null); } catch (e
 $('front').onclick = () => start('front'); $('nextb').onclick = nextBattle; $('menub').onclick = () => location.reload(); $('tdm').onclick = () => start('tdm'); $('ffa').onclick = () => start('ffa');
 $('resume').onclick = () => showPause(false); $('leave').onclick = () => { netLeave(); location.reload(); };
 addEventListener('beforeunload', netLeave);
+const netReady = loadSupabase().then(() => { const ok = !!netCfg(); $('online').dataset.ok = ok ? '1' : ''; $('onlinenote').textContent = ok ? 'Real players only · share the room code with your friends' : 'Online battles need an internet connection'; if ($('load').textContent === 'Ready') $('online').disabled = !ok; });
 { const ok = !!netCfg(); $('online').disabled = true; $('onlinenote').textContent = ok ? 'Real players only · share the room code with your friends' : 'Online battles work when you play inside Ares Revision';
   $('online').dataset.ok = ok ? '1' : ''; }
 $('online').onclick = async () => { if (!$('online').dataset.ok) return; const room = ($('room').value.trim() || 'ares').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 20) || 'ares';
