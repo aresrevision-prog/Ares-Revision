@@ -7661,12 +7661,23 @@ function sendQuickPrompt(text) {
   if (input) { input.value = text; sendAresMessage(); }
 }
 
+
+// Turn image links / markdown images / bare URLs in AI text into real <img> and <a> (input must already be HTML-escaped)
+function _aiRichLinks(h){
+  const IMG=/\.(png|jpe?g|gif|webp|svg|avif)(\?[^\s<]*)?$/i;
+  const img=u=>'<img src="'+u+'" alt="image" loading="lazy" referrerpolicy="no-referrer" style="display:block;max-width:100%;max-height:320px;border-radius:10px;margin:8px 0;" onerror="var a=document.createElement(\'a\');a.href=this.src;a.target=\'_blank\';a.rel=\'noopener noreferrer\';a.textContent=this.src;this.replaceWith(a)">';
+  const a=(u,t)=>'<a href="'+u+'" target="_blank" rel="noopener noreferrer" style="color:#8ab4ff;text-decoration:underline;word-break:break-all;">'+t+'</a>';
+  return String(h)
+    .replace(/!\[[^\]]*\]\((https?:\/\/[^\s)]+)\)/g,(m,u)=>img(u))
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,(m,t,u)=>IMG.test(u)?img(u):a(u,t))
+    .replace(/(^|[^="'>(\w])(https?:\/\/[^\s<)"']+[^\s<)"'.,;:!?])/g,(m,pre,u)=>pre+(IMG.test(u)?img(u):a(u,u)));
+}
 function appendAresMessage(role, text) {
   const container = document.getElementById('ares-ai-messages');
   if (!container) return;
 
   // Convert markdown-ish to HTML
-  let html = text
+  let html = _aiRichLinks(String(text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'))
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
     .replace(/\[LESSON:\s*([^\]]+)\]/g, (match, name) => `<span class="ai-lesson-chip" onclick="navigateToLesson('${name.replace(/'/g,"\\'")}')" title="Go to: ${name}">📚 ${name} →</span>`)
     .split('\n').join('<br>');
@@ -8117,7 +8128,7 @@ function renderPlannerStep4(body) {
     return;
   }
   // Render the plan — convert markdown to HTML with clickable lesson chips
-  let rendered = plannerPlan
+  let rendered = _aiRichLinks(String(plannerPlan).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'))
     .replace(/\*\*([^*]+)\*\*/g, '<strong style="color:#fff;">$1</strong>')
     .replace(/\[LESSON:\s*([^\]]+)\]/g, (m,n)=>`<span class="plan-lesson-chip" onclick="navigateToLesson('${n.replace(/'/g,"\\'")}');closeGCSEPlanner()">📚 ${n}</span>`)
     .replace(/^###\s+(.+)$/gm, '<div style="font-size:13px;font-weight:800;color:#34D399;margin:14px 0 6px;">$1</div>')
@@ -8466,7 +8477,7 @@ function viewChildPlan(cUser) {
     (plan.weeks||'?') + ' weeks · Created ' + (plan.generatedAt||'unknown');
 
   // Render the plan text with formatting
-  const rendered = (plan.plan || 'No plan content.')
+  const rendered = _aiRichLinks(String(plan.plan || 'No plan content.').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'))
     .replace(/\*\*([^*]+)\*\*/g, '<strong style="color:#fff;">$1</strong>')
     .replace(/\[LESSON:\s*([^\]]+)\]/g, '<span style="background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.3);color:#34D399;border-radius:6px;padding:1px 7px;font-size:11px;font-weight:600;">📚 $1</span>')
     .replace(/^###\s+(.+)$/gm, '<div style="font-size:13px;font-weight:800;color:#34D399;margin:12px 0 5px;">$1</div>')
