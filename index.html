@@ -13027,6 +13027,11 @@ function _aresUpdateArenaButton(){
       <div class="ac-play">▶ PLAY</div>
     </button>
     </div>
+    <div id="arena-reject" style="display:none;width:min(520px,92vw);margin:28px auto 24px;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px dashed rgba(255,255,255,.2);color:#fff;font-family:'DM Sans',sans-serif;">
+      <div style="font-weight:800;letter-spacing:.06em;">📁 REJECTION FOLDER</div>
+      <div style="font-size:11px;opacity:.55;margin-top:2px;">Games that lost the vote. Get enough votes and they return to TEST.</div>
+      <div id="arena-reject-list"></div>
+    </div>
   </div>
 </div>
 
@@ -14461,29 +14466,77 @@ function closePortSable(){
 window.openPortSable=openPortSable;window.closePortSable=closePortSable;
 var _AT_HASH='dd49477b0b970dde26d58606384cfedd0dc5740b719bffc06442e7d949849deb';
 var TEST_GAMES=[{id:'frontline',name:'Frontline Warzone'},{id:'worldminds',name:'World Minds'},{id:'empireheat',name:'Empire Heat'},{id:'portsable',name:'Port Sable'}];
-var TEST_PROMOTE_AT=5; // net 👍 minus 👎 (one vote per account) needed to join the Arena hub
-function _testTally(id){ var up=0,down=0; try{ var a=getAccounts(); for(var u in a){ var x=a[u]; var v=x&&x.testVotes&&x.testVotes[id]; if(v===1)up++; else if(v===-1)down++; } }catch(e){} return {up:up,down:down,net:up-down}; }
-function _gamePromoted(id){ return _testTally(id).net>=TEST_PROMOTE_AT; }
-function _refreshPromoted(){ TEST_GAMES.forEach(function(g){ var el=document.getElementById('arena-promoted-'+g.id); if(el)el.style.display=_gamePromoted(g.id)?'':'none'; }); }
+var REVIVE_AT=5; // 👍 "bring back" votes a rejected game needs to return to TEST
+// Shared state lives on the AdminHF account only: gameStatus[id]={state:'test'|'voting'|'promoted'|'rejected',round:n}
+// Each account's ballots live on its own row: testBallots[id]={r:round,v:1|-1}. A ballot only counts for the current round.
+function _isAdminHF(){ return !!currentUser && String(currentUser).toLowerCase()==='adminhf'; }
+function _gsRec(id){ try{ var a=getAccounts().adminhf, r=a&&a.gameStatus&&a.gameStatus[id]; if(r&&r.state)return r; }catch(e){} return {state:'test',round:0}; }
+function _testTally(id){ var rec=_gsRec(id), up=0,down=0; try{ var a=getAccounts(); for(var u in a){ var x=a[u], bl=x&&x.testBallots&&x.testBallots[id]; if(bl&&bl.r===rec.round){ if(bl.v===1)up++; else if(bl.v===-1)down++; } } }catch(e){} return {up:up,down:down,net:up-down}; }
+function _gameState(id){ var rec=_gsRec(id); if(rec.state==='rejected'&&_testTally(id).up>=REVIVE_AT)return 'test'; return rec.state; }
+function _gamePromoted(id){ return _gameState(id)==='promoted'; }
+function _gameName(id){ for(var i=0;i<TEST_GAMES.length;i++)if(TEST_GAMES[i].id===id)return TEST_GAMES[i].name; return id; }
+function _refreshPromoted(){
+  TEST_GAMES.forEach(function(g){ var el=document.getElementById('arena-promoted-'+g.id); if(el)el.style.display=_gamePromoted(g.id)?'':'none'; });
+  var f=document.getElementById('arena-reject'); if(!f)return;
+  var rej=TEST_GAMES.filter(function(g){ return _gameState(g.id)==='rejected'; });
+  f.style.display=rej.length?'':'none'; if(!rej.length)return;
+  var me=currentUser&&getAccounts()[currentUser], mine=(me&&me.testBallots)||{};
+  var list=document.getElementById('arena-reject-list'); if(!list)return;
+  list.innerHTML=rej.map(function(g){ var t=_testTally(g.id), rec=_gsRec(g.id), on=mine[g.id]&&mine[g.id].r===rec.round&&mine[g.id].v===1;
+    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;background:rgba(255,255,255,.04);margin-top:6px;"><span style="flex:1;text-align:left;font-weight:700;">'+g.name+'</span><span style="font-size:11px;opacity:.6;">'+t.up+' / '+REVIVE_AT+'</span>'
+      +(currentUser?'<button onclick="testVote(\''+g.id+'\',1)" style="padding:6px 10px;border-radius:8px;cursor:pointer;font-family:inherit;font-weight:700;font-size:12px;color:#fff;border:1px solid '+(on?'#4ade80':'rgba(255,255,255,.2)')+';background:'+(on?'rgba(74,222,128,.18)':'rgba(255,255,255,.06)')+';">🔁 Bring back</button>':'')+'</div>'; }).join('');
+}
+function _gsSet(id,rec){
+  if(!_isAdminHF())return false; var acc=getAccounts(), me=acc[currentUser]; if(!me)return false;
+  var gs=Object.assign({},me.gameStatus||{}); gs[id]=rec; me.gameStatus=gs; saveAccounts(acc); return true;
+}
+function adminGameVote(id,action){
+  if(!_isAdminHF()){ if(typeof showXpPop==='function')showXpPop('🔒 Only AdminHF can do this'); return; }
+  var rec=_gsRec(id), st=_gameState(id), t=_testTally(id), r=rec.round||0, msg='';
+  if(action==='start'&&st==='test'){ _gsSet(id,{state:'voting',round:r+1}); msg='🗳 Vote started'; }
+  else if(action==='end'&&st==='voting'){ if(t.up>t.down){ _gsSet(id,{state:'promoted',round:r}); msg='🏆 Won — added to the Arena hub'; } else { _gsSet(id,{state:'rejected',round:r+1}); msg='📁 Lost — moved to the rejection folder'; } }
+  else if(action==='cancel'&&st==='voting'){ _gsSet(id,{state:'test',round:r+1}); msg='Vote cancelled'; }
+  else if(action==='demote'&&st==='promoted'){ _gsSet(id,{state:'test',round:r+1}); msg='Moved back to TEST'; }
+  else if(action==='restart'&&st==='test'&&rec.state==='rejected'){ _gsSet(id,{state:'voting',round:r+1}); msg='🗳 Vote started'; }
+  if(rec.state==='rejected'&&st==='test'&&action==='start'){ /* revived game: new round */ }
+  if(msg&&typeof showXpPop==='function')showXpPop(msg);
+  renderTestVotes(); _refreshPromoted();
+}
 function testVote(id,v){
   if(!currentUser){ if(typeof showXpPop==='function')showXpPop('🔒 Log in to vote'); return; }
   var acc=getAccounts(), me=acc[currentUser]; if(!me||me.accountType==='parent')return;
-  var votes=Object.assign({},me.testVotes||{}); if(votes[id]===v)delete votes[id]; else votes[id]=v;
-  me.testVotes=votes; saveAccounts(acc); renderTestVotes();
-  if(typeof showXpPop==='function')showXpPop(votes[id]===1?'👍 Voted up':votes[id]===-1?'👎 Voted down':'Vote removed');
+  var st=_gameState(id), rec=_gsRec(id);
+  if(!(st==='voting'||(st==='rejected'&&v===1))){ if(typeof showXpPop==='function')showXpPop('No vote open for this game'); return; }
+  var bl=Object.assign({},me.testBallots||{}), cur=bl[id];
+  if(cur&&cur.r===rec.round&&cur.v===v)delete bl[id]; else bl[id]={r:rec.round,v:v};
+  me.testBallots=bl; saveAccounts(acc); renderTestVotes(); _refreshPromoted();
+  var n=bl[id]; if(typeof showXpPop==='function')showXpPop(!n?'Vote removed':n.v===1?(st==='rejected'?'🔁 Voted to bring back':'👍 Voted up'):'👎 Voted down');
 }
 function renderTestVotes(){
-  var me=currentUser&&getAccounts()[currentUser], mine=(me&&me.testVotes)||{};
+  var me=currentUser&&getAccounts()[currentUser], mine=(me&&me.testBallots)||{}, adm=_isAdminHF();
   TEST_GAMES.forEach(function(g){
-    var el=document.getElementById('at-vote-'+g.id); if(!el)return; var t=_testTally(g.id), ok=t.net>=TEST_PROMOTE_AT, pct=Math.max(0,Math.min(100,Math.round(t.net/TEST_PROMOTE_AT*100)));
-    var b=function(v,l){ var on=mine[g.id]===v; return '<button onclick="testVote(\''+g.id+'\','+v+')" style="flex:1;padding:8px;border-radius:9px;cursor:pointer;font-family:inherit;font-weight:800;font-size:14px;border:1px solid '+(on?(v===1?'#4ade80':'#f87171'):'rgba(255,255,255,.15)')+';background:'+(on?(v===1?'rgba(74,222,128,.18)':'rgba(248,113,113,.18)'):'rgba(255,255,255,.05)')+';color:#fff;">'+l+'</button>'; };
-    el.innerHTML='<div style="font-size:12px;opacity:.75;margin-bottom:8px;">'+(ok?'✅ <b>Voted into the Arena hub</b> — everyone with Arena access can play it':'Vote to add this to the Arena hub — needs a net score of '+TEST_PROMOTE_AT)+'</div>'
-      +(currentUser?'<div style="display:flex;gap:8px;">'+b(1,'👍 '+t.up)+b(-1,'👎 '+t.down)+'</div>':'<div style="font-size:12px;opacity:.6;">Log in to vote · 👍 '+t.up+' · 👎 '+t.down+'</div>')
-      +'<div style="height:6px;border-radius:99px;background:rgba(255,255,255,.1);margin-top:8px;overflow:hidden;"><div style="height:100%;width:'+pct+'%;background:'+(ok?'#4ade80':'#f2c14e')+';"></div></div>'
-      +'<div style="font-size:11px;opacity:.55;margin-top:4px;">Net score '+t.net+' / '+TEST_PROMOTE_AT+' · one vote per account</div>';
+    var el=document.getElementById('at-vote-'+g.id); if(!el)return; var t=_testTally(g.id), st=_gameState(g.id), rec=_gsRec(g.id), bl=mine[g.id], v=(bl&&bl.r===rec.round)?bl.v:0;
+    var btn=function(txt,act,col){ return '<button onclick="adminGameVote(\''+g.id+'\',\''+act+'\')" style="padding:8px 12px;border-radius:9px;cursor:pointer;font-family:inherit;font-weight:800;font-size:13px;color:#fff;border:1px solid '+col+';background:rgba(255,255,255,.06);">'+txt+'</button>'; };
+    var vb=function(x,l){ var on=v===x; return '<button onclick="testVote(\''+g.id+'\','+x+')" style="flex:1;padding:8px;border-radius:9px;cursor:pointer;font-family:inherit;font-weight:800;font-size:14px;border:1px solid '+(on?(x===1?'#4ade80':'#f87171'):'rgba(255,255,255,.15)')+';background:'+(on?(x===1?'rgba(74,222,128,.18)':'rgba(248,113,113,.18)'):'rgba(255,255,255,.05)')+';color:#fff;">'+l+'</button>'; };
+    var h='', ctl='';
+    if(st==='voting'){
+      h='<div style="font-size:12px;margin-bottom:8px;">🗳 <b>Vote open</b> — should this join the Arena hub?</div>'
+       +(currentUser?'<div style="display:flex;gap:8px;">'+vb(1,'👍 '+t.up)+vb(-1,'👎 '+t.down)+'</div>':'<div style="font-size:12px;opacity:.6;">Log in to vote · 👍 '+t.up+' · 👎 '+t.down+'</div>');
+      if(adm)ctl=btn('✅ End vote','end','#4ade80')+btn('Cancel','cancel','rgba(255,255,255,.25)');
+    } else if(st==='promoted'){
+      h='<div style="font-size:12px;">✅ <b>In the Arena hub</b> (👍 '+t.up+' · 👎 '+t.down+')</div>';
+      if(adm)ctl=btn('Move back to TEST','demote','rgba(255,255,255,.25)');
+    } else if(st==='rejected'){
+      h='<div style="font-size:12px;margin-bottom:8px;">📁 <b>Rejection folder</b> — needs '+REVIVE_AT+' votes to return to TEST</div>'
+       +(currentUser?'<div style="display:flex;gap:8px;">'+vb(1,'🔁 Bring back '+t.up+' / '+REVIVE_AT)+'</div>':'<div style="font-size:12px;opacity:.6;">Log in to vote · '+t.up+' / '+REVIVE_AT+'</div>');
+    } else {
+      h='<div style="font-size:12px;opacity:.75;">'+(rec.state==='rejected'?'🔁 <b>Voted back into TEST</b> — waiting for AdminHF to start a new vote':'In testing — AdminHF starts the vote')+'</div>';
+      if(adm)ctl=btn('🗳 Start vote','start','#f2c14e');
+    }
+    el.innerHTML=h+(ctl?'<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">'+ctl+'</div>':'');
   });
 }
-window.testVote=testVote;window.renderTestVotes=renderTestVotes;
+window.testVote=testVote;window.renderTestVotes=renderTestVotes;window.adminGameVote=adminGameVote;
 function _testAllowed(){ try{ if(window._adminSession)return true; var a=currentUser&&getAccounts()[currentUser]; return !!(a&&a.testAccess&&a.accountType!=='parent'); }catch(e){ return false; } }
 function _testDenied(){ if(_testAllowed())return false; if(typeof showXpPop==='function')showXpPop('🔒 Test games need admin access'); return true; }
 function _testOk(){ try{ return _testAllowed()||sessionStorage.getItem('ares_test_ok')==='1'; }catch(e){ return _testAllowed(); } }
