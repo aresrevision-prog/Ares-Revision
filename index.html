@@ -9142,6 +9142,27 @@ async function deleteEvent(id){
   _loadEventsAdminList(); checkEvents();
 }
 
+// ── Frontline game codes (admin) ──
+function toggleGameCodesPanel(){ const p = document.getElementById('game-codes-panel'); if(!p) return; const open = p.style.display === 'block'; p.style.display = open ? 'none' : 'block';
+  const t = document.getElementById('gc-time'); t.onchange = () => { document.getElementById('gc-until').style.display = t.value === 'custom' ? '' : 'none'; }; if(!open) _loadGameCodes(); }
+function _gcLeft(r){ if(!r.expires_at) return 'never expires'; const ms = new Date(r.expires_at) - Date.now(); if(ms <= 0) return '<span style="color:#F87171;">expired</span>'; const h = ms / 36e5; return 'expires in ' + (h < 1 ? Math.ceil(ms / 6e4) + ' min' : h < 48 ? Math.round(h) + ' h' : Math.round(h / 24) + ' days'); }
+async function _loadGameCodes(){ const box = document.getElementById('gc-list'); if(!box) return; try { initSupabase(); } catch(e){}
+  const { data, error } = await supabaseClient.from('game_codes').select('*').eq('active', true).order('created_at', { ascending: false });
+  if(error){ box.textContent = '⚠ Could not load codes — has schema_game_codes.sql been run in Supabase? ' + (error.message||''); return; }
+  box.innerHTML = (data && data.length) ? data.map(r => '<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;"><div style="flex:1;"><b style="color:#fff;letter-spacing:.05em;">' + _esc(r.code) + '</b> · ' + (r.reward === 'skin' ? _esc(r.skin) + ' skin' : r.amount + ' ' + r.reward) + ' · ' + _gcLeft(r) + '</div><button onclick="deleteGameCode(\'' + _esc(r.code) + '\')" style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.35);color:#F87171;border-radius:6px;padding:3px 9px;font-size:11px;cursor:pointer;font-family:inherit;">Delete</button></div>').join('') : 'No codes yet.'; }
+async function createGameCode(){ const st = document.getElementById('gc-status'); const code = document.getElementById('gc-code').value.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+  const reward = document.getElementById('gc-reward').value, amount = Math.max(0, Math.min(100000, parseInt(document.getElementById('gc-amount').value || '0', 10))), skin = reward === 'skin' ? document.getElementById('gc-skin').value : null, t = document.getElementById('gc-time').value;
+  if(code.length < 2){ st.textContent = 'Code must be at least 2 letters or numbers.'; return; } if(reward !== 'skin' && !amount){ st.textContent = 'Add an amount.'; return; }
+  let expires_at = null; if(t === 'custom'){ const v = document.getElementById('gc-until').value; if(!v){ st.textContent = 'Pick an end date.'; return; } expires_at = new Date(v).toISOString(); } else if(t !== '0') expires_at = new Date(Date.now() + (+t) * 36e5).toISOString();
+  st.textContent = 'Saving…'; try { initSupabase(); } catch(e){}
+  const { error } = await supabaseClient.from('game_codes').upsert({ code, reward, amount: reward === 'skin' ? 0 : amount, skin, expires_at, active: true, created_by: currentUser });
+  if(error){ st.textContent = '⚠ Failed — ' + (error.message||'') + (/relation|does not exist/i.test(error.message||'') ? ' (run schema_game_codes.sql in Supabase first)' : ''); return; }
+  st.textContent = '✓ Code "' + code + '" created'; document.getElementById('gc-code').value = ''; document.getElementById('gc-amount').value = ''; _loadGameCodes(); }
+async function deleteGameCode(code){ if(!confirm('Delete code "' + code + '"? It will stop working straight away.')) return; await supabaseClient.from('game_codes').delete().eq('code', code); _loadGameCodes(); }
+// the game asks the parent page to look up a code
+window._flLookupCode = async function(code){ try { initSupabase(); const { data, error } = await supabaseClient.from('game_codes').select('code,reward,amount,skin,expires_at').eq('code', String(code).toLowerCase()).maybeSingle(); if(error) return { error: error.message }; return data || null; } catch(e){ return { error: e.message }; } };
+window.toggleGameCodesPanel = toggleGameCodesPanel; window.createGameCode = createGameCode; window.deleteGameCode = deleteGameCode;
+
 // ── Global announcement (admin) ────────────────────────────────────────
 function toggleAnnouncementPanel(){
   const panel = document.getElementById('announcement-panel');
@@ -12702,6 +12723,9 @@ function _aresUpdateArenaButton(){
       <button onclick="toggleEventsAdminPanel()" style="background:rgba(56,189,248,0.12);
         border:1px solid rgba(56,189,248,0.3);color:#38bdf8;
         border-radius:7px;padding:3px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">🔔 Events &amp; Ping</button>
+      <button onclick="toggleGameCodesPanel()" style="background:rgba(242,193,78,0.12);
+        border:1px solid rgba(242,193,78,0.35);color:#f2c14e;
+        border-radius:7px;padding:3px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">🎟 Game codes</button>
       <button onclick="togglePromoEmailPanel()" style="background:rgba(236,72,153,0.12);
         border:1px solid rgba(236,72,153,0.3);color:#f472b6;
         border-radius:7px;padding:3px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">✉️ Promo Email</button>
@@ -12727,6 +12751,21 @@ function _aresUpdateArenaButton(){
           border-radius:7px;padding:7px 16px;font-size:12px;cursor:pointer;font-family:inherit;">Clear current</button>
         <span id="announcement-status" style="font-size:11px;color:rgba(255,255,255,0.35);"></span>
       </div>
+    </div>
+    <div id="game-codes-panel" style="display:none;flex-shrink:0;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,0.07);background:rgba(242,193,78,0.04);max-height:70vh;overflow-y:auto;">
+      <div style="font-size:12px;font-weight:700;color:#f2c14e;margin-bottom:6px;">🎟 Frontline Warzone codes</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:8px;">Players type these in the game's Armory. Each player can use a code once. Codes stop working when they expire or you delete them.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <input id="gc-code" maxlength="24" placeholder="Code (e.g. weekend500)" style="border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:#fff;font-size:13px;box-sizing:border-box;font-family:inherit;padding:9px 11px;border-radius:9px;text-transform:lowercase;">
+        <select id="gc-reward" onchange="document.getElementById('gc-skin').style.display=this.value==='skin'?'':'none';document.getElementById('gc-amount').style.display=this.value==='skin'?'none':''" style="border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:#fff;font-size:13px;box-sizing:border-box;font-family:inherit;padding:9px 11px;border-radius:9px;"><option value="honors">Honors</option><option value="coins">Coins</option><option value="skin">Weapon skin</option></select>
+        <input id="gc-amount" type="number" min="1" max="100000" placeholder="Amount" style="border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:#fff;font-size:13px;box-sizing:border-box;font-family:inherit;padding:9px 11px;border-radius:9px;">
+        <select id="gc-skin" style="border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:#fff;font-size:13px;box-sizing:border-box;font-family:inherit;padding:9px 11px;border-radius:9px;display:none;"><option value="gold">Gold</option><option value="dragon">Dragon scale</option><option value="neon">Neon</option><option value="crimson">Crimson</option><option value="cobalt">Cobalt</option><option value="carbon">Carbon fibre</option><option value="tiger">Tiger stripe</option><option value="digital">Digital</option></select>
+        <select id="gc-time" style="border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:#fff;font-size:13px;box-sizing:border-box;font-family:inherit;padding:9px 11px;border-radius:9px;"><option value="1">Active for 1 hour</option><option value="24" selected>Active for 1 day</option><option value="72">Active for 3 days</option><option value="168">Active for 1 week</option><option value="720">Active for 30 days</option><option value="0">Never expires</option><option value="custom">Until a set date…</option></select>
+        <input id="gc-until" type="datetime-local" style="border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:#fff;font-size:13px;box-sizing:border-box;font-family:inherit;padding:9px 11px;border-radius:9px;display:none;">
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px;align-items:center;"><button onclick="createGameCode()" style="background:#d4a02a;border:none;color:#111;border-radius:7px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Create code</button><span id="gc-status" style="font-size:11px;color:rgba(255,255,255,0.45);"></span></div>
+      <div style="font-size:12px;font-weight:700;color:#f2c14e;margin:16px 0 6px;">Codes</div>
+      <div id="gc-list" style="font-size:12px;color:rgba(255,255,255,0.6);"></div>
     </div>
     <div id="events-admin-panel" style="display:none;flex-shrink:0;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,0.07);background:rgba(56,189,248,0.04);max-height:70vh;overflow-y:auto;">
       <div style="font-size:12px;font-weight:700;color:#38bdf8;margin-bottom:6px;">🔔 Ping everyone</div>
