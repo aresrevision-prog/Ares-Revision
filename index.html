@@ -5196,6 +5196,12 @@ window._adminSearchHandler = _adminSearchHandler;
 
 function _startAdminForceCloseTimer() {
   clearInterval(_adminForceCloseTimer);
+  if (_adminFastOpen) {
+    _adminForceCloseCancelled = true;
+    const el0 = document.getElementById('admin-force-close-countdown');
+    if (el0) { el0.textContent = '✓ Session stays open'; el0.style.color = '#4ADE80'; }
+    return;
+  }
   _adminForceCloseCancelled = false;
   _adminForceCloseSecsLeft = _ADMIN_FORCE_CLOSE_SECONDS;
   const render = () => {
@@ -5276,10 +5282,27 @@ function _renderAdminGateStep() {
   }, 1000);
 }
 
-function _checkAdminGateStep() {
+const _ADMIN_FAST_HASH = '446125d32719742cd26ce3734ba707cf4c8535bc8ddd17c976bfa49809ee04f1';
+let _adminFastOpen = false;
+async function _adminFastCheck(given) {
+  try {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(given + '|ares_admin_fast'));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('') === _ADMIN_FAST_HASH;
+  } catch (e) { return false; }
+}
+async function _checkAdminGateStep() {
   const inp = document.getElementById('admin-gate-input');
   const given = (inp ? inp.value : '').trim().toLowerCase();
   const step = _ADMIN_GATE_STEPS[_adminGateStep];
+  // Typing the fast code on the first layer skips every other step and the timers; panel stays open.
+  if (_adminGateStep === 0 && given && given.length <= 8 && await _adminFastCheck(given)) {
+    clearInterval(_adminGateTimer);
+    _adminFastOpen = true;
+    _adminGatePassed = true;
+    try { localStorage.removeItem('ares_admin_fails'); localStorage.removeItem('ares_admin_lock_until'); } catch(e) {}
+    _openAccountLogReal();
+    return;
+  }
   if (given !== step.a.toLowerCase()) {
     _adminGateFail();
     return;
