@@ -4512,12 +4512,25 @@ async function authSignup() {
   const sc = await _edgeCall('signup', { username, password, displayName: username, accountType: acctType }, 3);
   if (sc.failed) {
     btn.textContent = 'Create Account →'; btn.disabled = false;
-    return authShowError('signup-error', sc.err && sc.err.status ? 'The server is having trouble right now. Please try again in a moment.' : 'Could not reach the server. Check your connection and try again.');
+    return authShowError('signup-error', sc.err && sc.err.status ? 'The server is having trouble right now (error ' + sc.err.status + (sc.err.detail ? ': ' + sc.err.detail : '') + '). Please try again in a moment.' : 'Could not reach the server. Check your connection and try again.');
   }
   const result = sc.result || {};
+  if (!sc.resp.ok && (sc.resp.status === 409 || /taken|exist|already/i.test(String(result.error || result.message || '')))) {
+    // A slow first attempt can create the account after the browser gave up and retried — the retry then
+    // reports "taken". If these exact details log in, the account is theirs: just sign them in.
+    try {
+      const lg = await _edgeCall('login', { username, password }, 2);
+      if (lg && !lg.failed && lg.resp && lg.resp.ok && lg.result && lg.result.token) {
+        _applyAuthToken(lg.result.token);
+        btn.textContent = '✓ Signed in'; btn.disabled = false;
+        authEnterApp(lg.result.username);
+        return;
+      }
+    } catch (e) {}
+  }
   if (!sc.resp.ok) {
     btn.textContent = 'Create Account →'; btn.disabled = false;
-    return authShowError('signup-error', result.error || 'Could not create account.');
+    return authShowError('signup-error', result.error || result.message || result.msg || ('Could not create account (error ' + sc.resp.status + ').'));
   }
 
   // From here on, every request carries this user's real, verified
@@ -4619,7 +4632,7 @@ async function _edgeCallAt(base, name, payload, tries) {
       clearTimeout(timer);
       let result = {};
       try { result = await resp.json(); } catch(e) { result = {}; }
-      if (resp.status >= 500 || resp.status === 404) { lastErr = { status: resp.status }; await new Promise(r => setTimeout(r, 700 * (i + 1))); continue; }
+      if (resp.status >= 500 || resp.status === 404) { lastErr = { status: resp.status, detail: String((result && (result.error || result.message || result.msg)) || '').slice(0, 120) }; await new Promise(r => setTimeout(r, 700 * (i + 1))); continue; }
       return { resp, result };
     } catch (e) {
       clearTimeout(timer);
