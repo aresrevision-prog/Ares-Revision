@@ -4507,17 +4507,17 @@ async function authDiagnose(id) {
   };
   const post = { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY }, body: '{}' };
   const lines = [];
-  const direct = await hit(SUPABASE_URL + '/functions/v1/signup', post);
+  const direct = await hit(SUPABASE_URL + '/functions/v1/sign-up', post);
   lines.push('Direct to Supabase: ' + (direct.err || (direct.status + ' ' + direct.body)));
   let via = null;
-  if (/^https?:$/.test(location.protocol)) { via = await hit(location.origin + '/functions/v1/signup', post); lines.push('Via this site: ' + (via.err || (via.status + ' ' + via.body))); }
+  if (/^https?:$/.test(location.protocol)) { via = await hit(location.origin + '/functions/v1/sign-up', post); lines.push('Via this site: ' + (via.err || (via.status + ' ' + via.body))); }
   const db = await hit(SUPABASE_URL + '/rest/v1/accounts?select=username&limit=1', { headers: { apikey: SUPABASE_ANON_KEY } });
   lines.push('Database: ' + (db.err || (db.status + ' ' + db.body)));
   const best = [direct, via].filter(Boolean).find(x => x.status);
   let verdict;
   if (!best) verdict = "Can't reach the server from this network (blocked or offline). Try another network/device.";
   else if (best.status === 401 || best.status === 403) verdict = 'The server function rejected the request: turn OFF "Verify JWT" on the signup and login functions in Supabase.';
-  else if (best.status === 404) verdict = 'The signup function is not deployed (404). Deploy it in Supabase → Edge Functions.';
+  else if (best.status === 404) verdict = 'The sign-up function was not found (404). Check its name in Supabase → Edge Functions (the app calls "sign-up").';
   else if (best.status >= 500) verdict = 'The signup function is crashing (' + best.status + '). Check its logs in Supabase → Edge Functions → signup → Logs.';
   else verdict = 'The signup function is reachable (' + best.status + '). If signing up still fails, send the exact message.';
   el.innerHTML = '';
@@ -4549,7 +4549,10 @@ async function authSignup() {
   // Function — at this point the browser has no identity yet, so this is
   // the one step that still has to run with elevated (service-role)
   // access rather than as "this specific user."
-  const sc = await _edgeCall('signup', { username, password, displayName: username, accountType: acctType }, 3);
+  // The deployed Edge Function is named "sign-up" (hyphen). Fall back to "signup" in case it's ever renamed.
+  const _suBody = { username, password, displayName: username, accountType: acctType };
+  let sc = await _edgeCall('sign-up', _suBody, 3);
+  if (sc.failed && sc.err && sc.err.status === 404) sc = await _edgeCall('signup', _suBody, 2);
   if (sc.failed) {
     btn.textContent = 'Create Account →'; btn.disabled = false;
     return authShowError('signup-error', sc.err && sc.err.status ? 'The server is having trouble right now (error ' + sc.err.status + (sc.err.detail ? ': ' + sc.err.detail : '') + '). Please try again in a moment.' : 'Could not reach the server. Check your connection and try again.');
