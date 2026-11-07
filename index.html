@@ -4485,7 +4485,47 @@ function authShowError(id, msg) {
   const el = document.getElementById(id);
   el.textContent = msg;
   el.classList.add('show');
+  // Server-ish problems get a one-tap connection test so the real cause is visible.
+  if ((id === 'signup-error' || id === 'login-error') && /server|connect|reach|error \d|JWT|authoriz|network|fetch|could not create|didn.t complete/i.test(msg)) {
+    const a = document.createElement('a');
+    a.href = '#'; a.textContent = ' Run connection test'; a.style.cssText = 'color:#93C5FD;text-decoration:underline;white-space:nowrap;cursor:pointer;';
+    a.onclick = (e) => { e.preventDefault(); authDiagnose(id); };
+    el.appendChild(a);
+  }
 }
+async function authDiagnose(id) {
+  const el = document.getElementById(id); if (!el) return;
+  el.textContent = 'Testing connection…'; el.classList.add('show');
+  const hit = async (url, init) => {
+    const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 12000);
+    try {
+      const r = await fetch(url, Object.assign({ signal: ctl.signal }, init));
+      let body = ''; try { body = (await r.text()).slice(0, 110); } catch (e) {}
+      return { status: r.status, body };
+    } catch (e) { return { err: e && e.name === 'AbortError' ? 'timed out' : 'blocked / no connection' }; }
+    finally { clearTimeout(t); }
+  };
+  const post = { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY }, body: '{}' };
+  const lines = [];
+  const direct = await hit(SUPABASE_URL + '/functions/v1/signup', post);
+  lines.push('Direct to Supabase: ' + (direct.err || (direct.status + ' ' + direct.body)));
+  let via = null;
+  if (/^https?:$/.test(location.protocol)) { via = await hit(location.origin + '/functions/v1/signup', post); lines.push('Via this site: ' + (via.err || (via.status + ' ' + via.body))); }
+  const db = await hit(SUPABASE_URL + '/rest/v1/accounts?select=username&limit=1', { headers: { apikey: SUPABASE_ANON_KEY } });
+  lines.push('Database: ' + (db.err || (db.status + ' ' + db.body)));
+  const best = [direct, via].filter(Boolean).find(x => x.status);
+  let verdict;
+  if (!best) verdict = "Can't reach the server from this network (blocked or offline). Try another network/device.";
+  else if (best.status === 401 || best.status === 403) verdict = 'The server function rejected the request: turn OFF "Verify JWT" on the signup and login functions in Supabase.';
+  else if (best.status === 404) verdict = 'The signup function is not deployed (404). Deploy it in Supabase → Edge Functions.';
+  else if (best.status >= 500) verdict = 'The signup function is crashing (' + best.status + '). Check its logs in Supabase → Edge Functions → signup → Logs.';
+  else verdict = 'The signup function is reachable (' + best.status + '). If signing up still fails, send the exact message.';
+  el.innerHTML = '';
+  const d = document.createElement('div'); d.style.cssText = 'font-size:11px;text-align:left;line-height:1.5;word-break:break-word;';
+  d.textContent = lines.join('\n') + '\n→ ' + verdict; d.style.whiteSpace = 'pre-wrap';
+  el.appendChild(d);
+}
+window.authDiagnose = authDiagnose;
 
 // ── Create account ────────────────────────────────────────────────────────
 async function authSignup() {
