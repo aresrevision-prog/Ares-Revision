@@ -5563,12 +5563,52 @@ function _renderAccountDetailHTML(k, accounts) {
             return '<div>' + stars + ' <span style=\"color:rgba(255,255,255,0.5);font-size:11px;\">' + avg + '/5 avg (' + rats.length + ' rating' + (rats.length>1?'s':'') + ')</span></div>';
           })()}
         </div>
+        <div style="margin-top:10px;padding:10px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);">
+          <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);margin-bottom:6px;">✏️ Change display name <span style="font-weight:400;opacity:.7;">(login username @${k} stays the same)</span></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <input id="ren-name-${k}" maxlength="24" placeholder="New name" style="flex:1;min-width:110px;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(0,0,0,0.3);color:#fff;font-size:12px;">
+            <input id="ren-pass-${k}" type="password" autocomplete="new-password" placeholder="Their password" style="flex:1;min-width:110px;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(0,0,0,0.3);color:#fff;font-size:12px;">
+            <button id="ren-btn-${k}" onclick="adminRenameAccount('${k}')" style="padding:8px 14px;border-radius:8px;border:1px solid rgba(167,139,250,0.5);background:rgba(167,139,250,0.15);color:#fff;font-weight:700;font-size:12px;cursor:pointer;">Rename</button>
+          </div>
+        </div>
         ${!isParent ? `<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
           <button onclick="adminToggleAccess('${k}','arenaAccess')" style="flex:1;min-width:130px;background:${a.arenaAccess?'rgba(16,185,129,0.15)':'rgba(255,255,255,0.06)'};border:1px solid ${a.arenaAccess?'#10B981':'rgba(255,255,255,0.18)'};color:${a.arenaAccess?'#10B981':'rgba(255,255,255,0.7)'};border-radius:8px;padding:8px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">⚔️ Arena: ${a.arenaAccess?'ON':'OFF'}</button>
           <button onclick="adminToggleAccess('${k}','testAccess')" style="flex:1;min-width:130px;background:${a.testAccess?'rgba(150,170,190,0.2)':'rgba(255,255,255,0.06)'};border:1px solid ${a.testAccess?'#96aabe':'rgba(255,255,255,0.18)'};color:${a.testAccess?'#c8d4e0':'rgba(255,255,255,0.7)'};border-radius:8px;padding:8px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">🧪 Test games: ${a.testAccess?'ON':'OFF'}</button>
         </div>` : ''}
       </div>`;
 }
+async function adminRenameAccount(k) {
+  if (!window._adminSession) return;
+  const nEl = document.getElementById('ren-name-' + k), pEl = document.getElementById('ren-pass-' + k), btn = document.getElementById('ren-btn-' + k);
+  if (!nEl || !pEl) return;
+  const name = nEl.value.trim().replace(/\s+/g, ' '), pw = pEl.value;
+  if (!name) return showXpPop('Enter a new name');
+  if (name.length > 24) return showXpPop('Name must be 24 characters or less');
+  if (!pw) return showXpPop("Enter the account's password");
+  const accounts = getAccounts();
+  if (!accounts[k]) return showXpPop('Account not found');
+  if (btn) { btn.disabled = true; btn.textContent = '…'; }
+  let ok = false;
+  try {
+    const h = await hashPassword(pw);
+    if (accounts[k].passwordHash && h === accounts[k].passwordHash) ok = true;
+    if (!ok) {
+      const call = await _edgeCall('login', { username: k, password: pw }, 2);
+      ok = !!(call && !call.failed && call.resp && call.resp.ok && call.result && call.result.token);
+    }
+  } catch (e) { ok = false; }
+  if (btn) { btn.disabled = false; btn.textContent = 'Rename'; }
+  if (!ok) { pEl.value = ''; return showXpPop('❌ Wrong password'); }
+  const fresh = getAccounts();
+  if (!fresh[k]) return;
+  fresh[k].displayName = name;
+  saveAccounts(fresh);
+  if (typeof gunPut === 'function') gunPut(k, fresh[k]);
+  showXpPop('✅ @' + k + ' is now "' + name + '"');
+  try { _adminAllAccounts = getAccounts(); renderAdminPanel(); } catch (e) {}
+}
+window.adminRenameAccount = adminRenameAccount;
+
 function adminToggleAccess(username, key) {
   if (!window._adminSession) return;
   if (key !== 'arenaAccess' && key !== 'testAccess') return;
