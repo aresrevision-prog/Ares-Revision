@@ -1,5 +1,7 @@
 <meta charset="utf-8">
 <title>Frontline Warzone</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%20%20%3Cdefs%3E%20%20%20%20%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%235f6b43%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%232e351f%22/%3E%3C/linearGradient%3E%20%20%20%20%3ClinearGradient%20id%3D%22au%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23ffe08a%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23d49a22%22/%3E%3C/linearGradient%3E%20%20%3C/defs%3E%20%20%3Cpath%20d%3D%22M32%202%20L58%2011%20V32%20C58%2047%2046%2057%2032%2062%20C18%2057%206%2047%206%2032%20V11%20Z%22%20fill%3D%22url%28%23g%29%22%20stroke%3D%22%2311140c%22%20stroke-width%3D%222.5%22/%3E%20%20%3Cpath%20d%3D%22M32%207%20L53%2014.5%20V32%20C53%2044%2043.5%2052.5%2032%2056.8%20C20.5%2052.5%2011%2044%2011%2032%20V14.5%20Z%22%20fill%3D%22none%22%20stroke%3D%22url%28%23au%29%22%20stroke-width%3D%222%22/%3E%20%20%3Cpath%20d%3D%22M15%2040%20L32%2029%20L49%2040%20V46%20L32%2035%20L15%2046%20Z%22%20fill%3D%22url%28%23au%29%22%20stroke%3D%22%2311140c%22%20stroke-width%3D%221.2%22/%3E%20%20%3Cpath%20d%3D%22M15%2049%20L32%2038%20L49%2049%20V54%20C44%2056%2038%2058%2032%2059.5%20C26%2058%2020%2056%2015%2054%20Z%22%20fill%3D%22url%28%23au%29%22%20stroke%3D%22%2311140c%22%20stroke-width%3D%221.2%22%20opacity%3D%22.9%22/%3E%20%20%3Cpath%20d%3D%22M32%209.5%20L35.2%2018.6%20L44.8%2018.8%20L37.1%2024.6%20L39.9%2033.8%20L32%2028.3%20L24.1%2033.8%20L26.9%2024.6%20L19.2%2018.8%20L28.8%2018.6%20Z%22%20fill%3D%22url%28%23au%29%22%20stroke%3D%22%2311140c%22%20stroke-width%3D%221.2%22/%3E%3C/svg%3E">
+<meta name="theme-color" content="#2e351f">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700;800&family=Barlow:wght@500;600&display=swap">
 <style>
 /* Layout: full-bleed 3D viewport with a tactical HUD overlay. Single dark look by choice. */
@@ -191,6 +193,13 @@ svg.rk{vertical-align:middle;flex:none;filter:drop-shadow(0 1px 1px #000)}
 .scard.done{border-color:var(--grn)}.scard.done>i{color:var(--grn)}.scard:hover{border-color:var(--acc)}
 .sl.noon{background:linear-gradient(#5d84b8,#a9c0cf 70%,#4e5a36 71%)}.sl.dawn{background:linear-gradient(#3a4a7a,#d48a6a 65%,#3e3a2c 66%)}.sl.dusk{background:linear-gradient(#20204a,#c8583a 62%,#2a2420 63%)}.sl.night{background:radial-gradient(circle at 75% 30%,#dfe8ff 0 4px,transparent 5px),linear-gradient(#020510,#0c1424 70%,#06080a 71%)}.sl.fog{background:linear-gradient(#a8b0b4,#9aa2a4 60%,#5a5e56 61%)}
 button.pri.alt{background:transparent;color:var(--acc);border-color:var(--acc)}
+.brandrow{display:flex;align-items:center;gap:16px}.mlogo{width:clamp(56px,9vh,92px);height:auto;filter:drop-shadow(0 4px 10px rgba(0,0,0,.6))}
+#conq{position:fixed;inset:0;z-index:40;background:rgba(6,9,7,.97);display:flex;justify-content:center;overflow:auto;padding:24px 16px}#conq .wrap{width:100%;max-width:1180px}#conq .top{display:flex;justify-content:space-between;align-items:center}#conq h2{font-family:var(--cond);font-size:34px;margin:0;text-transform:uppercase;letter-spacing:.04em}
+.cq{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px}#conqmap{flex:3;min-width:300px;border:1px solid rgba(207,217,200,.2);background:#0d120d}#conqmap svg{display:block;width:100%;height:auto}
+#conqside{flex:1;min-width:220px;border:1px solid rgba(207,217,200,.2);padding:16px;font-size:14px}#conqside h3{font-family:var(--cond);font-size:26px;margin:0 0 8px;text-transform:uppercase}#conqside .dsc{color:var(--dim)}#conqside button{width:100%;margin-top:8px}
+#conqmap line{stroke:rgba(207,217,200,.25);stroke-width:3;stroke-dasharray:6 6}#conqmap line.own{stroke:#6fb2ff;stroke-dasharray:none}#conqmap .river{fill:none;stroke:rgba(80,130,170,.35);stroke-width:14;stroke-linecap:round}
+.rg{cursor:pointer}.rg .core{stroke-width:3}.rg .halo{fill:none;stroke-width:2;opacity:0}.rg.own .core{fill:#1e3a66;stroke:#6fb2ff}.rg.foe .core{fill:#3a1510;stroke:#e0442f}.rg.atk .core{fill:#4a3a10;stroke:#f2c14e}.rg.atk .halo{stroke:#f2c14e;opacity:.7;animation:cqp 1.2s ease-in-out infinite}.rg.sel .halo{stroke:#fff;opacity:1}
+@keyframes cqp{50%{opacity:.15}}.rg .ic{text-anchor:middle;font-size:20px;fill:#fff}.rg .nm{text-anchor:middle;font-family:var(--cond);font-size:14px;fill:var(--ink);letter-spacing:.06em;text-transform:uppercase}.rg .ms{text-anchor:middle;font-size:11px;fill:var(--acc);font-family:var(--cond);letter-spacing:.06em}
 </style>
 
 <canvas id="c"></canvas>
@@ -213,14 +222,14 @@ button.pri.alt{background:transparent;color:var(--acc);border-color:var(--acc)}
 
 <div id="menu" class="screen">
   <div class="card">
-    <h1><em>Frontline</em>Warzone</h1><div class="byline">by <b>MagicWinter</b></div>
+    <div class="brandrow"><img class="mlogo" alt="" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%20%20%3Cdefs%3E%20%20%20%20%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%235f6b43%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%232e351f%22/%3E%3C/linearGradient%3E%20%20%20%20%3ClinearGradient%20id%3D%22au%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23ffe08a%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23d49a22%22/%3E%3C/linearGradient%3E%20%20%3C/defs%3E%20%20%3Cpath%20d%3D%22M32%202%20L58%2011%20V32%20C58%2047%2046%2057%2032%2062%20C18%2057%206%2047%206%2032%20V11%20Z%22%20fill%3D%22url%28%23g%29%22%20stroke%3D%22%2311140c%22%20stroke-width%3D%222.5%22/%3E%20%20%3Cpath%20d%3D%22M32%207%20L53%2014.5%20V32%20C53%2044%2043.5%2052.5%2032%2056.8%20C20.5%2052.5%2011%2044%2011%2032%20V14.5%20Z%22%20fill%3D%22none%22%20stroke%3D%22url%28%23au%29%22%20stroke-width%3D%222%22/%3E%20%20%3Cpath%20d%3D%22M15%2040%20L32%2029%20L49%2040%20V46%20L32%2035%20L15%2046%20Z%22%20fill%3D%22url%28%23au%29%22%20stroke%3D%22%2311140c%22%20stroke-width%3D%221.2%22/%3E%20%20%3Cpath%20d%3D%22M15%2049%20L32%2038%20L49%2049%20V54%20C44%2056%2038%2058%2032%2059.5%20C26%2058%2020%2056%2015%2054%20Z%22%20fill%3D%22url%28%23au%29%22%20stroke%3D%22%2311140c%22%20stroke-width%3D%221.2%22%20opacity%3D%22.9%22/%3E%20%20%3Cpath%20d%3D%22M32%209.5%20L35.2%2018.6%20L44.8%2018.8%20L37.1%2024.6%20L39.9%2033.8%20L32%2028.3%20L24.1%2033.8%20L26.9%2024.6%20L19.2%2018.8%20L28.8%2018.6%20Z%22%20fill%3D%22url%28%23au%29%22%20stroke%3D%22%2311140c%22%20stroke-width%3D%221.2%22/%3E%3C/svg%3E"><h1><em>Frontline</em>Warzone</h1></div><div class="byline">by <b>MagicWinter</b></div>
     <p>Trench warfare in a shattered forest. Fight alongside squads of soldiers, drive tanks and jeeps, fly supplies to your troops and call in artillery.</p>
     <div class="row"><label>Callsign<input id="name" maxlength="14" autocomplete="off"></label>
       <label>Bots per side<select id="botn"><option value="5">5</option><option value="7" selected>7</option><option value="9">9</option><option value="12">12</option></select></label></div>
     <div class="row"><label>Difficulty<select id="diff"><option value="recruit">Recruit</option><option value="regular" selected>Regular</option><option value="veteran">Veteran</option></select></label>
       <label>Graphics<select id="qual"><option value="ultra">Ultra (cinematic)</option><option value="high" selected>High</option><option value="low">Low (faster)</option></select></label></div>
     <div class="row"><label class="chk"><input type="checkbox" id="arty" checked>Ambient artillery</label><label>Look sensitivity<input type="range" id="sens" min="0.3" max="3" step="0.05" value="1"></label></div>
-    <div class="row"><button class="pri" id="front" disabled>Frontline Offensive</button><button class="pri alt" id="scenb" disabled>Scenarios</button></div><span id="campinfo" class="campinfo"></span>
+    <div class="row"><button class="pri" id="front" disabled>Frontline Offensive</button><button class="pri alt" id="scenb" disabled>Missions</button><button class="pri alt" id="conqb" disabled>Conquest</button></div><span id="campinfo" class="campinfo"></span>
     <div class="row"><button class="pri" id="online" disabled>Online battle</button><label>Room code<input id="room" maxlength="20" value="ares" autocomplete="off"></label></div><span id="onlinenote" class="campinfo"></span>
     <div class="row"><button id="tdm" disabled>Team Deathmatch</button><button id="ffa" disabled>Free-for-all</button></div>
     <div class="coinrow"><span id="mcoins"></span><button id="mshop">Armory</button><button id="mface">My face</button></div>
@@ -240,7 +249,8 @@ button.pri.alt{background:transparent;color:var(--acc);border-color:var(--acc)}
   <div class="row"><button class="pri" id="fsave">Save face</button><button id="fdel">Remove</button><button id="fclose">Close</button></div><span id="fmsg"></span></div></div>
   <h2 style="margin-top:22px;font-size:24px">iPad video</h2><p class="note">Pick a video to play on the iPad lying in the village rubble. It stays on this device only and is never uploaded. MP4 works on every browser.</p>
   <div class="row"><label class="fbtn">Choose video<input id="vfile" type="file" accept="video/*"></label><button id="vdel">Remove video</button></div><span id="vmsg" style="color:var(--grn);font-family:var(--cond)"></span></div></div>
-<div id="scen" class="hide"><div class="wrap"><div class="top"><h2>Scenarios</h2><button class="pri" id="scenclose">Back</button></div><p class="note" id="scenhint">Special missions with their own time of day, goals and rewards.</p><div id="scenlist"></div></div></div>
+<div id="conq" class="hide"><div class="wrap"><div class="top"><h2>Conquest</h2><button class="pri" id="conqclose">Back</button></div><p class="note" id="conqstat"></p><div class="cq"><div id="conqmap"></div><div id="conqside"></div></div></div></div>
+<div id="scen" class="hide"><div class="wrap"><div class="top"><h2>Missions</h2><button class="pri" id="scenclose">Back</button></div><p class="note" id="scenhint">Special missions with their own time of day, goals and rewards.</p><div id="scenlist"></div></div></div>
 <div id="shop" class="hide"><div class="wrap"><div class="top"><h2>Armory</h2><div class="coinrow"><span id="shcoins"></span><button class="pri" id="shopclose">Done</button></div></div>
   <div id="shoptabs"><button data-t="weapons">Weapons</button><button data-t="upgrades">Upgrades</button><button data-t="passes">Gamepasses</button><button data-t="skins">Skins</button><button data-t="honors">Honors</button></div><div id="shopbody"></div></div></div>
 <div id="stats" class="screen hide"><div class="card"><span class="kick">Battle report</span><h1 id="stT">Victory</h1><p id="stS"></p><div id="stXP"></div><div id="stGrid"></div><div id="stFront"></div>
@@ -1192,7 +1202,8 @@ function registerKill(kid, vid, head, kind) {
   div.innerHTML = `<span class="${cl(kid)}">${esc(nameOf(kid))}</span> <span class="${head ? 'hs' : ''}">${head ? '✛' : ICON[kind] || '▸'}</span> <span class="${cl(vid)}">${esc(nameOf(vid))}</span>`;
   $('feed').prepend(div); while ($('feed').children.length > 6) $('feed').lastChild.remove(); setTimeout(() => div.remove(), 6000);
   if (vid === me.id) me.streak = 0; const ve = ents.get(vid); if (ve) { ve.streak = 0; ve.fallZ = rnd(-.5, .5); ve.bubble.visible = false; if (isTeam()) { let said = false; ents.forEach(o => { if (!said && o !== ve && !o.dead && o.team === ve.team && o.pos.distanceTo(ve.pos) < 22) { say(o, 'down'); said = true; } }); } }
-  if (!suicide) { if (kid === me.id) { const ve = ents.get(vid), dist = ve && ve.pos ? Math.round(ve.pos.distanceTo(me.pos)) : 0; giveCoins(head ? 35 : 25, head ? 'Headshot' : kind === 'vehicle' ? 'Roadkill' : 'Kill'); if (dist >= 80 && kind === 'gun' && !me.veh) { misProgress('Long shot'); giveCoins(15, `Long shot ${dist} m`); } me.streak++; if (me.streak > PROFILE.bestStreak) PROFILE.bestStreak = me.streak; misProgress('Streak', me.streak, true); award(); $('msg').innerHTML = (head ? 'Headshot' : kind === 'vehicle' ? 'Roadkill' : kind === 'grenade' ? 'Fragged' : kind === 'tank' ? 'Tank kill' : 'Eliminated') + `<small>${dist ? dist + ' m · ' : ''}${me.streak} kill streak</small>`; later(1.3, () => { if (!me.dead && !targeting) $('msg').innerHTML = ''; }); }
+  if (!suicide) { if (kid === me.id && SC && !SC.done) { if (SC.k === 'sniper' && WEAPONS[wi] && WEAPONS[wi].scope && kind === 'gun') SC.n++; if (SC.k === 'heads' && head) SC.n++; }
+    if (kid === me.id) { const ve = ents.get(vid), dist = ve && ve.pos ? Math.round(ve.pos.distanceTo(me.pos)) : 0; giveCoins(head ? 35 : 25, head ? 'Headshot' : kind === 'vehicle' ? 'Roadkill' : 'Kill'); if (dist >= 80 && kind === 'gun' && !me.veh) { misProgress('Long shot'); giveCoins(15, `Long shot ${dist} m`); } me.streak++; if (me.streak > PROFILE.bestStreak) PROFILE.bestStreak = me.streak; misProgress('Streak', me.streak, true); award(); $('msg').innerHTML = (head ? 'Headshot' : kind === 'vehicle' ? 'Roadkill' : kind === 'grenade' ? 'Fragged' : kind === 'tank' ? 'Tank kill' : 'Eliminated') + `<small>${dist ? dist + ' m · ' : ''}${me.streak} kill streak</small>`; later(1.3, () => { if (!me.dead && !targeting) $('msg').innerHTML = ''; }); }
     const ke = ents.get(kid); if (ke && !ke.remote) { ke.streak++; if (Math.random() < .55) later(.4, () => say(ke, 'kill')); if (ke.streak === 4) botBarrage(ke); if (ke.streak === 6) botAirstrike(ke); if (ke.streak === 8) spawnHeli(ke.team, ke.id); } }
   updScore(); const lead = isTeam() ? Math.max(teamScore.A, teamScore.B) : (k ? k.k : 0); if (!suicide && lead >= GOAL) matchOver();
 }
@@ -1332,7 +1343,7 @@ function damageVehicle(v, dmg, by, fromNet) {
     v.g.traverse(o => { if (o.isMesh && o.material && o.material.color && o.material.visible !== false) { o.material = o.material.clone(); o.material.color.multiplyScalar(.15); if (o.material.map) o.material.map = null; } });
     if (v.rotor) v.vel.set(0, -2, 0);
     if (v.driver === me.id) { const p = v.pos.clone(); exitVehicle(true); if (!me.dead) hurt(me.id, 999, by, false, p, 'vehicle'); }
-    if (by === me.id && vehHostile(v, me.id)) giveCoins(75, 'Vehicle destroyed');
+    if (by === me.id && vehHostile(v, me.id)) { giveCoins(75, 'Vehicle destroyed'); if (SC && SC.k === 'demo' && !SC.done) SC.n++; }
     if (v.ai) feedMsg(`${nameOf(by)} destroyed ${isTeam() && v.team === me.team ? 'our' : 'an enemy'} ${v.type === 'tank' ? 'tank' : 'gun truck'}`, by === me.id);
     if (v.gunner) v.gunner.root.visible = false; }
 }
@@ -1489,7 +1500,7 @@ function spawnHeli(team, owner) {
   const h = { g, rotor, tail, team: isTeam() ? team : null, owner, pos: new V(Math.cos(a0) * 90, 30, Math.sin(a0) * 90), ang: a0, life: 45, hp: 800, dead: false, cool: 0, target: null, think: 0, vel: new V(), fus };
   fus.userData.heli = h; helis.push(h); announce(friendly ? 'Friendly attack helicopter inbound' : 'Enemy attack helicopter inbound', friendly);
 }
-function damageHeli(h, dmg, by) { if (h.dead) return; h.hp -= dmg; if (by === me.id) hitmarker(h.hp <= 0); if (h.hp <= 0) { h.dead = true; feedMsg(`${nameOf(by)} shot down an attack helicopter`, by === me.id); if (by === me.id) giveCoins(100, 'Helicopter down'); } }
+function damageHeli(h, dmg, by) { if (h.dead) return; h.hp -= dmg; if (by === me.id) hitmarker(h.hp <= 0); if (h.hp <= 0) { h.dead = true; feedMsg(`${nameOf(by)} shot down an attack helicopter`, by === me.id); if (by === me.id) giveCoins(100, 'Helicopter down'); if (SC && SC.k === 'skies' && !SC.done && h.team === 'B') SC.n++; } }
 function updHeli(h, dt) {
   if (h.dead) { h.vel.y -= 12 * dt; h.pos.addScaledVector(h.vel, dt); h.g.rotation.y += dt * 4; h.g.position.copy(h.pos); h.rotor.rotation.y += dt * 10; if (Math.random() < .4) SMOKE.emit(h.pos.x, h.pos.y, h.pos.z, 0, 1, 0, 2.5, 1, 3, .8, .07, .07, .07); if (h.pos.y < th(h.pos.x, h.pos.z) + 1) { explosion(h.pos.clone(), 8, 200, h.owner, 'heli'); removeHeli(h); } return; }
   h.life -= dt; const out = h.life <= 0;
@@ -2136,7 +2147,7 @@ function resetBattle() {
   score.forEach(s => { s.k = 0; s.d = 0; }); DZ.length = 0; nades.forEach(n => scene.remove(n.m)); nades.length = 0;
   if (me.veh) exitVehicle(true); ents.forEach(e => { e.cine = null; e.streak = 0; botRespawn(e); }); respawn(); updSectorHud();
 }
-function endBattle(winner) { if (SC && SC.k === 'dawn' && !SC.done) { const w = winner === me.team; PROFILE.scen = PROFILE.scen || {}; if (w) PROFILE.scen.dawn = true; SC.done = true; giveCoins(w ? SC.d.reward : 0, 'Scenario complete'); }
+function endBattle(winner) { if (SC && SC.k === 'dawn' && !SC.done) { const w = winner === me.team; PROFILE.scen = PROFILE.scen || {}; if (w) { PROFILE.scen.dawn = true; if (SC.region) conqWin(SC.region); } SC.done = true; giveCoins(w ? SC.d.reward : 0, 'Scenario complete'); }
   if (over) return; over = true; const meWin = winner === me.team;
   camp.f += meWin ? 1 : -1; let warEnd = false; if (camp.f > 2 || camp.f < -2) { warEnd = true; } const result = { winner, warEnd, day: camp.day, f: camp.f };
   if (warEnd) { camp.f = 0; camp.day = 1; } else camp.day++; saveCamp();
@@ -2425,13 +2436,23 @@ const SCEN = {
   hunt: { name: 'Tank Hunt', light: 'noon', mode: 'tdm', tag: 'Anti-tank', desc: 'Three enemy tanks are rolling in. Destroy all of them. You get an AT4.', reward: 500 },
   raid: { name: 'Night Raid', light: 'night', mode: 'tdm', tag: 'Sabotage', desc: 'Under cover of darkness, blow up 3 enemy fuel caches behind their lines.', reward: 450, bots: 5 },
   supply: { name: 'Supply Run', light: 'dusk', mode: 'tdm', tag: 'Helicopter', desc: 'Fly the helicopter and deliver 4 supply drops to your troops in 5 minutes.', reward: 400, time: 300 },
-  fogwar: { name: 'Fog of War', light: 'fog', mode: 'tdm', tag: 'Deathmatch', desc: 'Thick fog, short sight lines. First team to 30 kills wins.', reward: 350, goal: 30 } };
+  fogwar: { name: 'Fog of War', light: 'fog', mode: 'tdm', tag: 'Deathmatch', desc: 'Thick fog, short sight lines. First team to 30 kills wins.', reward: 350, goal: 30 },
+  sniper: { name: 'Sniper\'s Nest', light: 'dusk', mode: 'tdm', tag: 'Marksman', desc: 'Get 10 kills with a scoped rifle before you die 5 times.', reward: 450 },
+  demo: { name: 'Demolition', light: 'noon', mode: 'tdm', tag: 'Vehicles', desc: 'Destroy 4 enemy vehicles. Rockets, C4 and grenades all count.', reward: 500 },
+  heads: { name: 'Headhunter', light: 'dawn', mode: 'tdm', tag: 'Precision', desc: 'Land 8 headshot kills.', reward: 450 },
+  blackout: { name: 'Blackout', light: 'night', mode: 'tdm', tag: 'Survival', desc: 'Survive 4 minutes at night against veteran soldiers. You only have 3 lives.', reward: 550, time: 240 },
+  skies: { name: 'Air Superiority', light: 'dawn', mode: 'tdm', tag: 'Anti-air', desc: 'Enemy gunships are attacking. Shoot down 2 of them.', reward: 550 } };
 let SC = null;
-function startScenario(k) { const d = SCEN[k]; SC = { k, d, t: 0, done: false, left: d.time || 0, n: 0, need: 0, marks: [] }; setLighting(d.light); if (d.bots) $('botn').value = String(d.bots);
+function startScenario(k, region) { const d = SCEN[k]; SC = { k, d, region: region || null, t: 0, done: false, left: d.time || 0, n: 0, need: 0, marks: [] }; setLighting(d.light); if (d.bots) $('botn').value = String(d.bots);
   start(d.mode); GOAL = d.goal || Infinity; if (d.mode !== 'front') updScore();
   if (k === 'hunt') { SC.tanks = []; for (const [x, z] of [[40, -40], [48, 10], [36, 45]]) { makeTank(x, z, -Math.PI / 2, 'B', true); const v = vehicles[vehicles.length - 1]; v.noRespawn = true; SC.tanks.push(v); } SC.need = 3; const save = PROFILE.equip.slice(); PROFILE.equip[2] = 'at4'; applyLoadout(); PROFILE.equip = save; wstate[2].res = 12; updAmmo(); }
   if (k === 'raid') { SC.caches = []; for (const [x0, x1, z0, z1] of [[50, 64, -50, -20], [52, 66, -8, 8], [50, 64, 20, 50]]) { const p = randWalk(x0, x1, z0, z1); if (!p) continue; const q = makeProp('red', p); q.cache = true; q.hp = 1; SC.caches.push(q); } SC.need = SC.caches.length; }
   if (k === 'supply') SC.need = 4;
+  if (k === 'sniper') { SC.need = 10; wi = 1; VMG.forEach((g, i) => g.visible = i === 1); updAmmo(); }
+  if (k === 'demo') { SC.need = 4; for (const [x, z] of [[44, -20], [50, 30]]) { makeJeep(x, z, -Math.PI / 2, 'B', true, true); vehicles[vehicles.length - 1].noRespawn = false; } }
+  if (k === 'heads') SC.need = 8;
+  if (k === 'blackout') { SC.lives = 3; DIFF = DIFFS.veteran; }
+  if (k === 'skies') { SC.need = 2; SC.heliT = 4; }
   announce(`${d.name} · ${d.desc}`, true); }
 function scenBotGoal(e) { if (!SC || SC.done) return null; const vil = SECTORS[2];
   if (SC.k === 'stand') { if (e.team === me.team) { const c = findCover(new V(vil.x - 4, 0, vil.z + rnd(-9, 9)), 10, new V(vil.x + 20, 1.5, vil.z), e); return c ? { p: c, t: 'hold' } : null; } return { p: randWalk(vil.x - 8, vil.x + 8, vil.z - 9, vil.z + 9), t: 'adv' }; }
@@ -2447,11 +2468,37 @@ function updScenario(dt) { if (!SC || SC.done || !playing || cine) return; SC.t 
   if (SC.k === 'raid') { SC.n = SC.caches.filter(q => q.dead).length; txt = `<b>Destroy fuel caches</b> ${SC.n} / ${SC.need}`; if (SC.n >= SC.need) return endScenario(true, 'Every cache destroyed. The enemy is out of fuel.'); }
   if (SC.k === 'supply') { SC.left -= dt; SC.n = STATS.sup; txt = `<b>Deliver supply drops</b> ${SC.n} / 4 · ${Math.ceil(SC.left)} s`; if (SC.n >= 4) return endScenario(true, 'All supplies delivered!'); if (SC.left <= 0) return endScenario(false, 'Time ran out before the supplies arrived.'); }
   if (SC.k === 'fogwar') txt = `<b>First to 30</b> Blue ${teamScore.A} · Red ${teamScore.B}`;
+  if (SC.k === 'sniper') { txt = `<b>Scoped kills</b> ${SC.n} / 10 · deaths ${sc(me.id).d} / 5`; if (SC.n >= 10) return endScenario(true, 'Ten targets down from the nest.'); if (sc(me.id).d >= 5) return endScenario(false, 'You were found too many times.'); }
+  if (SC.k === 'demo') { txt = `<b>Enemy vehicles destroyed</b> ${SC.n} / 4`; if (SC.n >= 4) return endScenario(true, 'Their motor pool is scrap.'); }
+  if (SC.k === 'heads') { txt = `<b>Headshot kills</b> ${SC.n} / 8`; if (SC.n >= 8) return endScenario(true, 'Eight clean headshots.'); }
+  if (SC.k === 'blackout') { SC.left -= dt; const lv = SC.lives - sc(me.id).d; txt = `<b>Survive</b> ${Math.ceil(SC.left)} s · lives ${'♥'.repeat(Math.max(0, lv))}`; if (lv <= 0) return endScenario(false, 'You ran out of lives.'); if (SC.left <= 0) return endScenario(true, 'You made it through the night.'); }
+  if (SC.k === 'skies') { SC.heliT -= dt; if (SC.heliT <= 0 && !helis.some(h => !h.dead && h.team === 'B')) { SC.heliT = 20; spawnHeli('B', 'bB0'); } txt = `<b>Gunships shot down</b> ${SC.n} / 2`; if (SC.n >= 2) return endScenario(true, 'The skies are clear.'); }
   if (txt) $('objline').innerHTML = txt; SC.mt = (SC.mt || 0) - dt; if (SC.mt <= 0) { SC.mt = .15; scenMarks(); } }
-function endScenario(win, why) { if (!SC || SC.done) return; SC.done = true; over = true; mouseDown = false; $('omk').innerHTML = ''; const d = SC.d; if (win) { PROFILE.scen = PROFILE.scen || {}; PROFILE.scen[SC.k] = true; } giveCoins(win ? d.reward : 100, win ? 'Scenario complete' : 'Scenario failed', win ? d.reward * 4 : 300);
+function endScenario(win, why) { if (!SC || SC.done) return; SC.done = true; over = true; mouseDown = false; $('omk').innerHTML = ''; const d = SC.d; if (win) { PROFILE.scen = PROFILE.scen || {}; PROFILE.scen[SC.k] = true; if (SC.region) conqWin(SC.region); } giveCoins(win ? d.reward : 100, win ? 'Scenario complete' : 'Scenario failed', win ? d.reward * 4 : 300);
   later(1.5, () => { $('stT').textContent = win ? 'Mission complete' : 'Mission failed'; $('stT').className = win ? 'win' : 'loss'; $('stS').textContent = `${d.name} · ${why}`; const mine = sc(me.id);
     $('stGrid').innerHTML = [['Your kills', mine.k], ['Your deaths', mine.d], ['Time', Math.floor(SC.t / 60) + ':' + String(Math.floor(SC.t % 60)).padStart(2, '0')], ['Coins earned', `<i class="coin"></i>${battleCoins}`]].map(([a, b]) => `<div><span>${a}</span><b>${b}</b></div>`).join(''); $('stFront').innerHTML = ''; statXP();
-    $('nextb').textContent = 'Play again'; $('nextb').onclick = () => { try { sessionStorage.setItem('fl_again', SC.k); } catch (e) { } location.reload(); }; $('stats').classList.remove('hide'); paused = true; try { document.exitPointerLock(); } catch (e) { } }); }
+    $('nextb').textContent = SC.region ? 'Back to the map' : 'Play again'; $('nextb').onclick = () => { try { sessionStorage.setItem(SC.region ? 'fl_conq' : 'fl_again', SC.k); } catch (e) { } location.reload(); }; $('stats').classList.remove('hide'); paused = true; try { document.exitPointerLock(); } catch (e) { } }); }
+/* ---------------- Conquest: a map of regions you take one mission at a time ---------------- */
+const CONQ = [
+  { id: 'hq', name: 'Home Base', x: 70, y: 260, adj: ['wood', 'farm'] }, { id: 'wood', name: 'Pine Woods', x: 190, y: 160, m: 'raid', adj: ['hq', 'river', 'village'] },
+  { id: 'farm', name: 'Millbrook Farm', x: 190, y: 370, m: 'supply', adj: ['hq', 'village', 'quarry'] }, { id: 'river', name: 'River Crossing', x: 320, y: 90, m: 'hunt', adj: ['wood', 'ridge'] },
+  { id: 'village', name: 'Old Village', x: 320, y: 260, m: 'stand', adj: ['wood', 'farm', 'ridge', 'airfield'] }, { id: 'quarry', name: 'Quarry', x: 320, y: 430, m: 'demo', adj: ['farm', 'airfield'] },
+  { id: 'ridge', name: 'Sniper Ridge', x: 460, y: 150, m: 'sniper', adj: ['river', 'village', 'bunkers'] }, { id: 'airfield', name: 'Airfield', x: 460, y: 370, m: 'skies', adj: ['village', 'quarry', 'bunkers'] },
+  { id: 'bunkers', name: 'Bunker Line', x: 590, y: 260, m: 'blackout', adj: ['ridge', 'airfield', 'citadel', 'heads'] }, { id: 'heads', name: 'Watchtowers', x: 600, y: 430, m: 'heads', adj: ['bunkers', 'citadel'] },
+  { id: 'citadel', name: 'Enemy Citadel', x: 720, y: 260, m: 'dawn', adj: ['bunkers', 'heads'], boss: true }];
+const conqState = () => PROFILE.conq = PROFILE.conq || { owned: ['hq'], wins: 0 };
+function conqAttackable(r) { const st = conqState(); return !st.owned.includes(r.id) && r.adj.some(a => st.owned.includes(a)); }
+function renderConquest(sel) { const st = conqState(), R2 = Object.fromEntries(CONQ.map(r => [r.id, r])); let lines = '', nodes = '';
+  const done = new Set(); for (const r of CONQ) for (const a of r.adj) { const k = [r.id, a].sort().join(); if (done.has(k)) continue; done.add(k); const b = R2[a]; const both = st.owned.includes(r.id) && st.owned.includes(a); lines += `<line x1="${r.x}" y1="${r.y}" x2="${b.x}" y2="${b.y}" class="${both ? 'own' : ''}"/>`; }
+  for (const r of CONQ) { const own = st.owned.includes(r.id), atk = conqAttackable(r), d = r.m ? SCEN[r.m] : null; const rad = r.boss ? 34 : 27;
+    nodes += `<g class="rg ${own ? 'own' : atk ? 'atk' : 'foe'} ${sel === r.id ? 'sel' : ''}" data-id="${r.id}" transform="translate(${r.x},${r.y})"><circle r="${rad + 7}" class="halo"/><circle r="${rad}" class="core"/><text class="ic" y="7">${own ? '★' : atk ? '⚔' : r.boss ? '♜' : '✖'}</text><text class="nm" y="${rad + 20}">${r.name}</text>${d && !own ? `<text class="ms" y="${rad + 35}">${d.name}</text>` : ''}</g>`; }
+  $('conqmap').innerHTML = `<svg viewBox="0 0 790 500" preserveAspectRatio="xMidYMid meet"><defs><pattern id="topo" width="60" height="60" patternUnits="userSpaceOnUse"><path d="M0 30 Q15 20 30 30 T60 30 M0 50 Q15 40 30 50 T60 50 M0 10 Q15 0 30 10 T60 10" fill="none" stroke="rgba(207,217,200,.06)"/></pattern><linearGradient id="front" x1="0" x2="1"><stop offset="0" stop-color="rgba(111,178,255,.10)"/><stop offset="1" stop-color="rgba(224,68,47,.10)"/></linearGradient></defs><rect width="790" height="500" fill="url(#front)"/><rect width="790" height="500" fill="url(#topo)"/><path d="M250 0 C270 120 240 200 300 300 S330 440 290 500" class="river"/>${lines}${nodes}</svg>`;
+  const owned = st.owned.length - 1, total = CONQ.length - 1; $('conqstat').innerHTML = `Territory <b>${owned} / ${total}</b> · Campaigns won <b>${st.wins}</b> · Taking a region pays a <i class="coin"></i>150 bonus · Capturing the Citadel wins the war (<i class="coin"></i>3,000)`;
+  const r = sel && R2[sel]; const d = r && r.m && SCEN[r.m];
+  $('conqside').innerHTML = !r ? '<p class="note">Pick a region next to your territory (⚔) to attack it.</p>' : `<h3>${r.name}</h3>${st.owned.includes(r.id) ? '<p class="note">This region is yours.</p>' : d ? `<p><b>${d.name}</b> · ${d.tag}</p><p class="dsc">${d.desc}</p><p>Reward <i class="coin"></i>${d.reward} + <i class="coin"></i>150</p>${conqAttackable(r) ? `<button class="pri" id="conqgo">Attack ${r.name}</button>` : '<p class="note">Take a neighbouring region first.</p>'}` : ''}`;
+  const go = $('conqgo'); if (go) go.onclick = () => { $('conq').classList.add('hide'); startScenario(r.m, r.id); }; }
+function conqWin(region) { const st = conqState(); if (!region || st.owned.includes(region)) return; st.owned.push(region); giveCoins(150, 'Region captured', 400); const r = CONQ.find(q => q.id === region);
+  if (r && r.boss) { st.wins++; giveCoins(3000, 'Conquest won', 6000); st.owned = ['hq']; later(.5, () => announce('The war is won! The map has reset for a new campaign.', true)); } else later(.5, () => announce(`${r ? r.name : 'Region'} captured!`, true)); saveProfile(); }
 function renderScenarios() { const done = PROFILE.scen || {}; $('scenlist').innerHTML = Object.entries(SCEN).map(([k, d]) => `<button class="scard ${done[k] ? 'done' : ''}" data-k="${k}"><span class="sl ${d.light}"></span><b>${d.name}</b><em>${d.tag} · ${{ noon: 'Midday', dawn: 'Dawn', dusk: 'Dusk', night: 'Night', fog: 'Fog' }[d.light]}</em><small>${d.desc}</small><i>${done[k] ? '✓ Completed' : `Reward <i class="coin"></i>${d.reward}`}</i></button>`).join(''); }
 function start(m) { wi = 0; applyLoadout(); if (!PROPS.length) spawnProps(); battleCoins = 0; battleXP = 0; xpStart = PROFILE.xp;
   if (!RPM) { $('err').textContent = 'Still loading soldiers…'; return; }
@@ -2545,6 +2592,8 @@ $('fdel').onclick = () => { const two = $('fslot').value === '2'; try { localSto
 $('fslot').onchange = () => { $('fnamel').classList.toggle('hide', $('fslot').value !== '2'); FUI.img = null; try { const d = JSON.parse(localStorage.getItem($('fslot').value === '2' ? 'fl_face2' : 'fl_face') || 'null'); if (d && d.img) { fLoad(d.img); if (d.name) $('fname').value = d.name; } } catch (e) { } fDraw(); };
 $('vfile').onchange = async e => { const f = e.target.files[0]; if (!f) return; if (f.size > 150e6) { $('vmsg').textContent = 'That video is too big (150 MB max)'; return; } try { await mediaSet('ipad', f); $('vmsg').textContent = 'Saved. It plays on the iPad in the village rubble.'; loadIpadVideo(); } catch (er) { $('vmsg').textContent = 'Could not save on this browser'; } };
 $('vdel').onclick = async () => { try { await mediaSet('ipad', null); } catch (er) { } $('vmsg').textContent = 'Video removed'; loadIpadVideo(); };
+$('conqb').onclick = () => { renderConquest(); $('conq').classList.remove('hide'); }; $('conqclose').onclick = () => $('conq').classList.add('hide');
+$('conqmap').onclick = e => { const g = e.target.closest('.rg'); if (g) renderConquest(g.dataset.id); };
 $('scenb').onclick = () => { renderScenarios(); $('scen').classList.remove('hide'); }; $('scenclose').onclick = () => $('scen').classList.add('hide');
 $('scenlist').onclick = e => { const b = e.target.closest('.scard'); if (!b || $('front').disabled) return; $('scen').classList.add('hide'); startScenario(b.dataset.k); };
 $('front').onclick = () => start('front'); $('nextb').onclick = nextBattle; $('menub').onclick = () => location.reload(); $('tdm').onclick = () => start('tdm'); $('ffa').onclick = () => start('ffa');
@@ -2563,7 +2612,7 @@ function boot() {
   defineMap(); buildHF(); buildTerrain(); buildStructures(); buildBoxGrid(); buildNav(); buildSectors(); buildMiniBg(); resize();
   $('load').textContent = 'Loading soldiers…';
   loadModels()
-    .then(() => { $('load').textContent = 'Ready'; $('tdm').disabled = $('ffa').disabled = $('front').disabled = $('scenb').disabled = false; try { const ag = sessionStorage.getItem('fl_again'); if (ag && SCEN[ag]) { sessionStorage.removeItem('fl_again'); renderScenarios(); $('scen').classList.remove('hide'); $('scenhint').textContent = 'Pick a scenario to play again'; } } catch (e) { } $('online').disabled = !$('online').dataset.ok; $('campinfo').textContent = `Campaign: Day ${camp.day} · front ${camp.f > 0 ? 'pushed east' : camp.f < 0 ? 'pushed back' : 'stalled at the village'}`; }).catch(e => { $('err').textContent = 'Could not load soldier model: ' + (e.message || e); });
+    .then(() => { $('load').textContent = 'Ready'; $('tdm').disabled = $('ffa').disabled = $('front').disabled = $('scenb').disabled = $('conqb').disabled = false; try { if (sessionStorage.getItem('fl_conq')) { sessionStorage.removeItem('fl_conq'); renderConquest(); $('conq').classList.remove('hide'); } } catch (e) { } try { const ag = sessionStorage.getItem('fl_again'); if (ag && SCEN[ag]) { sessionStorage.removeItem('fl_again'); renderScenarios(); $('scen').classList.remove('hide'); $('scenhint').textContent = 'Pick a scenario to play again'; } } catch (e) { } $('online').disabled = !$('online').dataset.ok; $('campinfo').textContent = `Campaign: Day ${camp.day} · front ${camp.f > 0 ? 'pushed east' : camp.f < 0 ? 'pushed back' : 'stalled at the village'}`; }).catch(e => { $('err').textContent = 'Could not load soldier model: ' + (e.message || e); });
   requestAnimationFrame(loop);
 }
 setTimeout(boot, 30);
