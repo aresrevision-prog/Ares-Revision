@@ -180,6 +180,10 @@ svg.rk{vertical-align:middle;flex:none;filter:drop-shadow(0 1px 1px #000)}
 #cross.lock i{background:#ff3b2f!important;box-shadow:0 0 6px #ff3b2f}#cross.lock::after{content:'LOCKED';position:absolute;left:-24px;top:18px;font-size:12px;color:#ff3b2f;letter-spacing:.15em}
 #pahud{position:absolute;inset:0;pointer-events:none}#pahud .pav{position:absolute;inset:0;box-shadow:inset 0 0 0 999px rgba(60,255,240,.03),inset 0 0 160px 40px rgba(0,0,0,.75);border-radius:30% 30% 18% 18%/40% 40% 14% 14%}
 #pahud .pab{position:absolute;left:28px;bottom:84px;width:240px;font-size:14px;color:#6ff6f0;letter-spacing:.14em;text-shadow:0 0 6px #0ff}#pahud .pab i{display:block;height:6px;background:rgba(111,246,240,.15);margin-top:4px}#pahud .pab b{display:block;height:100%;background:#6ff6f0;box-shadow:0 0 8px #0ff}
+.screen{align-items:safe center}#menu{align-content:safe center}.screen>.card,.screen>aside{margin-top:auto;margin-bottom:auto}
+.byline{font-family:var(--cond);font-size:18px;letter-spacing:.32em;text-transform:uppercase;color:var(--dim);margin-top:-4px}.byline b{color:var(--acc);font-weight:700}
+@media (max-height:820px){.card{gap:9px}.card h1{font-size:clamp(44px,9vh,84px)}.card>p{font-size:14px;margin:0}.keys{font-size:13px;line-height:1.5}}
+@media (max-width:700px){.card h1{font-size:clamp(44px,14vw,72px)}.byline{font-size:15px}}
 </style>
 
 <canvas id="c"></canvas>
@@ -202,7 +206,7 @@ svg.rk{vertical-align:middle;flex:none;filter:drop-shadow(0 1px 1px #000)}
 
 <div id="menu" class="screen">
   <div class="card">
-    <h1><em>Frontline</em>Warzone</h1>
+    <h1><em>Frontline</em>Warzone</h1><div class="byline">by <b>MagicWinter</b></div>
     <p>Trench warfare in a shattered forest. Fight alongside squads of soldiers, drive tanks and jeeps, fly supplies to your troops and call in artillery.</p>
     <div class="row"><label>Callsign<input id="name" maxlength="14" autocomplete="off"></label>
       <label>Bots per side<select id="botn"><option value="5">5</option><option value="7" selected>7</option><option value="9">9</option><option value="12">12</option></select></label></div>
