@@ -14794,6 +14794,16 @@ window.openDinoDash=openDinoDash;window.closeDinoDash=closeDinoDash;
 .mt-k{box-shadow:0 2px 0 rgba(0,0,0,.35)}
 .mt-btn:focus-visible,.mt-opt:focus-visible,.mt-k:focus-visible{outline:2px solid #22D3EE;outline-offset:2px}
 @media(prefers-reduced-motion:reduce){.mt-card,.mt-ladder,.mt-opt,.mt-gs i,.mt-up{animation:none!important}}
+#mt-page{max-width:720px;margin:0 auto;color:#eceaf7;padding:.75rem 1rem 3rem}
+.mt-back{background:none;border:1px solid #2a2e44;color:#a5a3bd;border-radius:10px;padding:.45rem .9rem;cursor:pointer;font-family:inherit;margin-bottom:.9rem}
+.mt-ph{display:flex;gap:.9rem;align-items:center;margin-bottom:1rem}.mt-pi{font-size:2.2rem;background:rgba(124,92,252,.15);border-radius:16px;width:62px;height:62px;display:flex;align-items:center;justify-content:center;flex:none}
+.mt-ph h1{font-family:'Fraunces',Georgia,serif;font-weight:400;font-size:1.7rem;margin:0;color:#fff}.mt-ph p{margin:.2rem 0 0;color:#a5a3bd;font-size:14px}.mt-ph b{color:#34D399}
+.mt-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin:.8rem 0}.mt-stats div{background:#12162a;border:1px solid #232846;border-radius:12px;padding:.7rem .4rem;text-align:center}.mt-stats b{display:block;font-size:1.15rem;color:#fff}.mt-stats span{font-size:11px;color:#7d7b99}
+@media(max-width:480px){.mt-stats{grid-template-columns:repeat(2,1fr)}}
+.mt-cta{display:flex;gap:.6rem;flex-wrap:wrap}.mt-cta .mt-btn{flex:1 1 200px}
+.mt-first{text-align:center}.mt-first h2{font-family:'Fraunces',Georgia,serif;font-weight:400;font-size:1.5rem;margin:.2rem 0;color:#fff}.mt-first p{color:#c9c6e6;line-height:1.6;font-size:14px}
+.mt-hist{margin-top:1.2rem;background:#12162a;border:1px solid #232846;border-radius:14px;padding:.8rem 1rem}.mt-hist h3{margin:0 0 .4rem;font-size:13px;color:#a5a3bd;font-weight:600}.mt-hist ul{list-style:none;margin:0;padding:0}.mt-hist li{display:flex;gap:.8rem;align-items:center;padding:.4rem 0;border-top:1px solid #232846;font-size:13px;color:#a5a3bd}.mt-hist li:first-child{border-top:0}.mt-hist b{color:#fff}.mt-hist em{margin-left:auto;font-style:normal;color:#A78BFA}
+.mt-foot{text-align:center;color:#7d7b99;font-size:12px;margin-top:1.4rem}
 </style>
 <script id="maths-trainer">
 /* ===== Maths Trainer: graded question generators ===== */
@@ -15178,16 +15188,23 @@ function onOpen(quiet){
   if(currentSubject!=='mth'||!currentTopic)return;
   var id=currentTopic.id,p=load(),t=tp(p,id);
   if(!quiet){t.studied++;t.last=Date.now();save(p);}
-  var pg=document.getElementById('page-topic'),tabs=document.getElementById('topic-tabs');if(!pg||!tabs)return;
-  var old=document.getElementById('mt-banner');if(old)old.remove();
-  var b=document.createElement('div');b.id='mt-banner';
-  var msg,btn;
-  if(t.P==null){msg='Ares sees you\'re working on <b>'+_esc(currentTopic.name)+'</b>. Read the notes, then take the 15-question mini test so I can find your level.';btn='Take the mini test';}
-  else{msg='<b>'+_esc(currentTopic.name)+'</b> — your level: <b>'+lbl(t.P)+'</b> · studied '+mins(t.secs)+' · '+t.trained+' trained answers.';btn='Train from '+lbl(t.P);}
-  b.innerHTML='<div class="mt-b-t">🎯 <span>'+msg+'</span></div><div class="mt-b-btns"><button class="mt-btn" id="mt-go">'+btn+'</button>'+
-   (t.P!=null?'<button class="mt-btn mt-ghost" id="mt-re">Retake test</button>':'')+'</div>';
-  tabs.parentNode.insertBefore(b,tabs);
-  document.getElementById('mt-go').onclick=function(){t.P==null?startTest(id):startTrain(id);};
+  var pg=document.getElementById('page-topic');if(!pg)return;
+  ['topic-tabs','tab-notes','tab-flashcards','tab-quiz','tab-vocab','tab-tips','tab-quotes','tab-text','papers-panel','spec-panel','ai-drill-panel'].forEach(function(x){var e=document.getElementById(x);if(e)e.style.display='none';});
+  W._mtHid=true;var old=document.getElementById('mt-page');if(old)old.remove();
+  var old2=document.getElementById('mt-banner');if(old2)old2.remove();
+  var g=document.createElement('div');g.id='mt-page';
+  var tested=t.P!=null,acc=t.trained?Math.round(t.correct/t.trained*100):null,m=mp(t.P,id);
+  var hist=(t.tests||[]).slice(-5).reverse().map(function(x){return '<li><span>'+new Date(x.ts).toLocaleDateString()+'</span><b>'+x.score+'/'+x.n+'</b><em>'+lbl(x.P)+'</em></li>';}).join('');
+  g.innerHTML='<button class="mt-back" id="mt-bk">← All topics</button>'+
+   '<div class="mt-ph"><div class="mt-pi">'+(currentTopic.icon||'📐')+'</div><div><h1>'+_esc(currentTopic.name)+'</h1><p>'+(tested?'Your level: <b>'+lbl(t.P)+'</b> · '+m+'% mastered':'Not tested yet')+'</p></div></div>'+
+   (tested?ladderHTML(t.P,id)+'<div class="mt-stats"><div><b>'+t.trained+'</b><span>answers trained</span></div><div><b>'+(acc==null?'–':acc+'%')+'</b><span>accuracy</span></div><div><b>'+t.tests.length+'</b><span>tests taken</span></div><div><b>'+mins(t.secs)+'</b><span>study time</span></div></div>'+
+     '<div class="mt-cta"><button class="mt-btn mt-lg" id="mt-go">Train from '+lbl(t.P)+' →</button><button class="mt-btn mt-ghost mt-lg" id="mt-re">Retake mini test</button></div>'+
+     (hist?'<div class="mt-hist"><h3>Recent tests</h3><ul>'+hist+'</ul></div>':'')
+    :'<div class="mt-card mt-first"><h2>Find your level</h2><p>Take the 15-question mini test. Ares places you on the grade ladder, then trains you: <b>+2 steps</b> for a right answer, <b>−1 step</b> for a wrong one.</p><button class="mt-btn mt-lg" id="mt-go">Start the mini test →</button></div>')+
+   '<p class="mt-foot">Calculator and worked explanations are built into every question.</p>';
+  pg.insertBefore(g,pg.firstChild);
+  document.getElementById('mt-bk').onclick=function(){try{showHome();}catch(e){}};
+  document.getElementById('mt-go').onclick=function(){tested?startTrain(id):startTest(id);};
   var re=document.getElementById('mt-re');if(re)re.onclick=function(){startTest(id);};
 }
 setInterval(function(){
@@ -15300,11 +15317,11 @@ function startTest(id){
    '<button class="mt-btn mt-lg" id="mt-start">Start test</button></div>');
   document.getElementById('mt-start').onclick=function(){document.removeEventListener('keydown',keys);document.addEventListener('keydown',keys);showQ();};
 }
-function ladderHTML(){
-  var r=rng(S.t),h='';
-  for(var g=r[0];g<=r[1];g++){var segs='';for(var s=0;s<3;s++){var p=(g-1)*3+s,c=p<=S.P?'on':'';if(p===S.P)c+=' now';segs+='<i class="'+c+'"></i>';}
-    h+='<div class="mt-g'+(gOf(S.P)===g?' cur':'')+'"><div class="mt-gs">'+segs+'</div><span>'+g+'</span></div>';}
-  return '<div class="mt-ladder"><div class="mt-lh"><b>'+lbl(S.P)+'</b><span>+2 right · −1 wrong</span></div><div class="mt-gr">'+h+'</div></div>';
+function ladderHTML(P0,t0){
+  var P=P0==null?S.P:P0,T=t0==null?S.t:t0,r=rng(T),h='';
+  for(var g=r[0];g<=r[1];g++){var segs='';for(var s=0;s<3;s++){var p=(g-1)*3+s,c=p<=P?'on':'';if(p===P)c+=' now';segs+='<i class="'+c+'"></i>';}
+    h+='<div class="mt-g'+(gOf(P)===g?' cur':'')+'"><div class="mt-gs">'+segs+'</div><span>'+g+'</span></div>';}
+  return '<div class="mt-ladder"><div class="mt-lh"><b>'+lbl(P)+'</b><span>+2 right · −1 wrong</span></div><div class="mt-gr">'+h+'</div></div>';
 }
 function showQ(){
   var q=S.mode==='test'?S.qs[S.i]:S.cur;S.cur=q;S.locked=false;
@@ -15395,8 +15412,9 @@ function finishTrain(silent){
 }
 
 /* ---- hooks (wrap, don't edit, existing functions) ---- */
-var _rh=W.renderHome;W.renderHome=function(){var r=_rh.apply(this,arguments);try{decorate();}catch(e){}return r;};
-var _ot=W.openTopic;W.openTopic=function(){var r=_ot.apply(this,arguments);try{onOpen();}catch(e){}return r;};
+function restoreTabs(){if(!W._mtHid)return;W._mtHid=false;var px=document.getElementById('mt-page');if(px)px.remove();['topic-tabs','tab-notes'].forEach(function(x){var e=document.getElementById(x);if(e)e.style.display='';});['tab-flashcards','tab-quiz','tab-vocab','tab-tips','tab-quotes','tab-text','papers-panel','spec-panel','ai-drill-panel'].forEach(function(x){var e=document.getElementById(x);if(e)e.style.display='none';});}
+var _rh=W.renderHome;W.renderHome=function(){var r=_rh.apply(this,arguments);try{var pgx=document.getElementById('mt-page');if(pgx)pgx.remove();if(currentSubject!=='mth')restoreTabs();decorate();}catch(e){}return r;};
+var _ot=W.openTopic;W.openTopic=function(){var r=_ot.apply(this,arguments);try{if(currentSubject==='mth'){onOpen();}else restoreTabs();}catch(e){}return r;};
 W._mt={startTest:startTest,startTrain:startTrain,load:load,S:function(){return S;}};
 })();
 
