@@ -14725,7 +14725,7 @@ window.openDinoDash=openDinoDash;window.closeDinoDash=closeDinoDash;
 .mt-b-t{flex:1 1 240px;line-height:1.5}.mt-b-btns{display:flex;gap:.5rem;flex-wrap:wrap}
 .mt-btn{background:#7C5CFC;color:#fff;border:0;border-radius:10px;padding:.6rem 1.1rem;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
 .mt-btn:hover{filter:brightness(1.1)}.mt-ghost{background:transparent;border:1px solid rgba(167,139,250,.5);color:#A78BFA}
-#mt-overlay{position:fixed;inset:0;z-index:99999;display:none;align-items:flex-start;justify-content:center;overflow-y:auto;background:radial-gradient(900px 420px at 50% -80px,rgba(124,92,252,.28),transparent 70%),#090b16;color:#eceaf7;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-overflow-scrolling:touch}
+#mt-overlay{position:fixed;inset:0;z-index:1000001;display:none;align-items:flex-start;justify-content:center;overflow-y:auto;background:radial-gradient(900px 420px at 50% -80px,rgba(124,92,252,.28),transparent 70%),#090b16;color:#eceaf7;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-overflow-scrolling:touch}
 .mt-box{width:100%;max-width:680px;padding:.9rem 1rem 3rem;box-sizing:border-box}
 .mt-top{display:flex;align-items:center;gap:.6rem;margin-bottom:.7rem}
 .mt-brand{font-size:13px;letter-spacing:.04em;color:#a5a3bd}.mt-brand b{color:#fff;background:linear-gradient(90deg,#7C5CFC,#22D3EE);-webkit-background-clip:text;background-clip:text;color:transparent;font-size:15px}
@@ -14790,7 +14790,7 @@ window.openDinoDash=openDinoDash;window.closeDinoDash=closeDinoDash;
 .mt-up{background:linear-gradient(90deg,#7C5CFC,#22D3EE);color:#fff;font-weight:800;text-align:center;border-radius:10px;padding:.45rem;margin-bottom:.6rem;animation:mtPop .5s}
 .mt-rev{text-align:left;margin:.8rem 0;background:#191e38;border-radius:14px;padding:.2rem .9rem}.mt-rev summary{cursor:pointer;padding:.7rem 0;font-weight:700;font-size:14px;color:#fff}
 .mt-ri{border-top:1px solid #272d52;padding:.7rem 0}.mt-rq{font-size:15px;color:#fff;margin-bottom:.4rem}.mt-ra{display:flex;gap:.5rem;flex-wrap:wrap;font-size:12px;font-weight:700}.mt-ra span{border-radius:99px;padding:.2rem .6rem}.mt-ra .b{background:rgba(248,113,113,.15);color:#fca5a5}.mt-ra .g{background:rgba(52,211,153,.15);color:#6ee7b7}.mt-ri p{margin:.4rem 0 0;font-size:13px;color:#c9c6e6;line-height:1.5}
-.mt-conf{position:fixed;inset:0;z-index:100001;pointer-events:none;overflow:hidden}.mt-conf i{position:absolute;top:-12px;width:8px;height:14px;border-radius:2px;animation:mtFall linear forwards}@keyframes mtFall{to{top:105%;transform:rotate(720deg)}}
+.mt-conf{position:fixed;inset:0;z-index:1000002;pointer-events:none;overflow:hidden}.mt-conf i{position:absolute;top:-12px;width:8px;height:14px;border-radius:2px;animation:mtFall linear forwards}@keyframes mtFall{to{top:105%;transform:rotate(720deg)}}
 .mt-calc{box-shadow:0 8px 24px rgba(0,0,0,.35)}.mt-cd{background:linear-gradient(180deg,#05060f,#0a0d1c);border:1px solid #1c2140}
 .mt-k{box-shadow:0 2px 0 rgba(0,0,0,.35)}
 .mt-btn:focus-visible,.mt-opt:focus-visible,.mt-k:focus-visible{outline:2px solid #22D3EE;outline-offset:2px}
@@ -15187,11 +15187,17 @@ function decorate(){
 var seen={};
 function onOpen(quiet){
   if(currentSubject!=='mth'||!currentTopic)return;
+  var lo=document.getElementById('lesson-overlay');
+  if(lo&&lo.style.display==='block'&&document.getElementById('lesson-ov-body')){return buildPage(true,quiet);}
+  return buildPage(false,quiet);
+}
+function buildPage(inLesson,quiet){
   var id=currentTopic.id,p=load(),t=tp(p,id);
   if(!quiet){t.studied++;t.last=Date.now();save(p);}
-  var pg=document.getElementById('page-topic');if(!pg)return;
-  ['topic-tabs','tab-notes','tab-flashcards','tab-quiz','tab-vocab','tab-tips','tab-quotes','tab-text','papers-panel','spec-panel','ai-drill-panel'].forEach(function(x){var e=document.getElementById(x);if(e)e.style.display='none';});
-  W._mtHid=true;var old=document.getElementById('mt-page');if(old)old.remove();
+  var pg=inLesson?document.getElementById('lesson-ov-body'):document.getElementById('page-topic');if(!pg)return;
+  if(inLesson){var tb=document.getElementById('lesson-ov-tabs');if(tb)tb.style.display='none';pg.innerHTML='';}
+  if(!inLesson)['topic-tabs','tab-notes','tab-flashcards','tab-quiz','tab-vocab','tab-tips','tab-quotes','tab-text','papers-panel','spec-panel','ai-drill-panel'].forEach(function(x){var e=document.getElementById(x);if(e)e.style.display='none';});
+  if(!inLesson)W._mtHid=true;var old=document.getElementById('mt-page');if(old)old.remove();
   var old2=document.getElementById('mt-banner');if(old2)old2.remove();
   var g=document.createElement('div');g.id='mt-page';
   var tested=t.P!=null,acc=t.trained?Math.round(t.correct/t.trained*100):null,m=mp(t.P,id);
@@ -15204,13 +15210,13 @@ function onOpen(quiet){
     :'<div class="mt-card mt-first"><h2>Find your level</h2><p>Take the 15-question mini test. Ares places you on the grade ladder, then trains you: <b>+2 steps</b> for a right answer, <b>−1 step</b> for a wrong one.</p><button class="mt-btn mt-lg" id="mt-go">Start the mini test →</button></div>')+
    '<p class="mt-foot">Calculator and worked explanations are built into every question.</p>';
   pg.insertBefore(g,pg.firstChild);
-  document.getElementById('mt-bk').onclick=function(){try{showHome();}catch(e){}};
+  document.getElementById('mt-bk').onclick=function(){try{if(inLesson)closeLessonOverlay();else showHome();}catch(e){}};
   document.getElementById('mt-go').onclick=function(){tested?startTrain(id):startTest(id);};
   var re=document.getElementById('mt-re');if(re)re.onclick=function(){startTest(id);};
 }
 setInterval(function(){
   if(currentSubject!=='mth'||!currentTopic||document.hidden||(S&&S.mode))return;
-  var pg=document.getElementById('page-topic');if(!pg||pg.style.display==='none')return;
+  var pg=document.getElementById('page-topic'),lo=document.getElementById('lesson-overlay');if(!((pg&&pg.style.display!=='none')||(lo&&lo.style.display==='block')))return;
   var p=load();tp(p,currentTopic.id).secs+=20;save(p);
 },20000);
 
@@ -15416,6 +15422,17 @@ function finishTrain(silent){
 function restoreTabs(){if(!W._mtHid)return;W._mtHid=false;var px=document.getElementById('mt-page');if(px)px.remove();['topic-tabs','tab-notes'].forEach(function(x){var e=document.getElementById(x);if(e)e.style.display='';});['tab-flashcards','tab-quiz','tab-vocab','tab-tips','tab-quotes','tab-text','papers-panel','spec-panel','ai-drill-panel'].forEach(function(x){var e=document.getElementById(x);if(e)e.style.display='none';});}
 var _rh=W.renderHome;W.renderHome=function(){var r=_rh.apply(this,arguments);try{var pgx=document.getElementById('mt-page');if(pgx)pgx.remove();if(currentSubject!=='mth')restoreTabs();decorate();}catch(e){}return r;};
 var _ot=W.openTopic;W.openTopic=function(){var r=_ot.apply(this,arguments);try{if(currentSubject==='mth'){onOpen();}else restoreTabs();}catch(e){}return r;};
+var _ol=W.openLessonOverlay;
+if(typeof _ol==='function')W.openLessonOverlay=function(subj,tid){var r=_ol.apply(this,arguments);try{
+  var tb=document.getElementById('lesson-ov-tabs');
+  if(subj==='mth'){onOpen();}else{if(tb)tb.style.display='';}
+}catch(e){}return r;};
+var _rtg=W._renderTopicGrid;
+if(typeof _rtg==='function')W._renderTopicGrid=function(topics,label,subj){var r=_rtg.apply(this,arguments);try{if(subj==='mth')decorateSplash();}catch(e){}return r;};
+var _cl=W.closeLessonOverlay;if(typeof _cl==='function')W.closeLessonOverlay=function(){var r=_cl.apply(this,arguments);try{if(currentSubject==='mth')decorateSplash();}catch(e){}return r;};
+function decorateSplash(){var p=load();document.querySelectorAll('#splash-topic-grid .splash-topic-btn').forEach(function(b){
+  var m=(b.getAttribute('onclick')||'').match(/openLessonOverlay\('mth',(\d+)\)/);if(!m)return;var id=+m[1],t=tp(p,id),mt=b.querySelector('.stb-meta');if(!mt)return;
+  mt.textContent=t.P==null?'Take the 15-question test':'Grade '+gOf(t.P)+' · '+mp(t.P,id)+'% mastered';});}
 W._mt={startTest:startTest,startTrain:startTrain,load:load,S:function(){return S;}};
 })();
 
