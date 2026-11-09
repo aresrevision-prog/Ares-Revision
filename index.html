@@ -15675,9 +15675,9 @@ function aqaHTML(t,subj){var k=keyOf(subj,t),m=EL_MAP[k]||EL_MAP.essay,tk=tasksF
  return h;}
 function writeHTML(t,subj){var k=keyOf(subj,t),all=tasksFor(k);if(!all.length)all=EL_T.filter(function(z){return ((EL_PAPERS[z.paper]||{}).s||'eng')===(subj==='bks'?'eng':subj);}).slice(0,4);
  var att=load().att.slice(-6).reverse();
- var h='<div class="el-wrap"><div class="el-card"><div class="el-k">⌨️ Typing practice & AI marking</div><div style="font-size:13px;color:#ccc;line-height:1.6">Type your answer by hand — pasting is blocked. Your answer is marked against the AQA-style level bands, then checked for AI-written text. <b>75%+</b> AI likelihood is questioned (you must verify). <b>85%+</b> is not allowed and the attempt is automatically failed.</div></div>';
+ var h='<div class="el-wrap"><div class="el-card"><div class="el-k">⌨️ Typing practice & AI marking</div><div style="font-size:13px;color:#ccc;line-height:1.6">Type your answer by hand — pasting is blocked. Your answer is marked against the level bands, then checked by <b>Hades</b>, our AI checker. <b>75%+</b> AI likelihood is questioned (you must verify). <b>85%+</b> is not allowed and the attempt is automatically failed.</div></div>';
  h+=all.map(function(x){var b=best(x.id);return '<div class="el-card"><div class="el-row"><div><b>'+esc(x.title)+'</b><div style="font-size:12px;color:#aaa;margin-top:4px;max-width:46ch">'+esc(x.p.slice(0,150))+(x.p.length>150?'…':'')+'</div></div><div style="text-align:right"><div style="font-size:11px;color:#9a9aa8">'+x.marks+' marks · '+x.mins+' min</div>'+(b?'<span class="el-pill">best '+b.mark+'/'+b.max+'</span><br>':'')+'<button class="el-btn" onclick="_el.open(\''+x.id+'\')">Start</button></div></div></div>';}).join('');
- if(att.length)h+='<div class="el-card"><div class="el-k">Recent attempts</div>'+att.map(function(a){var tt=EL_T.filter(function(z){return z.id===a.id})[0];return '<div class="el-row" style="font-size:12px"><span>'+esc(tt?tt.title:a.id)+'</span><span>'+(a.st==='failed'?'❌ failed integrity':a.st==='held'?'⏳ held for review':a.mark+'/'+a.max+(a.st==='verified'?' · verified':''))+' · AI '+Math.round(a.ai)+'%</span></div>';}).join('')+'</div>';
+ if(att.length)h+='<div class="el-card"><div class="el-k">Recent attempts</div>'+att.map(function(a){var tt=EL_T.filter(function(z){return z.id===a.id})[0];return '<div class="el-row" style="font-size:12px"><span>'+esc(tt?tt.title:a.id)+'</span><span>'+(a.st==='failed'?'❌ failed Hades check':a.st==='held'?'⏳ held for review':a.mark+'/'+a.max+(a.st==='verified'?' · verified':''))+' · AI '+Math.round(a.ai)+'%</span></div>';}).join('')+'</div>';
  return h+'</div>';}
 /* ---------- writing overlay ---------- */
 var S=null;
@@ -15690,7 +15690,7 @@ function openTask(id){var T=EL_T.filter(function(z){return z.id===id;})[0];if(!T
  +'<div class="el-body">'+exHTML(T.ex)+'<div class="el-q">'+esc(T.p)+'</div>'
  +'<textarea id="el-ta" class="el-ta" rows="14" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" placeholder="Start typing your answer… (pasting is disabled)"></textarea>'
  +'<div class="el-stats"><span id="el-wc">0 words</span><span id="el-wpm">0 wpm</span><span id="el-tm">0:00</span></div>'
- +'<div class="el-note">Typed by hand only. Your typing pattern and text are checked for AI-written content (≥75% = questioned, ≥85% = automatic fail).</div>'
+ +'<div class="el-note">Typed by hand only. Hades, our AI checker, reviews your typing and text (≥75% = questioned, ≥85% = automatic fail).</div>'
  +'<button class="el-btn big" id="el-go" onclick="_el.submit()">Submit for marking</button><div id="el-res"></div></div>';
  wire($('el-ta'),true);o.scrollTop=0;
  S.timer=setInterval(function(){if(!S||!S.t0)return;var s=Math.floor((Date.now()-S.t0)/1000);var tm=$('el-tm');if(tm)tm.textContent=Math.floor(s/60)+':'+('0'+s%60).slice(-2);var w=wc($('el-ta')&&$('el-ta').value),p=$('el-wpm');if(p&&s>5)p.textContent=Math.round(w/(s/60))+' wpm';},1000);}
@@ -15713,7 +15713,7 @@ function race(p,ms){return Promise.race([p,new Promise(function(r){setTimeout(fu
 function jparse(t){if(!t)return null;try{var m=String(t).match(/\{[\s\S]*\}/);return m?JSON.parse(m[0]):null;}catch(e){return null;}}
 var MARKERS=/\b(delve|tapestry|testament|multifaceted|underscore[sd]?|intricate|moreover|furthermore|in conclusion|it is important to note|navigate|realm|pivotal|showcases?|evoke[sd]?|resonate[sd]?|juxtapos\w+|nuanced|seamless\w*|vibrant)\b/gi;
 function localRisk(text,tel){var r=0,why=[],len=text.length,words=wc(text);
- if(len>40&&len>tel.typed*1.2+30){r+=60;why.push('Much of the text did not come from the keyboard ('+tel.typed+' typed of '+len+' characters).');}
+ if(len>40&&len>tel.typed*1.2+30){r+=(len>tel.typed*1.5+60?90:60);why.push('Much of the text did not come from the keyboard ('+tel.typed+' typed of '+len+' characters).');}
  if(tel.maxCps>25){r+=30;why.push('Impossible typing speed ('+tel.maxCps+' characters in one second).');}
  if(tel.paste>=4){r+=10;why.push('Repeated paste attempts.');}
  if(words>=60){var mk=(text.match(MARKERS)||[]).length;if(mk>=4){r+=Math.min(40,mk*7);why.push('Many stock AI-style phrases ('+mk+').');}
@@ -15736,7 +15736,7 @@ async function submit(){if(!S||S.done)return;var ta=$('el-ta'),T=S.T,text=(ta.va
  var min=T.marks<=4?6:T.marks<=8?12:25;if(wc(text)<min){res.innerHTML='<div class="el-warn">Write a little more first (at least '+min+' words).</div>';return;}
  S.done=true;ta.readOnly=true;go.disabled=true;go.textContent='Checking…';clearInterval(S.timer);
  var secs=S.t0?Math.round((Date.now()-S.t0)/1000):0,words=wc(text),wpm=secs>5?Math.round(words/(secs/60)):0;
- res.innerHTML='<div class="el-card">⏳ Running integrity check…</div>';
+ res.innerHTML='<div class="el-card">👁️ Hades is checking your work…</div>';
  var chk=await aiCheck(text,S);S.chk=chk;
  var base={id:T.id,t:Date.now(),max:T.marks,ai:chk.pct,words:words,secs:secs,wpm:wpm};
  if(chk.pct>=85){record(Object.assign(base,{mark:0,st:'failed'}));res.innerHTML=failHTML(chk,'This attempt is NOT allowed.');go.style.display='none';return;}
@@ -15746,10 +15746,10 @@ async function submit(){if(!S||S.done)return;var ta=$('el-ta'),T=S.T,text=(ta.va
  var mk=Math.max(0,Math.min(T.marks,Math.round(+m.mark||0)));
  if(chk.pct>=75){S.pend={base:base,m:m};res.innerHTML=questionedHTML(chk);return;}
  record(Object.assign(base,{mark:mk,st:'ok'}));try{awardXP(Math.min(60,5+mk*2),'English answer marked: '+mk+'/'+T.marks,'correct');}catch(e){}
- res.innerHTML=(chk.checked?'':'<div class="el-warn">AI check was unavailable; only typing signals were checked.</div>')+fb(m,T)+'<div class="el-note">Integrity check: '+chk.pct+'% (pass).</div>';go.style.display='none';}
-function failHTML(chk,h){return '<div class="el-fail"><div style="font-size:1.1rem;font-weight:800">❌ '+h+'</div><div style="margin:.5rem 0">Integrity check: <b>'+chk.pct+'%</b> likelihood of AI-written text. At 85% or above the test is automatically failed as cheating, and it scores 0.</div>'+(chk.local.why.length?'<ul>'+chk.local.why.map(function(w){return '<li>'+esc(w)+'</li>'}).join('')+'</ul>':'')+(chk.reason?'<div style="font-size:12px;opacity:.85">'+esc(chk.reason)+'</div>':'')+'<div style="font-size:12px;margin-top:.5rem;opacity:.8">AI detectors can be wrong. If you wrote this yourself, ask a teacher or parent to review it.</div></div>';}
-function questionedHTML(chk){return '<div class="el-warn"><b>⚠ Questioned.</b> The integrity check scored this <b>'+chk.pct+'%</b>, which is in the questioned range (75–84%). Your mark is held until you verify the work is yours: in your own words, pick one quotation or idea from your answer, say why you chose it, and what you would add with ten more minutes.</div><textarea id="el-v" class="el-ta" rows="5" spellcheck="false" placeholder="Explain in your own words (typed by hand)…"></textarea><button class="el-btn big" id="el-vgo" onclick="_el.verify()">Submit verification</button>';}
-async function verify(){var v=$('el-v'),txt=(v.value||'').trim(),res=$('el-res');if(wc(txt)<20){alert('Write at least 20 words in your own words.');return;}
+ res.innerHTML=(chk.checked?'':'<div class="el-warn">Hades could not reach the AI, so only typing signals were checked.</div>')+fb(m,T)+'<div class="el-note">👁️ Hades: '+chk.pct+'% AI likelihood (pass).</div>';go.style.display='none';}
+function failHTML(chk,h){return '<div class="el-fail"><div style="font-size:1.1rem;font-weight:800">❌ '+h+'</div><div style="margin:.5rem 0">Hades scored this <b>'+chk.pct+'%</b> likely to be AI-written. At 85% or above the test is automatically failed as cheating, and it scores 0.</div>'+(chk.local.why.length?'<ul>'+chk.local.why.map(function(w){return '<li>'+esc(w)+'</li>'}).join('')+'</ul>':'')+(chk.reason?'<div style="font-size:12px;opacity:.85">'+esc(chk.reason)+'</div>':'')+'<div style="font-size:12px;margin-top:.5rem;opacity:.8">AI detectors can be wrong. If you wrote this yourself, ask a teacher or parent to review it.</div></div>';}
+function questionedHTML(chk){return '<div class="el-warn"><b>⚠ Questioned by Hades.</b> Hades scored this <b>'+chk.pct+'%</b>, which is in the questioned range (75–84%). Your mark is held until you verify the work is yours: in your own words, pick one quotation or idea from your answer, say why you chose it, and what you would add with ten more minutes.</div><textarea id="el-v" class="el-ta" rows="5" spellcheck="false" placeholder="Explain in your own words (typed by hand)…"></textarea><button class="el-btn big" id="el-vgo" onclick="_el.verify()">Submit verification</button>';}
+async function verify(){var v=$('el-v'),txt=(v.value||'').trim(),res=$('el-res');if(wc(txt)<20){var w=document.getElementById('el-vw')||document.createElement('div');w.id='el-vw';w.className='el-warn';w.textContent='Write at least 20 words in your own words.';v.parentNode.insertBefore(w,v);return;}
  S.vt=S.vt||{typed:0,ev:[],paste:0,maxCps:0};var b=S.pend.base,m=S.pend.m,T=S.T,orig=$('el-ta').value;
  var vc=localRisk(txt,{typed:S.vt.typed||(txt.length),paste:S.vt.paste,maxCps:S.vt.maxCps}).r;
  $('el-vgo').disabled=true;$('el-vgo').textContent='Checking…';
@@ -15781,6 +15781,34 @@ if(oG)W._renderTopicGrid=function(topics,label,subj){var r=oG.apply(this,argumen
 /* add MCQs once */
 function inject(){try{[[getENG(),'eng'],[getBKS(),'bks'],[getGEO(),'geo'],[getHIS(),'his']].forEach(function(pr){pr[0].forEach(function(t){if(t._elq)return;t._elq=1;var k=keyOf(pr[1],t);EL_MCQ.forEach(function(q){if(q.k.indexOf(k)>-1){(t.quiz=t.quiz||[]).push({q:q.q,opts:q.opts.slice(),ans:q.ans,exp:q.exp});}});});});}catch(e){}}
 inject();
+
+/* ---------- Hades: shared AI checker, also guards the classic written quiz ---------- */
+function watch(ta){if(!ta||ta._hades)return ta&&ta._tel;var tel=ta._tel={typed:0,ev:[],paste:0,maxCps:0};ta._hades=1;
+ function blk(e){e.preventDefault();tel.paste++;}
+ ['paste','drop','cut','contextmenu'].forEach(function(ev){ta.addEventListener(ev,blk);});
+ ta.addEventListener('keydown',function(e){if((e.ctrlKey||e.metaKey)&&/^[vxVX]$/.test(e.key))blk(e);});
+ ta.addEventListener('beforeinput',function(e){var it=e.inputType||'';if(/Paste|Drop|Cut|History|insertFromYank|insertTranspose/.test(it)){blk(e);return;}
+  var n=e.data?e.data.length:(it==='insertParagraph'||it==='insertLineBreak'?1:0);if(n>12){blk(e);return;}
+  if(n>0){tel.typed+=n;var now=Date.now();tel.ev.push(now);if(tel.ev.length>3000)tel.ev.shift();var c=0;for(var i=tel.ev.length-1;i>=0&&now-tel.ev[i]<1000;i--)c++;if(c>tel.maxCps)tel.maxCps=c;}});
+ ta.placeholder=(ta.placeholder||'Write your answer here...').replace(/\s*\(.*\)$/,'')+' (typed by hand — Hades checks for AI)';return tel;}
+var wo=new MutationObserver(function(){var w=document.getElementById('written-input');if(w&&!w._hades)watch(w);});
+wo.observe(document.body,{childList:true,subtree:true});
+var oSW=W.submitWritten;
+if(oSW)W.submitWritten=async function(){var ta=document.getElementById('written-input');if(!ta)return oSW.apply(this,arguments);
+ var tel=watch(ta),text=(ta.value||'').trim();
+ if(text&&(wc(text)>=25||(tel.typed<text.length*0.8&&text.length>40))){
+  var fbEl=document.getElementById('qfb'),btn=document.getElementById('written-btn');
+  if(btn){btn.disabled=true;btn.textContent='Hades is checking…';}
+  if(fbEl){fbEl.className='written-fb show partial';fbEl.innerHTML='👁️ Hades is checking your work…';}
+  var chk=await aiCheck(text,tel);
+  if(chk.pct>=75){quizAnswered=true;ta.readOnly=true;try{updateStreak(false);}catch(e){}
+   if(fbEl){fbEl.className='written-fb show wrong-f';fbEl.innerHTML=chk.pct>=85?failHTML(chk,'Failed by Hades — this answer is NOT allowed (0 marks).'):'<div class="el-warn"><b>⚠ Questioned by Hades</b> ('+chk.pct+'% AI likelihood). No credit for this answer. Retake the quiz and write it in your own words.</div>';}
+   if(btn)btn.style.display='none';var nx=document.getElementById('qnext');if(nx)nx.classList.add('show');
+   try{record({id:'quiz-'+(currentSubject||'')+'-'+((currentTopic&&currentTopic.id)||''),t:Date.now(),max:0,ai:chk.pct,words:wc(text),secs:0,wpm:0,mark:0,st:chk.pct>=85?'failed':'held'});}catch(e){}
+   return;}
+  if(btn){btn.disabled=false;btn.textContent='Submit for marking →';}}
+ return oSW.apply(this,arguments);};
+W.Hades={watch:watch,check:aiCheck};
 W._el={open:openTask,close:close,submit:submit,verify:verify,keyOf:keyOf,tasks:EL_T,localRisk:localRisk,wire:wire};
 /* verification textarea needs paste blocking too */
 var oo=new MutationObserver(function(){var v=$('el-v');if(v&&!v._w&&S){v._w=1;S.vt={typed:0,ev:[],paste:0,maxCps:0};var tel=S.vt;['paste','drop','cut','contextmenu'].forEach(function(e){v.addEventListener(e,function(ev){ev.preventDefault();tel.paste++;});});v.addEventListener('beforeinput',function(e){var it=e.inputType||'';if(/Paste|Drop|Cut/.test(it)){e.preventDefault();tel.paste++;return;}var n=e.data?e.data.length:0;if(n>12){e.preventDefault();tel.paste++;return;}tel.typed+=n;var now=Date.now();tel.ev.push(now);var c=0;for(var i=tel.ev.length-1;i>=0&&now-tel.ev[i]<1000;i--)c++;if(c>tel.maxCps)tel.maxCps=c;});}});
