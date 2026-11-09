@@ -15446,6 +15446,26 @@ W.AresMascot=mk;
 function splash(){var w=document.querySelector('#splash-logo-view .splash-logo-wrap');if(w&&!w.querySelector('.mascot-ares')){var d=document.createElement('div');d.className='mascot-ares';d.style.cssText='display:flex;justify-content:center;margin:0 auto 6px';d.innerHTML=mk('ares',118);w.insertBefore(d,w.firstChild);}
  document.querySelectorAll('.splash-auth-btn').forEach(function(b){if(!b._ma&&/Athena AI/.test(b.textContent)){b._ma=1;b.innerHTML='<span style="display:inline-flex;vertical-align:middle;margin-right:6px">'+mk('athena',20)+'</span>'+b.textContent.replace('\ud83e\udde0','').trim();}});}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',splash);else splash();
+/* Ares speaks pings on the home screen */
+var st=document.createElement('style');st.textContent='.mascot-ares{align-items:center;gap:14px;flex-wrap:wrap;transition:transform .3s}.mascot-ares.talk>svg{animation:maBob 1.6s ease-in-out infinite}@keyframes maBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}@media (prefers-reduced-motion:reduce){.mascot-ares.talk>svg{animation:none}}'
+ +'.ma-bubble{position:relative;max-width:min(320px,88vw);text-align:left;background:#fff7ec;color:#2a1608;border:2px solid #cf8f3e;border-radius:16px;padding:12px 14px;box-shadow:0 8px 24px rgba(0,0,0,.45);font:500 13px/1.5 "DM Sans",system-ui,sans-serif}'
+ +'.ma-bubble:before{content:"";position:absolute;left:-11px;top:34px;border:9px solid transparent;border-right-color:#cf8f3e;border-left:0}.ma-bubble:after{content:"";position:absolute;left:-7px;top:36px;border:7px solid transparent;border-right-color:#fff7ec;border-left:0}'
+ +'.ma-bubble b{display:block;color:#a3231d;font-size:13px;margin-bottom:2px}.ma-bubble button{margin-top:8px;background:#a3231d;color:#fff;border:0;border-radius:8px;padding:5px 12px;font:700 12px "DM Sans",system-ui,sans-serif;cursor:pointer}'
+ +'@media (max-width:560px){.ma-bubble:before,.ma-bubble:after{display:none}}';document.head.appendChild(st);
+function homeVisible(){var sp=document.getElementById('splash'),lv=document.getElementById('lesson-overlay');if(!sp||getComputedStyle(sp).display==='none')return false;if(lv&&getComputedStyle(lv).display!=='none')return false;return !!document.querySelector('.mascot-ares');}
+function bubble(p){var m=document.querySelector('.mascot-ares');if(!m)return;var old=m.querySelector('.ma-bubble');if(old)old.remove();
+ var d=document.createElement('div');d.className='ma-bubble';d.setAttribute('role','status');
+ var t=document.createElement('b');t.textContent=p.title||'Ares says';var x=document.createElement('div');x.style.whiteSpace='pre-wrap';x.textContent=p.message||'';
+ var bt=document.createElement('button');bt.textContent='Got it';bt.onclick=function(){pingDismiss();};
+ d.appendChild(t);d.appendChild(x);d.appendChild(bt);m.appendChild(d);m.classList.add('talk');}
+function unbubble(){var m=document.querySelector('.mascot-ares');if(!m)return;var o=m.querySelector('.ma-bubble');if(o)o.remove();m.classList.remove('talk');}
+var oN=W._pingNext,oD=W.pingDismiss;
+if(oN)W._pingNext=function(){if(_pingCurrent||!_pingQueue.length)return;
+ if(homeVisible()){_pingCurrent=_pingQueue.shift();bubble(_pingCurrent);return;}
+ return oN.apply(this,arguments);};
+if(oD)W.pingDismiss=function(){unbubble();return oD.apply(this,arguments);};
+/* a ping that arrives while away shows on return home */
+setInterval(function(){try{if(!_pingCurrent&&_pingQueue.length&&homeVisible())W._pingNext();}catch(e){}},1500);
 })();
 </script>
 <style id="eng-lab-css">#el-ov{display:none;position:fixed;inset:0;z-index:1000002;background:#0b0b12;color:#eee;overflow:auto;font-family:'DM Sans',system-ui,sans-serif}
