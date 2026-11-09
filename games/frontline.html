@@ -1248,9 +1248,9 @@ function hurt(tid, dmg, aid, head, src, kind) {
   if (over || dmg <= 0) return;
   if (tid === me.id) return takeDamage(dmg, src, aid, head, kind);
   const e = ents.get(tid); if (!e || e.dead) return;
-  if (e.remote) { if (aid === me.id && !/grenade|rocket|tank|artillery|airstrike|explosion|shell|at4|gl|c4/.test(kind || '')) { netSend('h', { t: tid, d: Math.round(dmg), hd: head ? 1 : 0, k: kind || 'gun', x: +me.pos.x.toFixed(1), z: +me.pos.z.toFixed(1) }); hitmarker(false, head); } return; }
+  if (e.remote) { if (aid === me.id && !/grenade|rocket|tank|artillery|airstrike|explosion|shell|at4|gl|c4/.test(kind || '')) { netSend('h', { t: tid, d: Math.round(dmg), hd: head ? 1 : 0, k: kind || 'gun', x: +me.pos.x.toFixed(1), z: +me.pos.z.toFixed(1) }); hitmarker(false, head); } else if (NET.coop === 'host' && aid !== me.id) { const a = ents.get(aid); if (a && !a.remote) netSend('h', { t: tid, a: aid, d: Math.round(dmg), hd: head ? 1 : 0, k: kind || 'gun', x: +a.pos.x.toFixed(1), z: +a.pos.z.toFixed(1) }); } return; }
   e.hp -= dmg; e.lastHurt = gameT; e.flinch = 1; if (e.hp > 0 && Math.random() < .4) say(e, 'hit'); e.supp = Math.min(1.6, e.supp + .4); if (src && !e.tgt) { e.lastSeen = src.clone().setY(src.y + 1.2); e.lastSeenT = gameT; } if (aid === me.id) hitmarker(e.hp <= 0, head);
-  if (e.hp <= 0) { e.dead = true; e.hp = 0; e.deadT = 0; e.path = null; deathPush(e, src, kind); registerKill(aid, e.id, head, kind); later(4, () => botRespawn(e)); }
+  if (e.hp <= 0) { e.dead = true; e.hp = 0; e.deadT = 0; e.path = null; deathPush(e, src, kind); registerKill(aid, e.id, head, kind); if (NET.coop === 'host') netSend('k', { k: aid, v: e.id, hd: head ? 1 : 0, kd: kind || 'gun' }); later(4, () => botRespawn(e)); }
 }
 function takeDamage(dmg, fromPos, killerId, head, kind) {
   if (me.dead || !playing || cine) return; if (me.veh && kind === 'gun') { damageVehicle(me.veh, dmg * 1.2, killerId); return; }
@@ -1281,8 +1281,8 @@ function registerKill(kid, vid, head, kind) {
 }
 function feedMsg(t, mine) { const d = document.createElement('div'); if (mine) d.className = 'me'; d.textContent = t; $('feed').prepend(d); setTimeout(() => d.remove(), 5000); }
 function announce(t, good) { const a = $('announce'); a.textContent = t; a.className = good ? 'good' : 'bad'; clearTimeout(a._t); a._t = setTimeout(() => a.className = 'hide', 3500); }
-function updScore() { if (mode === 'front') { updSectorHud(); if (boardOpen) drawBoard(); return; } if (isTeam()) $('score').innerHTML = `<span class="al">Blue <b>${teamScore[me.team]}</b></span><span class="en">Red <b>${teamScore[me.team === 'A' ? 'B' : 'A']}</b></span><span>${SC && GOAL === Infinity ? SC.d.name : 'First to ' + GOAL}</span>`;
-  else { let lead = 0; score.forEach(s => lead = Math.max(lead, s.k)); $('score').innerHTML = `<span>You <b>${sc(me.id).k}</b></span><span>Leader <b>${lead}</b></span><span>${SC && GOAL === Infinity ? SC.d.name : 'First to ' + GOAL}</span>`; } if (boardOpen) drawBoard(); }
+function updScore() { if (mode === 'front') { updSectorHud(); if (boardOpen) drawBoard(); return; } if (isTeam()) $('score').innerHTML = `<span class="al">Blue <b>${teamScore[me.team]}</b></span><span class="en">Red <b>${teamScore[me.team === 'A' ? 'B' : 'A']}</b></span><span>${NET.coop === 'guest' ? esc(NET.coopName || 'Co-op') : SC && GOAL === Infinity ? SC.d.name : 'First to ' + GOAL}</span>`;
+  else { let lead = 0; score.forEach(s => lead = Math.max(lead, s.k)); $('score').innerHTML = `<span>You <b>${sc(me.id).k}</b></span><span>Leader <b>${lead}</b></span><span>${NET.coop === 'guest' ? esc(NET.coopName || 'Co-op') : SC && GOAL === Infinity ? SC.d.name : 'First to ' + GOAL}</span>`; } if (boardOpen) drawBoard(); }
 function drawBoard() { const rows = [...score.entries()].sort((a, b) => b[1].k - a[1].k); $('bt').innerHTML = '<tr><td>Soldier</td><td class="n">Kills</td><td class="n">Deaths</td></tr>' + rows.map(([id, s]) => `<tr class="${id === me.id ? 'me' : ''}"><td class="${isTeam() ? (s.team === me.team ? 'al' : 'en') : ''}">${rankIcon(id === me.id ? myRank() : botRank(id), 18)} ${esc(s.name)}</td><td class="n">${s.k}</td><td class="n">${s.d}</td></tr>`).join(''); $('bh').textContent = isTeam() ? 'Team Deathmatch' : 'Free-for-all'; $('board').classList.remove('hide'); }
 function matchOver() { if (SC && !SC.done) { endScenario(teamScore[me.team] >= GOAL, teamScore[me.team] >= GOAL ? 'Your team got 30 kills first.' : 'The enemy got 30 kills first.'); return; } if (over) return; over = true; mouseDown = false; giveCoins((isTeam() ? teamScore[me.team] >= GOAL : [...score.values()].sort((a, b) => b.k - a.k)[0] === sc(me.id)) ? 200 : 75, 'Match over'); const win = isTeam() ? (teamScore[me.team] >= GOAL ? 'Blue team wins' : 'Red team wins') : `${[...score.values()].sort((a, b) => b.k - a.k)[0].name} wins`;
   $('msg').innerHTML = `${esc(win)}<small>Next match in 10 seconds</small>`; drawBoard();
@@ -1412,7 +1412,7 @@ function makeTransport(x, z, yaw, team, gunship) { if (WW2ON) return null;
 }
 function placeVeh(v) { v.g.position.copy(v.pos); v.g.rotation.set(0, v.yaw, 0); }
 function damageVehicle(v, dmg, by, fromNet) {
-  if (v.dead) return; if (NET.on && !fromNet) { if (by !== me.id) return; netSend('vd', { v: v.nid, d: Math.round(dmg) }); } v.hp -= dmg; if (by === me.id) hitmarker(v.hp <= 0);
+  if (v.dead) return; if (NET.on && !fromNet) { if (NET.coop === 'host') { const a = ents.get(by); if (a && a.remote) return; } else { if (by !== me.id) return; netSend('vd', { v: v.nid, d: Math.round(dmg) }); } } v.hp -= dmg; if (by === me.id) hitmarker(v.hp <= 0);
   if (v.driver === me.id && by !== me.id) { shakeAmt = Math.max(shakeAmt, .05); }
   if (v.hp <= 0) { v.dead = true; v.respawnT = 30; explosion(v.pos.clone().setY(v.pos.y + 1.2), v.type === 'tank' ? 8 : 6, 170, by, 'vehicle');
     v.g.traverse(o => { if (o.isMesh && o.material && o.material.color && o.material.visible !== false) { o.material = o.material.clone(); o.material.color.multiplyScalar(.15); if (o.material.map) o.material.map = null; } });
@@ -1958,6 +1958,7 @@ function botShoot(e, g) {
   const r = traceShot(muzzle, dir, 220, e.id, null); const end = r ? r.point : muzzle.clone().addScaledVector(dir, 220);
   if (r) applyHit(r, DIFF.dmg || 16, 1.8, e.id, e.pos, 'gun');
   tracer(muzzle, end); FIRE.emit(muzzle.x, muzzle.y, muzzle.z, 0, 0, 0, .05, .45, .25, 1, 4, 2.4, 1); if (muzzle.distanceTo(cam.position) < 90) snd('shot', muzzle);
+  if (NET.coop === 'host' && (e.nsh = e.nsh || []).length < 3) e.nsh.push([...muzzle.toArray(), ...end.toArray()].map(v => +v.toFixed(2)));
   e.firedT = gameT; nearMiss(muzzle, end, e.id, r); alertHear(e.pos, e.id, 40);
 }
 function botRocket(e, g) { e.rpg--; e.rpgCD = rnd(8, 14); const from = new V(e.pos.x, e.pos.y + 1.5, e.pos.z); const tp = g.heli ? g.heli.pos.clone().addScaledVector(g.heli.vel, .6) : new V(g.t.pos.x, g.t.pos.y + 1.2, g.t.pos.z); fireRocket(from, tp.sub(from).add(new V(rnd(-1, 1), rnd(-.5, .5), rnd(-1, 1))), e.id); }
@@ -2139,6 +2140,36 @@ function deathPush(e, src, kind) { const dir = src ? e.pos.clone().sub(src).setY
 function updDeadPhys(e, dt) { if (!e.dv) return; e.dvy -= 9.8 * dt; e.dy += e.dvy * dt; const g = th(e.pos.x + e.dv.x * dt, e.pos.z + e.dv.z * dt);
   if (!castWorld(new V(e.pos.x, e.pos.y + .6, e.pos.z), e.dv.clone().setLength(1), e.dv.length() * dt + .3)) { e.pos.x += e.dv.x * dt; e.pos.z += e.dv.z * dt; e.tpos.x = e.pos.x; e.tpos.z = e.pos.z; } else e.dv.multiplyScalar(-.2);
   e.pos.y = e.tpos.y = g; if (e.dy <= 0) { e.dy = 0; e.dvy = 0; e.dv.multiplyScalar(Math.pow(.02, dt)); } e.ryaw += (e.spin || 0) * dt; if (e.dy === 0) e.spin *= Math.pow(.05, dt); }
+/* ---------------- co-op: friends can drop into any battle you are playing ---------------- */
+let COOPJOIN = null; try { const q = sessionStorage.getItem('fl_coop'); if (q) { sessionStorage.removeItem('fl_coop'); COOPJOIN = JSON.parse(q); } } catch (e) { }
+async function hostCoop() { if (NET.on || mode === 'ffa' || mode === 'online' || !LOBBY.on || !netCfg()) return; NET.coop = 'host'; NET.vn = 0;
+  try { await netJoin('co-' + PROFILE.pcode.slice(3).toLowerCase(), me.team || 'A'); lobbyTrack(); } catch (e) { NET.coop = null; NET.on = false; } }
+function coopSnap() { const b = []; ents.forEach(e => { if (e.remote) return; const s = e.nsh && e.nsh.length ? e.nsh.splice(0) : 0;
+    b.push([e.id, e.name, e.team, +e.pos.x.toFixed(2), +e.pos.y.toFixed(2), +e.pos.z.toFixed(2), +(e.yaw - Math.PI).toFixed(3), +(e.aimPitch || 0).toFixed(2), e.crouch ? 1 : 0, +(e.speed || 0).toFixed(1), e.dead ? 1 : 0, e.inVeh || (!e.dead && !e.root.visible) ? 1 : 0, s || undefined]); });
+  const v = []; vehicles.forEach(x => { if (x.netDriver && x.netDriver !== 'host') return; if (x.nid == null) x.nid = 'v' + (++NET.vn); v.push([x.nid, x.type, x.team, +x.pos.x.toFixed(2), +x.pos.y.toFixed(2), +x.pos.z.toFixed(2), +x.yaw.toFixed(3), x.turret ? +x.turret.rotation.y.toFixed(3) : 0, x.gun ? +x.gun.rotation.x.toFixed(3) : 0, +x.g.rotation.x.toFixed(3), +x.g.rotation.z.toFixed(3), x.dead ? 1 : 0]); });
+  const ob = $('objline').innerHTML, gs = mode === 'front' ? [tickets.A, tickets.B] : [teamScore.A, teamScore.B]; const g = [gs[0], gs[1], ob !== NET.lastOb ? ob : null, SC ? SC.d.name : mode === 'front' ? 'Offensive' : 'Team battle']; NET.lastOb = ob;
+  netSend('b', { b, v, g }); }
+const PUPS = new Map();
+function onCoopSnap(p) { if (NET.coop !== 'guest') return; const now = performance.now();
+  for (const a of p.b) { const e0 = ents.get(a[0]); if (e0 && !e0.hb && e0.remote) continue; onNetState({ i: a[0], n: a[1], t: a[2], x: a[3], y: a[4], z: a[5], yw: a[6], p: a[7], c: a[8], v: a[9], d: a[10], a: 1, sh: a[12] || undefined }); const e = ents.get(a[0]); if (!e) continue; e.hb = true; if (a[11] && !e.dead) e.root.visible = false; e.inVeh = !!a[11] && !e.dead; }
+  const seen = new Set(); for (const a of p.v) { const [nid, type, team, x, y, z, yaw, ty, gp, rx, rz, dead] = a; seen.add(nid); let v = PUPS.get(nid);
+    if (!v) { if (dead) continue; v = type === 'tank' ? makeTank(x, z, yaw, team, false) : type === 'heli' ? makeTransport(x, z, yaw, team) : makeJeep(x, z, yaw, team, false); if (!v) continue; v.nid = nid; v.puppet = true; PUPS.set(nid, v); }
+    v.seen = now; if (v.dead) continue; if (dead) { damageVehicle(v, 1e6, 'host', true); v.respawnT = 1e9; continue; }
+    v.netDriver = 'host'; v.driver = 'host'; v.net = v.net || { p: new V() }; Object.assign(v.net, { yaw, sp: 0, rx, rz, ty, gp, t: now }); v.net.p.set(x, y, z); }
+  PUPS.forEach((v, nid) => { if (!seen.has(nid) && now - v.seen > 4000) { scene.remove(v.g); const k = vehicles.indexOf(v); if (k >= 0) vehicles.splice(k, 1); PUPS.delete(nid); } });
+  const g = p.g; teamScore.A = g[0]; teamScore.B = g[1]; if (g[3]) NET.coopName = g[3]; updScore(); if (g[2] != null) $('objline').innerHTML = g[2]; }
+function ww2Style(i) { WW2ON = true; LOADOUT_OVR = ['garand', 'springfield', 'bazooka']; PICK_POOL.splice(0, PICK_POOL.length, 'thompson', 'bar', 'springfield', 'bazooka', 'thompson', 'bar', 'thompson', 'garand', 'bar');
+  recamo(CAMO.A, '#57583a', '74,76,48', '64,62,40', '92,90,62'); recamo(CAMO.B, '#5e625b', '86,90,84', '70,74,68', '104,106,98'); NAMES_B_OVR = POOL_W; cv.style.filter = 'sepia(.3) saturate(.8) contrast(1.06)';
+  for (const [k, c] of [['armorA', 0x4b5230], ['armorB', 0x8a7f5a]]) { const m = MAT[k].clone(); m.map = null; m.color = LIN(c); m.roughness = .75; MAT[k] = m; }
+  ['Recon plane', 'Howitzers', 'Dive bombers', 'Typhoons'].forEach((n, k) => streaks[k].name = n); }
+function joinFriend(p, team) { if (!p.h) return joinOnline(p.room, team); const info = { room: p.room, team, w: p.w ?? -1, n: p.n, b: p.b };
+  if (playing || (p.m || null) !== MAPV || !!p.sn !== MAPSNOW) { try { sessionStorage.setItem('fl_coop', JSON.stringify(info)); if (info.w >= 0) sessionStorage.setItem('fl_ww2go', String(info.w)); } catch (e) { } location.reload(); return; }
+  joinCoop(info); }
+async function joinCoop(info) { if (!$('online').dataset.ok) return; $('friends').classList.add('hide'); $('invite').classList.add('hide'); $('ww2').classList.add('hide');
+  me.name = ($('name').value.trim() || 'Soldier').slice(0, 14); me.id = 'p' + Math.random().toString(36).slice(2, 10); NET.coop = 'guest'; NET.coopName = info.b || 'Co-op battle'; $('onlinenote').textContent = 'Joining ' + info.n + '…';
+  try { if (info.w >= 0) ww2Style(info.w); await netJoin(info.room, info.team); start('online'); NET.coopW = info.w; announce(`Joined ${info.n}'s battle · ${NET.coopName} · you are on ${me.team === 'A' ? 'Blue' : 'Red'}`, true); lobbyTrack(); }
+  catch (e) { NET.coop = null; $('onlinenote').textContent = e.message; } }
+function showCoopJoin(info) { const b = $('invite'); b.innerHTML = `Ready to join <b>${esc(info.n)}</b>'s battle (${esc(info.b || 'battle')})<button class="pri" id="cjgo">Join battle</button><button id="cjno">Cancel</button>`; b.classList.remove('hide'); $('cjgo').onclick = () => joinCoop(info); $('cjno').onclick = () => b.classList.add('hide'); }
 /* ---------------- online play (Supabase Realtime, via the Ares site) ---------------- */
 const NET = { on: false, chan: null, sb: null, acc: 0, shots: [], room: '' };
 const FL_NET = { url: 'https://lakjmdyzuqrwcncxybcw.supabase.co', key: 'sb_publishable__m0zTZ3-ThJVk0pktI65Ag_yDFPPD5s' };
@@ -2156,13 +2187,15 @@ function onNetState(p) { const e = addRemote(p.i, p.n, p.t); e.last = performanc
   if (!!p.pa !== !!e.pa) setPAVisual(e, !!p.pa); e.tpos.set(p.x, p.y, p.z); e.yaw = p.yw + Math.PI; e.aimPitch = p.p; e.crouch = !!p.c; e.speed = p.v; e.aimW = p.a ? 1 : .4;
   if (p.d && !e.dead) { e.dead = true; e.deadT = 0; deathPush(e, null, 'gun'); } if (!p.d && e.dead) { e.dead = false; e.dv = null; e.dy = 0; e.root.rotation.set(0, 0, 0); e.pos.copy(e.tpos); e.root.visible = true; }
   if (p.sh) for (const q of p.sh) { const a = new V(q[0], q[1], q[2]), b = new V(q[3], q[4], q[5]); tracer(a, b); snd('shot', a); impact(b, null, 'dirt'); e.firedT = gameT; } }
-function netTick(dt) { if (!NET.on) return; NET.acc += dt; if (NET.acc < .1) return; NET.acc = 0;
+function netTick(dt) { if (!NET.on) return; NET.acc += dt; if (NET.acc < .1) return; NET.acc = 0; if (NET.coop === 'host') { let any = false; ents.forEach(e => { if (e.remote) any = true; }); if (!any) return; if ((NET.bt = !NET.bt)) coopSnap(); }
   netSend('s', { n: me.name, t: me.team, x: +me.pos.x.toFixed(2), y: +me.pos.y.toFixed(2), z: +me.pos.z.toFixed(2), yw: +me.yaw.toFixed(3), p: +me.pitch.toFixed(2), c: me.crouch ? 1 : 0, v: +Math.hypot(me.vel.x, me.vel.z).toFixed(1), d: me.dead ? 1 : 0, pa: PA.on ? 1 : 0, a: adsT > .5 ? 1 : 0, sh: NET.shots.length ? NET.shots.splice(0) : undefined, vh: me.veh ? { i: me.veh.nid, x: +me.veh.pos.x.toFixed(2), y: +me.veh.pos.y.toFixed(2), z: +me.veh.pos.z.toFixed(2), yw: +me.veh.yaw.toFixed(3), sp: +(me.veh.speed || 0).toFixed(1), rx: +me.veh.g.rotation.x.toFixed(3), rz: +me.veh.g.rotation.z.toFixed(3), ty: me.veh.turret ? +me.veh.turret.rotation.y.toFixed(3) : undefined, gp: me.veh.gun ? +me.veh.gun.rotation.x.toFixed(3) : undefined, sn: me.veh.spin !== undefined ? +me.veh.spin.toFixed(2) : undefined, ld: me.veh.landed ? 1 : 0 } : undefined }); }
 async function netJoin(room, forceTeam) { const cfg = netCfg(); if (!cfg) throw new Error('Online play only works inside Ares Revision.');
   NET.sb = NET.sb || cfg.lib.createClient(cfg.url, cfg.key, { auth: { persistSession: false } }); NET.room = room;
   const ch = NET.sb.channel('frontline-' + room, { config: { broadcast: { self: false, ack: false }, presence: { key: me.id } } }); NET.chan = ch;
   ch.on('broadcast', { event: 's' }, ({ payload: p }) => onNetState(p))
-    .on('broadcast', { event: 'h' }, ({ payload: p }) => { if (p.t === me.id) takeDamage(p.d, new V(p.x, me.pos.y, p.z), p.i, !!p.hd, p.k || 'gun'); })
+    .on('broadcast', { event: 'h' }, ({ payload: p }) => { if (p.t === me.id) takeDamage(p.d, new V(p.x, me.pos.y, p.z), p.a || p.i, !!p.hd, p.k || 'gun'); else if (NET.coop === 'host') { const e = ents.get(p.t); if (e && !e.remote) hurt(p.t, p.d, p.i, !!p.hd, new V(p.x, e.pos.y, p.z), p.k || 'gun'); } })
+    .on('broadcast', { event: 'b' }, ({ payload: p }) => onCoopSnap(p))
+    .on('broadcast', { event: 'end' }, ({ payload: p }) => { if (NET.coop !== 'guest' || over) return; if (p.ww >= 0) setTimeout(() => showMemorial(p.ww, p.w === me.team), 2600); endBattle(p.w); })
     .on('broadcast', { event: 'k' }, ({ payload: p }) => { registerKill(p.k, p.v, !!p.hd, p.kd || 'gun'); if (p.k === me.id) hitmarker(true, !!p.hd); })
     .on('broadcast', { event: 'vo' }, ({ payload: p }) => { const v = netVeh(p.v); if (!v) return; if (p.on) { if (v.driver === me.id) exitVehicle(true); v.netDriver = p.i; v.driver = p.i; } else if (v.netDriver === p.i) { v.netDriver = null; v.driver = null; v.net = null; } })
     .on('broadcast', { event: 'vd' }, ({ payload: p }) => { const v = netVeh(p.v); if (v) damageVehicle(v, p.d, p.i, true); })
@@ -2170,7 +2203,7 @@ async function netJoin(room, forceTeam) { const cfg = netCfg(); if (!cfg) throw 
     .on('broadcast', { event: 'n' }, ({ payload: p }) => throwNade(new V(p.x, p.y, p.z), new V(p.dx, p.dy, p.dz), p.i, true))
     .on('broadcast', { event: 'r' }, ({ payload: p }) => fireRocket(new V(...p.f), new V(...p.d), p.i, p.s, p.k, true))
     .on('broadcast', { event: 'x' }, ({ payload: p }) => { const c = new V(p.x, th(p.x, p.z), p.z); if (p.a === 'arty') barrage(c, p.i, 10, 8); else airstrike(c, p.i, teamOf(p.i)); })
-    .on('presence', { event: 'sync' }, () => { const st = ch.presenceState(), ids = new Set(Object.keys(st)); netBalance(st); ids.forEach(id => { if (id !== me.id && st[id][0]) addRemote(id, st[id][0].name, st[id][0].team); }); ents.forEach((e, id) => { if (e.remote && !ids.has(id)) removeRemote(id); }); $('netinfo').textContent = `Online · room ${room} · ${ids.size} player${ids.size === 1 ? '' : 's'}`; });
+    .on('presence', { event: 'sync' }, () => { const st = ch.presenceState(), ids = new Set(Object.keys(st)); netBalance(st); ids.forEach(id => { if (id !== me.id && st[id][0]) addRemote(id, st[id][0].name, st[id][0].team); }); ents.forEach((e, id) => { if (e.remote && !e.hb && !ids.has(id)) removeRemote(id); }); if (NET.coop === 'guest' && NET.on && !ids.has('me') && !NET.hostGone && ids.size > 1) { NET.hostGone = true; announce('The host left the battle', true); } $('netinfo').textContent = `Online · room ${room} · ${ids.size} player${ids.size === 1 ? '' : 's'}`; });
   await new Promise((res, rej) => { const to = setTimeout(() => rej(new Error('Could not connect to the game server.')), 12000);
     ch.subscribe(st => { if (st === 'SUBSCRIBED') { clearTimeout(to); res(); } if (st === 'CHANNEL_ERROR' || st === 'TIMED_OUT') { clearTimeout(to); rej(new Error('Connection failed (' + st + ').')); } }); });
   await new Promise(r => setTimeout(r, 700)); const st = ch.presenceState(); let a = 0, b = 0; for (const k in st) { const t = st[k][0] && st[k][0].team; if (t === 'A') a++; else if (t === 'B') b++; }
@@ -2248,9 +2281,9 @@ function resetBattle() {
   if (me.veh) exitVehicle(true); ents.forEach(e => { e.cine = null; e.streak = 0; botRespawn(e); }); respawn(); updSectorHud();
 }
 function endBattle(winner) { if (SC && SC.k === 'dawn' && !SC.done) { const w = winner === me.team; SC.won = w; PROFILE.scen = PROFILE.scen || {}; if (w) { PROFILE.scen.dawn = true; if (SC.region) conqWin(SC.region); ww2Win(); } SC.done = true; giveCoins(w ? SC.d.reward : 0, 'Scenario complete'); }
-  if (over) return; over = true; const meWin = winner === me.team;
+  if (over) return; over = true; const meWin = winner === me.team; if (NET.coop === 'host') netSend('end', { w: winner, ww: SC && SC.ww2 != null ? SC.ww2 : -1 }); const campSave = JSON.stringify(camp);
   camp.f += meWin ? 1 : -1; let warEnd = false; if (camp.f > 2 || camp.f < -2) { warEnd = true; } const result = { winner, warEnd, day: camp.day, f: camp.f };
-  if (warEnd) { camp.f = 0; camp.day = 1; } else camp.day++; saveCamp();
+  if (warEnd) { camp.f = 0; camp.day = 1; } else camp.day++; if (NET.coop === 'guest') Object.assign(camp, JSON.parse(campSave)); saveCamp();
   if (me.veh) exitVehicle(true); targeting = null; $('msg').innerHTML = ''; PROFILE.battles++; if (meWin) PROFILE.wins++; giveCoins(meWin ? 300 : 100, meWin ? 'Battle won' : 'Battle fought');
   later(1.2, () => battleCine(result));
 }
@@ -2441,12 +2474,12 @@ let last = performance.now(), stepT = 0, eyeH = 1.6, hintT = 0, tagT = 0, dtG = 
 const _v2 = new THREE.Vector2(), _qi = new THREE.Quaternion();
 function loop(now) {
   requestAnimationFrame(loop);
-  const dt = Math.min(.05, (now - last) / 1000); last = now; dtG = dt;
+  const dt = Math.min(.05, (now - last) / 1000); last = now; dtG = dt; const paused0 = paused; if (NET.on && playing && !over) paused = false;
   if (!paused) { gameT += dt; for (let i = EV.length - 1; i >= 0; i--) if (EV[i].t <= gameT) { const ev = EV.splice(i, 1)[0]; ev.fn(); } }
   if (playing && !paused) { step(dt); updFront(dt); if (cine) updCine(dt); }
   else if (!playing) { const t = now / 1000 * .05; cam.position.set(Math.cos(t) * 34, 11, Math.sin(t) * 34); cam.lookAt(0, 1, 0); cam.fov = 60; cam.updateProjectionMatrix(); }
   if (!paused) { updAmbient(dt); if (!playing) ambientArty(dt); SMOKE.update(dt); FIRE.update(dt); DIRT.update(dt); updTracers(dt); updRing(DEB, dt, 18, .3); updRing(CAS, dt, 12, .3); updRing(HOLES, 0, 0, 0); updFlags(gameT); updNades(dt); updRockets(dt); updJets(dt); helis.slice().forEach(h => updHeli(h, dt)); }
-  render();
+  paused = paused0; render();
 }
 function step(dt) {
   combAge -= dt; if (combAge <= 0) { combCache = combatants(); combAge = .2; }
@@ -2579,7 +2612,7 @@ function updScenario(dt) { if (!SC || SC.done || !playing || cine) return; SC.t 
   if (SC.k === 'blackout') { SC.left -= dt; const lv = SC.lives - sc(me.id).d; txt = `<b>Survive</b> ${Math.ceil(SC.left)} s · lives ${'♥'.repeat(Math.max(0, lv))}`; if (lv <= 0) return endScenario(false, 'You ran out of lives.'); if (SC.left <= 0) return endScenario(true, 'You made it through the night.'); }
   if (SC.k === 'skies') { SC.heliT -= dt; if (SC.heliT <= 0 && !helis.some(h => !h.dead && h.team === 'B')) { SC.heliT = 20; spawnHeli('B', 'bB0'); } txt = `<b>Gunships shot down</b> ${SC.n} / 2`; if (SC.n >= 2) return endScenario(true, 'The skies are clear.'); }
   if (txt) $('objline').innerHTML = txt; SC.mt = (SC.mt || 0) - dt; if (SC.mt <= 0) { SC.mt = .15; scenMarks(); } }
-function endScenario(win, why) { if (!SC || SC.done) return; SC.done = true; if (SC.ww2 != null) { const wi2 = SC.ww2; setTimeout(() => showMemorial(wi2, win), 2600); } over = true; mouseDown = false; $('omk').innerHTML = ''; const d = SC.d; if (win) { PROFILE.scen = PROFILE.scen || {}; PROFILE.scen[SC.k] = true; if (SC.region) conqWin(SC.region); ww2Win(); } giveCoins(win ? d.reward : 100, win ? 'Scenario complete' : 'Scenario failed', win ? d.reward * 4 : 300);
+function endScenario(win, why) { if (!SC || SC.done) return; SC.done = true; if (NET.coop === 'host') netSend('end', { w: win ? me.team : me.team === 'A' ? 'B' : 'A', ww: SC.ww2 != null ? SC.ww2 : -1 }); if (SC.ww2 != null) { const wi2 = SC.ww2; setTimeout(() => showMemorial(wi2, win), 2600); } over = true; mouseDown = false; $('omk').innerHTML = ''; const d = SC.d; if (win) { PROFILE.scen = PROFILE.scen || {}; PROFILE.scen[SC.k] = true; if (SC.region) conqWin(SC.region); ww2Win(); } giveCoins(win ? d.reward : 100, win ? 'Scenario complete' : 'Scenario failed', win ? d.reward * 4 : 300);
   later(1.5, () => { $('stT').textContent = win ? 'Mission complete' : 'Mission failed'; $('stT').className = win ? 'win' : 'loss'; $('stS').textContent = `${d.name} · ${why}`; const mine = sc(me.id);
     $('stGrid').innerHTML = [['Your kills', mine.k], ['Your deaths', mine.d], ['Time', Math.floor(SC.t / 60) + ':' + String(Math.floor(SC.t % 60)).padStart(2, '0')], ['Coins earned', `<i class="coin"></i>${battleCoins}`]].map(([a, b]) => `<div><span>${a}</span><b>${b}</b></div>`).join(''); $('stFront').innerHTML = ''; statXP();
     $('nextb').textContent = SC.ww2 != null ? 'Back to the campaign' : SC.region ? 'Back to the map' : 'Play again'; $('nextb').onclick = () => { try { sessionStorage.setItem(SC.ww2 != null ? 'fl_ww2' : SC.region ? 'fl_conq' : 'fl_again', SC.k); } catch (e) { } location.reload(); }; $('stats').classList.remove('hide'); paused = true; try { document.exitPointerLock(); } catch (e) { } }); }
@@ -2622,10 +2655,7 @@ const WW2X = [
 WW2.forEach((b, i) => Object.assign(b, WW2X[i]));
 WW2[2].m = 'dawn'; WW2[2].goal = 'Fight through the hedgerows and capture every field.'; WW2[5].m = 'stand'; WW2[5].goal = 'Hold the bridge until relief arrives.'; WW2[9].m = 'stand'; WW2[9].goal = 'Take the bridge and hold it for 45 seconds.'; WW2[7].goal = 'Survive 4 minutes in the forest with 3 lives.'; WW2[3].goal = 'Destroy 3 Panzers before they escape the pocket.'; WW2[6].goal = 'Destroy 4 enemy vehicles in the streets.';
 function startWW2(i) { if (WW2BOOT === i) return startWW2now(i); try { sessionStorage.setItem('fl_ww2go', String(i)); } catch (e) { } $('ww2side').innerHTML = '<p class="note">Loading the battlefield…</p>'; location.reload(); }
-function startWW2now(i) { const b = WW2[i]; WW2ON = true; LOADOUT_OVR = ['garand', 'springfield', 'bazooka']; PICK_POOL.splice(0, PICK_POOL.length, 'thompson', 'bar', 'springfield', 'bazooka', 'thompson', 'bar', 'thompson', 'garand', 'bar');
-  recamo(CAMO.A, '#57583a', '74,76,48', '64,62,40', '92,90,62'); recamo(CAMO.B, '#5e625b', '86,90,84', '70,74,68', '104,106,98'); NAMES_B_OVR = POOL_W; cv.style.filter = 'sepia(.3) saturate(.8) contrast(1.06)';
-  for (const [k, c] of [['armorA', 0x4b5230], ['armorB', 0x8a7f5a]]) { const m = MAT[k].clone(); m.map = null; m.color = LIN(c); m.roughness = .75; MAT[k] = m; }
-  ['Recon plane', 'Howitzers', 'Dive bombers', 'Typhoons'].forEach((n, k) => streaks[k].name = n);
+function startWW2now(i) { const b = WW2[i]; ww2Style(i);
   if (b.sectors) SECTORS.forEach((s, k) => { s.name = b.sectors[k]; s.short = b.sectors[k].toUpperCase().slice(0, 14); });
   const d = SCEN[b.m], prevL = d.light; d.light = b.light || d.light; startScenario(b.m, null); d.light = prevL; SC.ww2 = i; SC.d = Object.assign({}, d, { name: b.name, reward: d.reward + 200 });
   if (b.hold) SC.holdName = b.hold; if (b.time) SC.left = b.time; if (b.take) { SC.take = b.take; SC.got = 0; } updScore(); announce(`${b.date} · ${b.name} · ${b.goal}`, true); }
@@ -2663,10 +2693,10 @@ function start(m) { wi = 0; applyLoadout(); if (!PROPS.length) spawnProps(); bat
   if (!RPM) { $('err').textContent = 'Still loading soldiers…'; return; }
   audioInit(); me.name = ($('name').value.trim() || 'Soldier').slice(0, 14); sens = +$('sens').value; SET.ultra = $('qual').value === 'ultra'; SET.quality = SET.ultra ? 'high' : $('qual').value; SET.diff = $('diff').value; SET.arty = $('arty').checked; DIFF = DIFFS[SET.diff];
   try { localStorage.setItem('fl_name', me.name); localStorage.setItem('fl_sens', sens); } catch (e) { }
-  applyQuality(); mode = m; GOAL = m === 'tdm' ? 50 : m === 'front' ? Infinity : m === 'online' ? 30 : 25; const onT = me.team; me.team = m === 'ffa' ? null : m === 'online' ? onT : 'A'; if (m === 'online') streaks[3].need = 99; score.clear(); teamScore.A = teamScore.B = 0; sc(me.id, me.name, me.team);
+  applyQuality(); mode = m; GOAL = m === 'tdm' ? 50 : m === 'front' ? Infinity : m === 'online' ? (NET.coop === 'guest' ? Infinity : 30) : 25; const onT = me.team; me.team = m === 'ffa' ? null : m === 'online' ? onT : 'A'; if (m === 'online') streaks[3].need = 99; score.clear(); teamScore.A = teamScore.B = 0; sc(me.id, me.name, me.team);
   const n = +$('botn').value; if (m === 'front') { const own = OWNERS[String(clamp(camp.f, -2, 2))]; SECTORS.forEach((s, i) => setOwner(s, own[i] === 'N' ? null : own[i])); showSectors(true); }
   if (m !== 'online') { resetSquad(); spawnBots(n, m !== 'ffa' ? n : 0); } if (m !== 'front') placeAssets();
-  if (m === 'online') { makeJeep(-70, -15, Math.PI / 2, 'A', false); makeJeep(-70, 27, Math.PI / 2, 'A', true); makeTank(-66, 0, Math.PI / 2, 'A', false); makeTransport(-70, 12, Math.PI / 2, 'A');
+  if (m === 'online' && NET.coop !== 'guest') { makeJeep(-70, -15, Math.PI / 2, 'A', false); makeJeep(-70, 27, Math.PI / 2, 'A', true); makeTank(-66, 0, Math.PI / 2, 'A', false); makeTransport(-70, 12, Math.PI / 2, 'A');
     makeJeep(70, 15, -Math.PI / 2, 'B', false); makeJeep(70, -27, -Math.PI / 2, 'B', true); makeTank(66, 0, -Math.PI / 2, 'B', false); makeTransport(70, -12, -Math.PI / 2, 'B'); vehicles.forEach((v, i) => v.nid = i); } else if (m !== 'ffa') { makeJeep(-70, -15, Math.PI / 2, 'A', false); makeJeep(-70, 27, Math.PI / 2, 'A', true); makeJeep(-66, -22, Math.PI / 2, 'A', true, true); makeJeep(66, 22, -Math.PI / 2, 'B', true, true); makeJeep(70, -15, -Math.PI / 2, 'B', false);
     makeTank(-66, 0, Math.PI / 2, 'A', false); makeTank(66, 0, -Math.PI / 2, 'B', true); makeTransport(-70, 12, Math.PI / 2, 'A'); if (hasPass('gunship')) makeTransport(-72, 30, Math.PI / 2, 'A', true); }
   else { makeJeep(-70, 27, Math.PI / 2, null, false); makeJeep(70, -15, -Math.PI / 2, null, true); makeTank(66, 0, -Math.PI / 2, null, false); makeTransport(-70, 12, Math.PI / 2, null); }
@@ -2674,7 +2704,8 @@ function start(m) { wi = 0; applyLoadout(); if (!PROPS.length) spawnProps(); bat
   combCache = combatants();
   $('menu').classList.add('hide'); $('hud').classList.remove('hide'); playing = true; respawn(); updScore(); drawStreaks(); lockPointer();
   if (m === 'tdm' && !SC) announce('Team Deathmatch · first team to 50 · tanks and a supply helicopter are at your base', true); if (!SC) setLighting('noon');
-  if (m === 'online') { announce(`Online battle · you are on ${me.team === 'A' ? 'Blue' : 'Red'} · first team to 30`, true); $('netinfo').classList.remove('hide'); }
+  if (m !== 'online') setTimeout(hostCoop, 1500);
+  if (m === 'online' && NET.coop !== 'guest') { announce(`Online battle · you are on ${me.team === 'A' ? 'Blue' : 'Red'} · first team to 30`, true); $('netinfo').classList.remove('hide'); }
   if (m === 'front') { $('score').classList.add('hide'); $('sectors').classList.remove('hide'); resetBattle(); introCine(); }
 }
 let shopTab = 'weapons';
@@ -2748,7 +2779,7 @@ const netReady = loadSupabase().then(() => { const ok = !!netCfg(); $('online').
 if (!PROFILE.pcode) { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; PROFILE.pcode = 'MW-' + Array.from({ length: 5 }, () => A[Math.random() * A.length | 0]).join(''); saveProfile(); }
 PROFILE.friends = PROFILE.friends || [];
 const LOBBY = { ch: null, st: {}, on: false };
-function lobbyMe() { return { n: ($('name').value.trim() || 'Soldier').slice(0, 14), c: PROFILE.pcode, room: NET.on ? NET.room : '', team: NET.on ? me.team : '', st: NET.on ? 'battle' : 'menu' }; }
+function lobbyMe() { const host = NET.coop === 'host'; return { n: ($('name').value.trim() || 'Soldier').slice(0, 14), c: PROFILE.pcode, room: NET.on ? NET.room : '', team: NET.on ? me.team : '', st: NET.on ? 'battle' : 'menu', h: host ? 1 : 0, b: host ? (SC ? SC.d.name : mode === 'front' ? 'Offensive' : 'Team battle') : NET.coop === 'guest' ? NET.coopName : '', w: host && SC && SC.ww2 != null ? SC.ww2 : -1, m: host ? MAPV || '' : '', sn: host && MAPSNOW ? 1 : 0 }; }
 function lobbyTrack() { if (LOBBY.on) try { LOBBY.ch.track(lobbyMe()); } catch (e) { } }
 async function lobbyJoin() { const cfg = netCfg(); if (!cfg || LOBBY.ch) return; NET.sb = NET.sb || cfg.lib.createClient(cfg.url, cfg.key, { auth: { persistSession: false } });
   const ch = NET.sb.channel('frontline-lobby', { config: { broadcast: { self: false, ack: false }, presence: { key: PROFILE.pcode } } }); LOBBY.ch = ch;
@@ -2756,7 +2787,7 @@ async function lobbyJoin() { const cfg = netCfg(); if (!cfg || LOBBY.ch) return;
     .on('broadcast', { event: 'inv' }, ({ payload: p }) => { if (p.to !== PROFILE.pcode || playing) return; const f = PROFILE.friends.find(x => x.code === p.from); showInvite(p, f ? f.name : p.n); })
     .on('broadcast', { event: 'fr' }, ({ payload: p }) => { if (p.to !== PROFILE.pcode) return; if (!PROFILE.friends.some(x => x.code === p.from)) { PROFILE.friends.push({ code: p.from, name: p.n }); saveProfile(); renderFriends(); announce(`${p.n} added you as a friend`, true); } })
     .subscribe(st => { if (st === 'SUBSCRIBED') { LOBBY.on = true; lobbyTrack(); } }); }
-function friendStatus(f) { const p = LOBBY.st[f.code]; if (!p) return { on: false, txt: 'Offline' }; if (p.n && p.n !== f.name) { f.name = p.n; saveProfile(); } return p.st === 'battle' ? { on: true, p, txt: `In battle · room ${p.room} · ${p.team === 'A' ? 'Blue' : 'Red'} team` } : { on: true, p, txt: 'Online · in the menu' }; }
+function friendStatus(f) { const p = LOBBY.st[f.code]; if (!p) return { on: false, txt: 'Offline' }; if (p.n && p.n !== f.name) { f.name = p.n; saveProfile(); } return p.st === 'battle' ? { on: true, p, txt: `In battle${p.b ? ' · ' + p.b : ' · room ' + p.room} · ${p.team === 'A' ? 'Blue' : 'Red'} team` } : { on: true, p, txt: 'Online · in the menu' }; }
 function renderFriends() { if (!$('friends') || $('friends').classList.contains('hide')) { updFriendBadge(); return; } $('frcode').textContent = PROFILE.pcode;
   $('frnet').textContent = LOBBY.on ? '' : netCfg() ? 'Connecting to the friends server…' : 'Friends need an internet connection.';
   $('frlist').innerHTML = PROFILE.friends.length ? PROFILE.friends.map((f, i) => { const s = friendStatus(f), bt = s.on && s.p.st === 'battle';
@@ -2764,7 +2795,7 @@ function renderFriends() { if (!$('friends') || $('friends').classList.contains(
   updFriendBadge(); }
 function updFriendBadge() { const n = PROFILE.friends.filter(f => LOBBY.st[f.code]).length; if ($('mfriends')) $('mfriends').textContent = n ? `Friends · ${n} online` : 'Friends'; }
 function showInvite(p, who) { const b = $('invite'); b.innerHTML = `<b>${esc(who)}</b> invited you to a battle (room ${esc(p.room)})<button class="pri" id="invsame">Join their team</button><button id="invother">Join other team</button><button id="invno">No thanks</button>`; b.classList.remove('hide');
-  $('invsame').onclick = () => { b.classList.add('hide'); joinOnline(p.room, p.team); }; $('invother').onclick = () => { b.classList.add('hide'); joinOnline(p.room, p.team === 'A' ? 'B' : 'A'); }; $('invno').onclick = () => b.classList.add('hide'); }
+  $('invsame').onclick = () => { b.classList.add('hide'); joinFriend(p, p.team); }; $('invother').onclick = () => { b.classList.add('hide'); joinFriend(p, p.team === 'A' ? 'B' : 'A'); }; $('invno').onclick = () => b.classList.add('hide'); }
 async function joinOnline(room, forceTeam) { if (!$('online').dataset.ok) return; room = (room || 'ares').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 20) || 'ares'; $('room').value = room; $('friends').classList.add('hide');
   me.name = ($('name').value.trim() || 'Soldier').slice(0, 14); me.id = 'p' + Math.random().toString(36).slice(2, 10); $('online').disabled = true; $('onlinenote').textContent = 'Connecting…';
   try { await netJoin(room, forceTeam); start('online'); lobbyTrack(); } catch (e) { $('onlinenote').textContent = e.message; $('online').disabled = false; } }
@@ -2778,7 +2809,7 @@ $('fradd').onclick = () => { const c = $('frin').value.trim().toUpperCase().repl
   if (LOBBY.on) LOBBY.ch.send({ type: 'broadcast', event: 'fr', payload: { to: code, from: PROFILE.pcode, n: lobbyMe().n } }); renderFriends(); };
 $('frlist').onclick = e => { const t = e.target.closest('button'); if (!t) return;
   if (t.dataset.del != null) { PROFILE.friends.splice(+t.dataset.del, 1); saveProfile(); return renderFriends(); }
-  if (t.dataset.j != null) { const p = LOBBY.st[PROFILE.friends[+t.dataset.j].code]; if (p && p.room) joinOnline(p.room, t.dataset.s === 'same' ? p.team : (p.team === 'A' ? 'B' : 'A')); return; }
+  if (t.dataset.j != null) { const p = LOBBY.st[PROFILE.friends[+t.dataset.j].code]; if (p && p.room) joinFriend(p, t.dataset.s === 'same' ? p.team : (p.team === 'A' ? 'B' : 'A')); return; }
   if (t.dataset.inv != null) { const f = PROFILE.friends[+t.dataset.inv], room = 'mw-' + PROFILE.pcode.slice(3).toLowerCase(); LOBBY.ch.send({ type: 'broadcast', event: 'inv', payload: { to: f.code, from: PROFILE.pcode, n: lobbyMe().n, room, team: 'A' } }); announce(`Invite sent to ${f.name} · they can join your team or the other one`, true); joinOnline(room, 'A'); } };
 netReady.then(() => lobbyJoin());
 $('psens').oninput = e => { sens = +e.target.value; };
@@ -2788,7 +2819,7 @@ function boot() {
   defineMap(); buildHF(); buildTerrain(); buildStructures(); buildBoxGrid(); buildNav(); buildSectors(); buildMiniBg(); resize();
   $('load').textContent = 'Loading soldiers…';
   loadModels()
-    .then(() => { $('load').textContent = 'Ready'; $('tdm').disabled = $('ffa').disabled = $('front').disabled = $('scenb').disabled = $('conqb').disabled = $('ww2b').disabled = false; try { if (sessionStorage.getItem('fl_ww2')) { sessionStorage.removeItem('fl_ww2'); renderWW2(); $('ww2').classList.remove('hide'); } } catch (e) { } if (WW2BOOT != null) { renderWW2(WW2BOOT); $('ww2').classList.remove('hide'); } try { if (sessionStorage.getItem('fl_conq')) { sessionStorage.removeItem('fl_conq'); renderConquest(); $('conq').classList.remove('hide'); } } catch (e) { } try { const ag = sessionStorage.getItem('fl_again'); if (ag && SCEN[ag]) { sessionStorage.removeItem('fl_again'); renderScenarios(); $('scen').classList.remove('hide'); $('scenhint').textContent = 'Pick a scenario to play again'; } } catch (e) { } $('online').disabled = !$('online').dataset.ok; $('campinfo').textContent = `Campaign: Day ${camp.day} · front ${camp.f > 0 ? 'pushed east' : camp.f < 0 ? 'pushed back' : 'stalled at the village'}`; }).catch(e => { $('err').textContent = 'Could not load soldier model: ' + (e.message || e); });
+    .then(() => { $('load').textContent = 'Ready'; $('tdm').disabled = $('ffa').disabled = $('front').disabled = $('scenb').disabled = $('conqb').disabled = $('ww2b').disabled = false; try { if (sessionStorage.getItem('fl_ww2')) { sessionStorage.removeItem('fl_ww2'); renderWW2(); $('ww2').classList.remove('hide'); } } catch (e) { } if (COOPJOIN) netReady.then(() => showCoopJoin(COOPJOIN)); else if (WW2BOOT != null) { renderWW2(WW2BOOT); $('ww2').classList.remove('hide'); } try { if (sessionStorage.getItem('fl_conq')) { sessionStorage.removeItem('fl_conq'); renderConquest(); $('conq').classList.remove('hide'); } } catch (e) { } try { const ag = sessionStorage.getItem('fl_again'); if (ag && SCEN[ag]) { sessionStorage.removeItem('fl_again'); renderScenarios(); $('scen').classList.remove('hide'); $('scenhint').textContent = 'Pick a scenario to play again'; } } catch (e) { } $('online').disabled = !$('online').dataset.ok; $('campinfo').textContent = `Campaign: Day ${camp.day} · front ${camp.f > 0 ? 'pushed east' : camp.f < 0 ? 'pushed back' : 'stalled at the village'}`; }).catch(e => { $('err').textContent = 'Could not load soldier model: ' + (e.message || e); });
   requestAnimationFrame(loop);
 }
 setTimeout(boot, 30);
