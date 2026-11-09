@@ -11,7 +11,7 @@ export default async function handler(req, res) {
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
     const prompt = body.prompt;
-    const maxTokens = Math.min(Math.max(parseInt(body.maxTokens) || 1000, 1), 4096);
+    const maxTokens = Math.min(Math.max(parseInt(body.maxTokens) || 1000, 300), 4096);
     if (!prompt || typeof prompt !== 'string') { res.status(400).json({ error: 'Missing prompt' }); return; }
 
     const r = await fetch(
@@ -21,7 +21,7 @@ export default async function handler(req, res) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: maxTokens, temperature: 0.7 }
+          generationConfig: { maxOutputTokens: maxTokens, temperature: 0.7, thinkingConfig: { thinkingBudget: 0 } }
         })
       }
     );
