@@ -14711,5 +14711,531 @@ function closeDinoDash(){
 }
 window.openDinoDash=openDinoDash;window.closeDinoDash=closeDinoDash;
 </script>
+<style id="maths-trainer-css">#mt-dash{background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.3);border-radius:14px;padding:1rem 1.2rem;margin:-.5rem 0 1.25rem}
+.mt-dash-h{font-family:'Fraunces',serif;font-size:1.1rem;color:var(--text);margin-bottom:.3rem}.mt-dash-p{font-size:13px;color:var(--text2);line-height:1.55;margin-bottom:.6rem}
+.mt-dash-s{display:flex;gap:1rem;flex-wrap:wrap;font-size:12px;color:var(--text2)}.mt-dash-s b{color:#A78BFA}
+.mt-chip{margin-top:6px;font-size:11px;color:#A78BFA;font-weight:600}
+#mt-banner{display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.3);border-radius:12px;padding:.7rem 1rem;margin:0 0 .75rem;font-size:13px;color:var(--text)}
+.mt-b-t{flex:1 1 240px;line-height:1.5}.mt-b-btns{display:flex;gap:.5rem;flex-wrap:wrap}
+.mt-btn{background:#7C5CFC;color:#fff;border:0;border-radius:10px;padding:.6rem 1.1rem;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
+.mt-btn:hover{filter:brightness(1.1)}.mt-ghost{background:transparent;border:1px solid rgba(167,139,250,.5);color:#A78BFA}
+#mt-overlay{position:fixed;inset:0;z-index:99999;background:var(--bg,#0b0b14);display:none;align-items:flex-start;justify-content:center;overflow-y:auto;padding:0}
+.mt-box{width:100%;max-width:640px;min-height:100%;padding:1rem 1rem 3rem;color:var(--text)}
+.mt-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem}.mt-ttl{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#A78BFA}
+.mt-x{background:none;border:1px solid var(--border,#333);color:var(--text2);border-radius:8px;width:34px;height:34px;font-size:16px;cursor:pointer}
+.mt-bar,.mt-lad{height:6px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden;margin-bottom:1rem}.mt-bar i,.mt-lad i{display:block;height:100%;background:#A78BFA;transition:width .3s}
+.mt-lad{height:10px}.mt-lad i{background:linear-gradient(90deg,#7C5CFC,#34D399)}
+.mt-c{text-align:left}.mt-c h2{font-family:'Fraunces',serif;font-weight:400;font-size:1.6rem;margin:.3rem 0}.mt-c p{color:var(--text2);line-height:1.6;font-size:14px}
+.mt-big{font-size:3rem}.mt-meta{font-size:12px;color:var(--text2);margin-bottom:.5rem}.mt-lvl{color:#A78BFA;font-weight:700}.mt-lv{font-size:15px!important}
+.mt-q{font-size:1.15rem;line-height:1.55;margin:.5rem 0 1rem;white-space:pre-wrap}
+.mt-opts{display:grid;gap:.55rem}.mt-opt{display:flex;gap:.7rem;align-items:center;text-align:left;background:var(--bg2,#14141f);border:1px solid var(--border,#2a2a3a);color:var(--text);border-radius:12px;padding:.8rem 1rem;font-size:15px;cursor:pointer;font-family:inherit;line-height:1.4}
+.mt-opt span{flex:none;width:24px;height:24px;border-radius:50%;background:rgba(167,139,250,.18);color:#A78BFA;font-size:12px;display:flex;align-items:center;justify-content:center;font-weight:700}
+.mt-opt:not(:disabled):hover{border-color:#A78BFA}.mt-opt.sel{border-color:#A78BFA;background:rgba(167,139,250,.15)}
+.mt-opt.ok{border-color:#34D399;background:rgba(52,211,153,.15)}.mt-opt.bad{border-color:#F87171;background:rgba(248,113,113,.15)}
+#mt-fb{margin-top:1rem}.mt-f{border-radius:12px;padding:.9rem 1rem;border:1px solid}.mt-f.g{border-color:#34D399;background:rgba(52,211,153,.08)}.mt-f.r{border-color:#F87171;background:rgba(248,113,113,.08)}
+.mt-f p{margin:.4rem 0;font-size:14px;color:var(--text2);line-height:1.55}.mt-f .mt-btn{margin-top:.4rem}
+.mt-coach{background:rgba(167,139,250,.1);border-left:3px solid #A78BFA;border-radius:8px;padding:.8rem 1rem;margin:1rem 0;font-size:14px;line-height:1.55;color:var(--text)}
+@media(max-width:480px){.mt-q{font-size:1.05rem}}
+</style>
+<script id="maths-trainer">
+/* ===== Maths Trainer: graded question generators ===== */
+var MTG=(function(){
+'use strict';
+const R=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const P=a=>a[Math.floor(Math.random()*a.length)];
+const gcd=(a,b)=>b?gcd(b,a%b):Math.abs(a);
+const sh=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=R(0,i);[a[i],a[j]]=[a[j],a[i]];}return a;};
+const sg=n=>n<0?' − '+(-n):' + '+n;
+const co=a=>a===1?'':a===-1?'-':String(a);
+const lin=(a,b)=>a===0?String(b):co(a)+'x'+(b?sg(b):'');
+const quad=(a,b,c)=>co(a)+'x²'+(b?(b<0?' − ':' + ')+(Math.abs(b)===1?'':Math.abs(b))+'x':'')+(c?sg(c):'');
+const fac=r=>'(x '+(r<0?'− ':'+ ')+Math.abs(r)+')';
+const fr=(n,d)=>{const g=gcd(n,d)||1;n/=g;d/=g;if(d<0){n=-n;d=-d;}return d===1?String(n):n+'/'+d;};
+const nz=x=>String(Number(x.toFixed(6)));
+const d1=x=>x.toFixed(1);
+const m2=x=>'£'+x.toFixed(2);
+const rad=x=>x*Math.PI/180, deg=x=>x*180/Math.PI;
+const sin=x=>Math.sin(rad(x)),cos=x=>Math.cos(rad(x)),tan=x=>Math.tan(rad(x));
+const b3=n=>String(((Math.round(n)%360)+360)%360).padStart(3,'0')+'°';
+function tidy(t){t=String(t);
+  t=t.replace(/£(-?\d+)\.(\d)(?!\d)/g,'£$1.$20').replace(/£(-?\d+\.\d{3,})/g,(m,n)=>'£'+Number(n).toFixed(2));
+  t=t.replace(/(^|[^\w.])(-?)(\d+\.\d{4,})(?!\d)/g,(m,a,b,n)=>a+b+String(Math.round(Number(n)*100)/100));
+  t=t.replace(/(^|[^\w.²³])1([xnabcπ])(?![\w])/g,'$1$2').replace(/([+−] )1([abcxn])(?!\w)/g,'$1$2').replace(/  +/g,' ');return t;}
+function mc(q,correct,wrongs,exp,fmt){
+  q=tidy(q);exp=tidy(exp||'');correct=tidy(correct);wrongs=(wrongs||[]).map(tidy);const opts=[correct];
+  (wrongs||[]).forEach(w=>{w=String(w);if(w!==correct&&w!=='NaN'&&w!=='Infinity'&&w!=='undefined'&&opts.indexOf(w)<0)opts.push(w);});
+  const cn=parseFloat(correct.replace('£','').replace('−','-'));
+  if(opts.length<4&&isFinite(cn)){
+    const pre=correct.indexOf('£')===0?'£':'',suf=/°$/.test(correct)?'°':/%$/.test(correct)?'%':'';
+    const dec=(correct.split('.')[1]||'').replace(/[^0-9]/g,'').length;
+    [1,-1,2,-2,10,-10,5,-5,0.5,-0.5,3,-3].forEach(k=>{
+      if(opts.length>=4)return;let v=cn+k*(Math.abs(cn)>=20?Math.max(1,Math.round(Math.abs(cn)/10)):1);
+      let s=pre+(dec?v.toFixed(dec):String(Math.round(v*1e6)/1e6))+suf;if(opts.indexOf(s)<0&&s!==correct)opts.push(s);});
+  }
+  while(opts.length<4)opts.push('None of these'+(opts.length>4?'':' ('+opts.length+')'));
+  const o=sh(opts.slice(0,4));return{q:q,opts:o,ans:o.indexOf(correct),exp:exp||''};
+}
+const G={};
+// ---------- 0 NUMBER ----------
+G[0]=[
+{g:[1,2],f:()=>{const a=R(2,9),b=R(2,9),c=R(2,9);return mc('Calculate '+a+' + '+b+' × '+c+'.',a+b*c,[(a+b)*c,a+b+c,a*b+c],'BIDMAS: multiply first. '+b+' × '+c+' = '+b*c+', then add '+a+' → '+(a+b*c)+'.');}},
+{g:[1,3],f:()=>{const a=R(-9,9),b=R(2,9);return mc('Calculate '+a+' − (−'+b+').',a+b,[a-b,-(a+b),b-a],'Subtracting a negative is adding: '+a+' + '+b+' = '+(a+b)+'.');}},
+{g:[2,4],f:()=>{if(Math.random()<.5){const d=P([3,4,5,8]),n=R(1,d-1),k=R(3,9)*d,v=k/d*n;return mc('What is '+n+'/'+d+' of '+k+'?',v,[k/d,v+k/d,k*n],'Divide by '+d+': '+k/d+'. Multiply by '+n+': '+v+'.');}
+  const p=P([10,20,25,5,15,30,40]),k=P([40,60,80,120,200,240]);const v=k*p/100;return mc('What is '+p+'% of '+k+'?',v,[k/p,k*p,k-v],p+'% = '+p+'/100. '+k+' × '+p+'/100 = '+v+'.');}},
+{g:[3,4],f:()=>{if(Math.random()<.5){const x=R(1000,9999)/1000,v=x.toFixed(2);return mc('Round '+x.toFixed(3)+' to 2 decimal places.',v,[x.toFixed(1),(Math.floor(x*100)/100).toFixed(2),x.toFixed(3)],'Look at the 3rd decimal digit: 5 or more rounds up.');}
+  const x=R(1000,99999)/P([1,10,100]);const k=P([1,2]);const mag=Math.floor(Math.log10(x)),f=Math.pow(10,mag-k+1);const v=Number((Math.round(x/f)*f).toPrecision(k));const w1=Number((Math.floor(x/f)*f).toPrecision(k)),w2=Number((Math.round(x/f/10)*f*10).toPrecision(k));
+  return mc('Round '+x+' to '+k+' significant figure'+(k>1?'s':'')+'.',v,[w1,w2,Number(x.toPrecision(k+1))],'Count '+k+' significant figure'+(k>1?'s':'')+' from the first non-zero digit, then round using the next digit.');}},
+{g:[3,5],f:()=>{const g=P([2,3,4,5,6]),a=g*R(2,6),b=g*R(2,6);if(a===b)return null;const H=gcd(a,b),L=a*b/H;const hcf=Math.random()<.5;return mc('Find the '+(hcf?'HCF':'LCM')+' of '+a+' and '+b+'.',hcf?H:L,[hcf?L:H,a*b,Math.abs(a-b)||H+1],hcf?'The HCF is the largest number dividing both: '+H+'.':'LCM = '+a+' × '+b+' ÷ HCF('+H+') = '+L+'.');}},
+{g:[4,5],f:()=>{const t=R(0,2),a=R(2,6),b=R(2,5);if(t===0)return mc('Simplify 2^'+a+' × 2^'+b+'. Give your answer as a power of 2.','2^'+(a+b),['2^'+a*b,'4^'+(a+b),'2^'+Math.abs(a-b)],'Multiplying powers with the same base: add the indices.');
+ if(t===1){const A=a+b;return mc('Simplify x^'+A+' ÷ x^'+b+'.','x^'+a,['x^'+A*b,'x^'+(A+b),'x^'+a*b],'Dividing powers: subtract the indices, '+A+' − '+b+' = '+a+'.');}
+ return mc('Simplify (x^'+a+')^'+b+'.','x^'+a*b,['x^'+(a+b),'x^'+Math.pow(a,b),'x^'+a],'Power of a power: multiply the indices.');}},
+{g:[5,6],f:()=>{if(Math.random()<.5){const m=R(11,98),e=R(2,6),n=m*Math.pow(10,e);const d=String(m);const a=(m/10).toString();return mc('Write '+n.toLocaleString('en-GB').replace(/,/g,' ')+' in standard form.',a+' × 10^'+(e+1),[m+' × 10^'+e,a+' × 10^'+e,a+' × 10^'+(e+2)],'Move the decimal point so the number is between 1 and 10; count places moved for the power.');}
+ const a=R(2,4),b=R(2,4),m=R(2,6),n=R(2,6);return mc('Work out ('+a+' × 10^'+m+') × ('+b+' × 10^'+n+'). Give your answer in standard form.',a*b+' × 10^'+(m+n),[a*b+' × 10^'+m*n,(a+b)+' × 10^'+(m+n),a*b+' × 10^'+Math.abs(m-n)],'Multiply the numbers ('+a*b+'), add the powers ('+(m+n)+').');}},
+{g:[5,6],f:()=>{const a=R(1,3),b=R(1,2);if(a===1&&b===1)return null;const n=Math.pow(2,a)*Math.pow(3,b);return mc('Write '+n+' as a product of its prime factors.',(a>1?'2^'+a:'2')+' × '+(b>1?'3^'+b:'3'),[(b>1?'2^'+b:'2')+' × '+(a>1?'3^'+a:'3'),'2 × 3 × '+(n/6),(a+1>1?'2^'+(a+1):'2')+' × '+(b>1?'3^'+(b-1):'3')],'Divide repeatedly by primes: '+n+' = '+(a>1?'2^'+a:'2')+' × '+(b>1?'3^'+b:'3')+'.');}},
+{g:[6,7],f:()=>{if(Math.random()<.55){const r=R(2,5),q=P([2,3]),p=R(1,3),base=Math.pow(r,q);return mc('Evaluate '+base+'^('+p+'/'+q+').',Math.pow(r,p),[r*p,base/q,Math.pow(base,p)],'The denominator is the root: the '+(q===2?'square':'cube')+' root of '+base+' is '+r+'. The numerator is the power: '+r+'^'+p+' = '+Math.pow(r,p)+'.');}
+ const b=P([2,3,4,5,10]),n=R(1,3);return mc('Evaluate '+b+'^(−'+n+').','1/'+Math.pow(b,n),['−'+Math.pow(b,n),'−'+b*n,'1/'+b*n],'A negative index means reciprocal: 1 ÷ '+b+'^'+n+' = 1/'+Math.pow(b,n)+'.');}},
+{g:[7,8],f:()=>{const k=R(2,6),m=P([2,3,5,6,7]);return mc('Simplify √'+k*k*m+'.',k+'√'+m,[m+'√'+k,k*k+'√'+m,k+'√'+m*k],'Write '+k*k*m+' = '+k*k+' × '+m+'; √'+k*k+' = '+k+', so the answer is '+k+'√'+m+'.');}},
+{g:[7,9],f:()=>{if(Math.random()<.5){const u=P([10,100,5]),v=u*R(2,40),bound=Math.random()<.5;return mc('A mass is '+v+' kg to the nearest '+u+' kg. What is its '+(bound?'upper':'lower')+' bound?',bound?v+u/2:v-u/2,[v+u,v-u/2+(bound?0:u),bound?v+u/2-0.01:v-u/2+0.01],'Half of the rounding unit ('+u/2+') either side of '+v+'. The '+(bound?'upper':'lower')+' bound is '+(bound?v+u/2:v-u/2)+'.');}
+ const m=P([2,3,5,7]),n=R(2,9);return mc('Rationalise the denominator of '+n+'/√'+m+'.',n+'√'+m+'/'+m,[n+'/'+m,n+'√'+m,'√'+m+'/'+n],'Multiply top and bottom by √'+m+': '+n+'√'+m+'/('+m+').');}},
+{g:[8,9],f:()=>{if(Math.random()<.5){const d=R(1,8);const a=fr(d,9);return mc('Write 0.'+d+' recurring (0.'+d+d+d+'…) as a fraction in its simplest form.',a,[d+'/10',fr(d,99),fr(d,90)],'Let x = 0.'+d+d+'…; 10x − x = '+d+' so 9x = '+d+' and x = '+a+'.');}
+ const a=R(1,9),b=R(0,9);const n=a*10+b;if(n%11===0)return null;return mc('Write 0.'+a+b+' recurring (0.'+a+b+a+b+'…) as a fraction in its simplest form.',fr(n,99),[fr(n,100),fr(n,90),fr(n,999)],'Let x = 0.'+a+b+'…; 100x − x = '+n+' so x = '+n+'/99 = '+fr(n,99)+'.');}}
+];
+// ---------- 1 ALGEBRA ----------
+G[1]=[
+{g:[1,2],f:()=>{const a=R(2,6),b=R(3,7),c=R(1,5),d=R(1,b-1);const A=a+c,B=b-d;return mc('Simplify '+a+'x + '+b+'y + '+c+'x − '+d+'y.',A+'x'+(B===1?' + y':' + '+B+'y'),[A+'x + '+(b+d)+'y',(a-c||1)+'x + '+B+'y',(A+B)+'xy'],'Collect like terms: x terms '+a+' + '+c+' = '+A+'; y terms '+b+' − '+d+' = '+B+'.');}},
+{g:[2,3],f:()=>{const k=R(2,6),a=R(2,5),b=R(1,7),neg=Math.random()<.4;return mc('Expand '+k+'('+a+'x '+(neg?'− ':'+ ')+b+').',(k*a)+'x '+(neg?'− ':'+ ')+(k*b),[(k*a)+'x '+(neg?'− ':'+ ')+b,(k+a)+'x '+(neg?'− ':'+ ')+(k+b),(k*a)+'x '+(neg?'+ ':'− ')+(k*b)],'Multiply every term inside the bracket by '+k+'.');}},
+{g:[2,3],f:()=>{const a=R(2,6),b=R(2,6),p=R(2,5),q=R(1,5);const v=p*a-q*b;return mc('a = '+a+' and b = '+b+'. Work out '+p+'a − '+q+'b.',v,[p*a+q*b,p+a-q-b,(p-q)*(a-b)],'Substitute: '+p+'×'+a+' − '+q+'×'+b+' = '+p*a+' − '+q*b+' = '+v+'.');}},
+{g:[3,4],f:()=>{const k=R(2,6),a=R(1,5),b=R(1,5);if(gcd(a,b)!==1)return null;return mc('Factorise fully '+k*a+'x + '+k*b+'.',k+'('+co(a)+'x + '+b+')',[k+'('+co(a)+'x + '+k*b+')',k*a+'('+'x + '+b+')',k+'('+co(a*k)+'x + '+b+')'],'The highest common factor of '+k*a+' and '+k*b+' is '+k+'. Take it outside the bracket.');}},
+{g:[4,5],f:()=>{const a=R(1,7),b=P([-7,-6,-5,-4,-3,-2,-1,1,2,3,4,5,6,7]),c=a*b;return mc('Expand and simplify '+fac(a)+fac(b)+'.',quad(1,a+b,c),[quad(1,a*b,a+b),quad(1,a+b,-c),quad(1,a+b,0)],'Expand: x², then '+a+'x + '+b+'x = '+(a+b)+'x, then '+a+' × '+b+' = '+c+'.');}},
+{g:[4,5],f:()=>{const m=R(2,6),c=R(1,9);return mc('Make x the subject of y = '+m+'x + '+c+'.','x = (y − '+c+')/'+m,['x = (y + '+c+')/'+m,'x = y/'+m+' − '+c,'x = '+m+'(y − '+c+')'],'Subtract '+c+' from both sides, then divide by '+m+'.');}},
+{g:[5,6],f:()=>{const u=R(-8,8),v=R(-8,8);if(!u||!v||u+v===0)return null;return mc('Factorise '+quad(1,u+v,u*v)+'.',fac(u)+fac(v),[fac(-u)+fac(-v),fac(u)+fac(-v),fac(u*v)+'(x + 1)'],'Find two numbers that multiply to '+u*v+' and add to '+(u+v)+': '+u+' and '+v+'.');}},
+{g:[5,6],f:()=>{const a=R(1,8),neg=Math.random()<.5,s=neg?-a:a;return mc('Expand and simplify (x '+(neg?'− ':'+ ')+a+')².',quad(1,2*s,a*a),[quad(1,0,a*a),quad(1,s,a*a),quad(1,2*s,-a*a)],'(x '+(neg?'−':'+')+' '+a+')(x '+(neg?'−':'+')+' '+a+') = x² '+(neg?'−':'+')+' '+2*a+'x + '+a*a+'. Do not forget the middle term.');}},
+{g:[6,7],f:()=>{const p=R(1,3),r=R(1,3);if(p*r<2)return null;const q=P([-5,-4,-3,-2,-1,1,2,3,4,5]),s=P([-5,-4,-3,-2,-1,1,2,3,4,5]);const A=p*r,B=p*s+q*r,C=q*s;const t=(a,b)=>'('+co(a)+'x '+(b<0?'− ':'+ ')+Math.abs(b)+')';return mc('Factorise '+quad(A,B,C)+'.',t(p,q)+t(r,s),[t(p,s)+t(r,q),t(p,-q)+t(r,-s),t(A,q)+t(1,s)],'Multiply the x² and constant coefficients: '+A+'×'+C+' = '+A*C+'. Find two numbers that multiply to this and add to '+B+', then split the middle term and factorise.');}},
+{g:[6,7],f:()=>{const a=R(2,9);if(Math.random()<.5)return mc('Factorise x² − '+a*a+'.','(x + '+a+')(x − '+a+')',['(x − '+a+')²','(x + '+a+')²','(x − '+a*a+')(x + 1)'],'Difference of two squares: a² − b² = (a + b)(a − b).');const k=R(2,4);return mc('Factorise '+k*k+'x² − '+a*a+'.','('+k+'x + '+a+')('+k+'x − '+a+')',['('+k*k+'x + '+a+')('+'x − '+a+')','('+k+'x − '+a+')²','('+k+'x + '+a*a+')('+k+'x − 1)'],(k*k)+'x² = ('+k+'x)² and '+a*a+' = '+a+'², so use the difference of two squares.');}},
+{g:[7,8],f:()=>{const h=R(1,6),neg=Math.random()<.5,s=neg?-h:h,q=R(-9,9)||3;const c=h*h+q;return mc('Write x² '+(neg?'− ':'+ ')+2*h+'x '+sg(c)+' in the form (x + p)² + q.','(x '+(neg?'− ':'+ ')+h+')²'+sg(q),['(x '+(neg?'+ ':'− ')+h+')²'+sg(q),'(x '+(neg?'− ':'+ ')+2*h+')²'+sg(c-4*h*h),'(x '+(neg?'− ':'+ ')+h+')²'+sg(c)],'p is half the x coefficient ('+s+'). (x'+(s<0?'−':'+')+h+')² = x² '+(neg?'−':'+')+2*h+'x + '+h*h+', so q = '+c+' − '+h*h+' = '+q+'.');}},
+{g:[7,8],f:()=>{const a=R(2,9);return mc('Simplify (x² − '+a*a+')/(x + '+a+').','x − '+a,['x + '+a,'x − '+a*a,'x² − '+a],'Factorise the top: (x + '+a+')(x − '+a+'). Cancel (x + '+a+').');}},
+{g:[8,9],f:()=>{const a=R(1,5),b=R(1,5);if(a===b)return null;const p=R(1,4),q=R(1,4);if(p===q)return null;const n1=a+b,n0=a*q+b*p;return mc('Write '+a+'/(x + '+p+') + '+b+'/(x + '+q+') as a single fraction.','('+lin(n1,n0)+')/((x + '+p+')(x + '+q+'))',['('+(a+b)+')/(x² + '+(p+q)+'x)','('+lin(n1,a*p+b*q)+')/((x + '+p+')(x + '+q+'))',(a+b)+'/(x + '+(p+q)+')'],'Common denominator (x + '+p+')(x + '+q+'). Numerator: '+a+'(x + '+q+') + '+b+'(x + '+p+') = '+lin(n1,n0)+'.');}}
+];
+// ---------- 2 EQUATIONS & INEQUALITIES ----------
+G[2]=[
+{g:[1,2],f:()=>{const x=R(-6,12),a=R(2,7),b=R(1,12),c=a*x+b;return mc('Solve '+a+'x + '+b+' = '+c+'.',x,[(c+b)/a,c-b,(c-b)/a+1],'Subtract '+b+': '+a+'x = '+(c-b)+'. Divide by '+a+': x = '+x+'.');}},
+{g:[2,3],f:()=>{const x=R(-5,10),c=R(1,4),a=c+R(1,4),b=R(-8,8),d=(a-c)*x+b;return mc('Solve '+a+'x '+(b<0?'− ':'+ ')+Math.abs(b)+' = '+c+'x '+(d<0?'− ':'+ ')+Math.abs(d)+'.',x,[-x,(d+b)/(a-c),(d-b)/(a+c)],'Collect x terms on one side: '+(a-c)+'x = '+(d-b)+', so x = '+x+'.');}},
+{g:[3,4],f:()=>{const a=R(2,5),b=R(1,9),x=R(2,8),c=a*x-b;return mc('Solve '+a+'x − '+b+' > '+c+'.','x > '+x,['x < '+x,'x > '+(c-b)/a,'x > '+(c+b)],'Add '+b+': '+a+'x > '+(c+b)+'. Divide by '+a+': x > '+x+'.');}},
+{g:[3,4],f:()=>{const a=R(1,6),b=R(1,7);return mc('How many integers satisfy −'+a+' < x ≤ '+b+'?',a+b,[a+b+1,a+b-1,b-a>0?b-a:a+b+2],'The integers are −'+(a-1)+' up to '+b+' (−'+a+' is not included, '+b+' is). That is '+(a+b)+' integers.');}},
+{g:[4,5],f:()=>{const x=R(-4,8),y=R(-4,8),a=R(1,4),b=R(1,3);return mc('Solve the simultaneous equations: '+a+'x + '+b+'y = '+(a*x+b*y)+' and '+a+'x − '+b+'y = '+(a*x-b*y)+'.','x = '+x+', y = '+y,['x = '+y+', y = '+x,'x = '+(x+1)+', y = '+y,'x = '+x+', y = '+(y+1)],'Add the equations to eliminate y: '+2*a+'x = '+2*a*x+' so x = '+x+'. Substitute back to get y = '+y+'.');}},
+{g:[5,6],f:()=>{const u=R(-8,8),v=R(-8,8);if(!u||!v||u===v)return null;const lo=Math.min(u,v),hi=Math.max(u,v);return mc('Solve '+quad(1,-(u+v),u*v)+' = 0.','x = '+lo+' or x = '+hi,['x = '+-lo+' or x = '+-hi,'x = '+(-(u*v))+' or x = 1','x = '+(u+v)+' or x = '+u*v],'Factorise: (x '+(u<0?'+ '+-u:'− '+u)+')(x '+(v<0?'+ '+-v:'− '+v)+') = 0, so x = '+u+' or x = '+v+'.');}},
+{g:[6,7],f:()=>{const p=R(1,3),r=R(1,3);if(p*r<2)return null;const q=P([-4,-3,-2,-1,1,2,3,4]),s=P([-4,-3,-2,-1,1,2,3,4]);const A=p*r,B=p*s+q*r,C=q*s;const r1=fr(-q,p),r2=fr(-s,r);if(r1===r2)return null;const rs=[r1,r2].sort((a,b)=>eval(a)-eval(b));return mc('Solve '+quad(A,B,C)+' = 0.','x = '+rs[0]+' or x = '+rs[1],['x = '+fr(q,p)+' or x = '+fr(s,r),'x = '+fr(-p,q)+' or x = '+fr(-r,s),'x = '+fr(-C,A)+' or x = 1'],'Factorise into ('+co(p)+'x '+(q<0?'−':'+')+' '+Math.abs(q)+')('+co(r)+'x '+(s<0?'−':'+')+' '+Math.abs(s)+') = 0, so each bracket = 0.');}},
+{g:[6,7],f:()=>{const x=R(-4,6),y=R(-4,6);const a=R(1,4),b=R(1,4),c=R(1,4),d=R(1,4);if(a*d===b*c)return null;return mc('Solve '+a+'x + '+b+'y = '+(a*x+b*y)+' and '+c+'x − '+d+'y = '+(c*x-d*y)+'.','x = '+x+', y = '+y,['x = '+y+', y = '+x,'x = '+-x+', y = '+y,'x = '+x+', y = '+-y],'Make the y coefficients match (multiply each equation), then add or subtract. Check by substituting into both equations.');}},
+{g:[7,8],f:()=>{const u=R(-6,6),v=R(-6,6);if(u>=v)return null;return mc('Solve '+quad(1,-(u+v),u*v)+' < 0.',u+' < x < '+v,['x < '+u+' or x > '+v,'x < '+v,'x > '+u],'The graph is a U-shape below the x-axis between the roots '+u+' and '+v+', so '+u+' < x < '+v+'.');}},
+{g:[7,8],f:()=>{const b=R(-6,6),c=R(-6,9);const D=b*b-4*c;const ans=D<0?'No real solutions':D===0?'One repeated solution':'Two distinct solutions';return mc('How many real solutions does x² '+sg(b)+'x '+sg(c)+' = 0 have?',ans,['No real solutions','One repeated solution','Two distinct solutions','Cannot be worked out'],'Discriminant b² − 4ac = '+b*b+' − '+4*c+' = '+D+'. '+(D<0?'Negative → no real solutions.':D===0?'Zero → one repeated solution.':'Positive → two distinct solutions.'));}},
+{g:[8,9],f:()=>{const p=R(1,5),k=P([2,3,5,6,7,10,11]);const q=p*p-k;return mc('Solve x² + '+2*p+'x '+sg(q)+' = 0. Give your answers in surd form.','x = −'+p+' ± √'+k,['x = '+p+' ± √'+k,'x = −'+p+' ± '+k,'x = −'+2*p+' ± √'+k],'Complete the square: (x + '+p+')² = '+(p*p)+' − ('+q+') = '+k+', so x = −'+p+' ± √'+k+'.');}}
+];
+// ---------- 3 GRAPHS & FUNCTIONS ----------
+G[3]=[
+{g:[2,3],f:()=>{const m=R(-5,6)||2,c=R(-8,8)||3,g=Math.random()<.5;return mc('What is the '+(g?'gradient':'y-intercept')+' of the line y = '+(m===1?'':m===-1?'-':m)+'x '+(c<0?'− ':'+ ')+Math.abs(c)+'?',g?m:c,[g?c:m,g?-m:-c,g?1/m<1&&m!==1?'1/'+m:m+1:c+m],'In y = mx + c, m is the gradient and c is where it crosses the y-axis.');}},
+{g:[3,4],f:()=>{const x1=R(-3,3),y1=R(-3,3),m=P([-3,-2,-1,1,2,3,4]),dx=R(1,4),x2=x1+dx,y2=y1+m*dx;return mc('Find the gradient of the line through ('+x1+', '+y1+') and ('+x2+', '+y2+').',m,[-m,1/m===Math.round(1/m)?1/m:m+1,dx*m+1],'Gradient = change in y ÷ change in x = '+(y2-y1)+' ÷ '+dx+' = '+m+'.');}},
+{g:[3,4],f:()=>{const c=R(-5,6),m=P([-3,-2,1,2,3,4]),a=R(1,4),b=c+m*a;return mc('A straight line passes through (0, '+c+') and ('+a+', '+b+'). What is its equation?','y = '+lin(m,c),['y = '+lin(c,m),'y = '+lin(-m,c),'y = '+lin(m,-c)],'Gradient = ('+b+' − '+c+') ÷ '+a+' = '+m+'. It crosses the y-axis at '+c+'.');}},
+{g:[4,5],f:()=>{const m=P([-3,-2,2,3,4,5]),c=R(-5,6),d=R(-7,8);if(c===d)return null;return mc('Find the equation of the line parallel to y = '+lin(m,c)+' that passes through (0, '+d+').','y = '+lin(m,d),['y = '+lin(m,c),'y = '+lin(-m,d),'y = '+lin(d,m)],'Parallel lines have the same gradient ('+m+'). The new line crosses the y-axis at '+d+'.');}},
+{g:[4,5],f:()=>{const x1=R(-6,6),y1=R(-6,6),x2=x1+2*R(1,4),y2=y1+2*R(-3,4);return mc('Find the midpoint of ('+x1+', '+y1+') and ('+x2+', '+y2+').','('+(x1+x2)/2+', '+(y1+y2)/2+')',['('+(x2-x1)/2+', '+(y2-y1)/2+')','('+(x1+x2)+', '+(y1+y2)+')','('+(x1+x2)/2+', '+(y2-y1)/2+')'],'Average the x values and the y values.');}},
+{g:[5,6],f:()=>{const m=P([2,3,4,5,-2,-3,-4]);const a=fr(-1,m);return mc('What is the gradient of a line perpendicular to y = '+lin(m,R(1,5))+'?',a,[String(m),String(-m),fr(1,m)],'Perpendicular gradients multiply to −1: −1 ÷ '+m+' = '+a+'.');}},
+{g:[5,6],f:()=>{const k=R(2,8),t=Math.random()<.5;if(t)return mc('Where does y = x² − '+k*k+' cross the x-axis?','x = −'+k+' and x = '+k,['x = '+k*k,'x = −'+k*k+' and x = '+k*k,'x = '+k+' only'],'Set y = 0: x² = '+k*k+', so x = ±'+k+'.');const u=R(1,6),v=R(1,6);if(u===v)return null;return mc('Where does y = (x − '+u+')(x + '+v+') cross the x-axis?','x = '+u+' and x = −'+v,['x = −'+u+' and x = '+v,'x = '+u+' and x = '+v,'x = '+u*v+' only'],'Set y = 0: each bracket can be zero, giving x = '+u+' and x = −'+v+'.');}},
+{g:[6,7],f:()=>{const a=R(-6,6)||2,b=R(-8,8)||1;const nm=a<0?'(x + '+-a+')²':'(x − '+a+')²';return mc('The graph y = '+nm+' '+sg(b)+' has a turning point at:','('+a+', '+b+')',['('+-a+', '+b+')','('+a+', '+-b+')','('+b+', '+a+')'],'For y = (x − p)² + q the turning point is (p, q). Here p = '+a+', q = '+b+'.');}},
+{g:[6,7],f:()=>{const u=R(-6,4),v=u+2*R(1,4);return mc('A quadratic graph crosses the x-axis at x = '+u+' and x = '+v+'. What is its line of symmetry?','x = '+(u+v)/2,['x = '+(v-u)/2,'x = '+u*v,'x = '+(u+v)],'The line of symmetry is halfway between the roots: ('+u+' + '+v+') ÷ 2 = '+(u+v)/2+'.');}},
+{g:[7,8],f:()=>{const m=P([2,3,4,5]),c=R(1,6),d=R(-5,5)||2;return mc('A line has equation y = '+m+'x + '+d+'. Find the equation of the line perpendicular to it that passes through (0, '+c+').','y = −x/'+m+' + '+c,['y = x/'+m+' + '+c,'y = −'+m+'x + '+c,'y = −x/'+m+' + '+d],'Perpendicular gradient = −1/'+m+'. It passes through (0, '+c+') so the intercept is '+c+'.');}},
+{g:[7,8],f:()=>{const a=R(1,6),t=R(0,3);const T=[['f(x + '+a+')','Translation by vector (−'+a+', 0)'],['f(x − '+a+')','Translation by vector ('+a+', 0)'],['f(x) + '+a,'Translation by vector (0, '+a+')'],['f(x) − '+a,'Translation by vector (0, −'+a+')']];const w=T.map(x=>x[1]);return mc('The graph of y = f(x) is transformed into y = '+T[t][0]+'. Which transformation is this?',T[t][1],w.filter((_,i)=>i!==t),'Changes inside the brackets move the graph horizontally (opposite sign); changes outside move it vertically (same sign).');}},
+{g:[8,9],f:()=>{const k=R(2,5),t=R(0,3);const T=[['y = '+k+'f(x)','Stretch, scale factor '+k+', parallel to the y-axis'],['y = f('+k+'x)','Stretch, scale factor 1/'+k+', parallel to the x-axis'],['y = −f(x)','Reflection in the x-axis'],['y = f(−x)','Reflection in the y-axis']];const w=T.map(x=>x[1]);w.push('Stretch, scale factor '+k+', parallel to the x-axis');return mc('The graph of y = f(x) is transformed into '+T[t][0]+'. Which transformation is this?',T[t][1],w.filter((_,i)=>i!==t),'Multiplying outside f changes y values (vertical stretch); multiplying x inside divides horizontally; a minus outside reflects in the x-axis, inside in the y-axis.');}},
+{g:[8,9],f:()=>{const r=R(2,9);return mc('Which equation describes a circle with centre the origin and radius '+r+'?','x² + y² = '+r*r,['x² + y² = '+r,'x + y = '+r*r,'x² − y² = '+r*r],'A circle centre (0,0) radius r: x² + y² = r². Here r² = '+r*r+'.');}}
+];
+// ---------- 4 GEOMETRY & MEASURES ----------
+G[4]=[
+{g:[1,2],f:()=>{const t=R(0,2);if(t===0){const b=2*R(2,9),h=R(3,12);return mc('A triangle has base '+b+' cm and height '+h+' cm. What is its area?',b*h/2+' cm²',[b*h+' cm²',b+h+' cm²',b*h/2+h+' cm²'],'Area of a triangle = ½ × base × height = ½ × '+b+' × '+h+'.');}
+ if(t===1){const l=R(4,15),w=R(2,l-1);return mc('A rectangle is '+l+' cm by '+w+' cm. What is its perimeter?',2*(l+w)+' cm',[l*w+' cm',l+w+' cm',2*l*w+' cm'],'Perimeter = 2 × ('+l+' + '+w+') = '+2*(l+w)+' cm.');}
+ const l=R(4,15),w=R(2,l-1);return mc('A rectangle is '+l+' cm by '+w+' cm. What is its area?',l*w+' cm²',[2*(l+w)+' cm²',l+w+' cm²',l*w+' cm'],'Area = length × width = '+l+' × '+w+'.');}},
+{g:[2,3],f:()=>{const t=R(0,2);if(t===0){const a=R(30,80),b=R(30,80);return mc('Two angles in a triangle are '+a+'° and '+b+'°. What is the third angle?',180-a-b+'°',[360-a-b+'°',180-a+'°',a+b+'°'],'Angles in a triangle add to 180°: 180 − '+a+' − '+b+' = '+(180-a-b)+'°.');}
+ if(t===1){const a=R(30,150);return mc('Two angles on a straight line are x and '+a+'°. What is x?',180-a+'°',[360-a+'°',90-a>0?90-a+'°':a+10+'°',a+'°'],'Angles on a straight line add to 180°.');}
+ const a=R(60,150),b=R(60,150),c=R(30,100);if(a+b+c>=350)return null;return mc('Angles around a point are '+a+'°, '+b+'°, '+c+'° and x. What is x?',360-a-b-c+'°',[180-a-b-c>0?180-a-b-c+'°':a+'°',a+b+c+'°',360-a-b+'°'],'Angles around a point add to 360°.');}},
+{g:[3,4],f:()=>{if(Math.random()<.5){const n=R(5,12);return mc('What is the sum of the interior angles of a polygon with '+n+' sides?',(n-2)*180+'°',[n*180+'°',(n-1)*180+'°',(n-2)*360+'°'],'Sum = (n − 2) × 180 = '+(n-2)+' × 180.');}
+ const n=P([5,6,8,9,10,12]);return mc('What is the size of each interior angle of a regular polygon with '+n+' sides?',(180-360/n)+'°',[360/n+'°',((n-2)*180)+'°',(180-360/n)+10+'°'],'Exterior angle = 360 ÷ '+n+' = '+360/n+'°, so interior = 180 − '+360/n+' = '+(180-360/n)+'°.');}},
+{g:[3,4],f:()=>{const t=R(0,2),r=R(2,9);if(t===0)return mc('A circle has diameter '+2*r+' cm. What is its circumference in terms of π?',2*r+'π cm',[r+'π cm',4*r+'π cm',r*r+'π cm'],'Circumference = π × diameter = '+2*r+'π.');
+ if(t===1)return mc('A circle has radius '+r+' cm. What is its area in terms of π?',r*r+'π cm²',[2*r+'π cm²',r+'π cm²',2*r*r+'π cm²'],'Area = πr² = π × '+r+'² = '+r*r+'π.');
+ return mc('A circle has radius '+r+' cm. What is its circumference in terms of π?',2*r+'π cm',[r*r+'π cm',r+'π cm',4*r+'π cm'],'Circumference = 2πr = 2 × '+r+' × π.');}},
+{g:[4,5],f:()=>{const T=[[3,4,5],[5,12,13],[8,15,17],[6,8,10],[7,24,25],[9,12,15]],[a,b,c]=P(T);if(Math.random()<.6)return mc('A right-angled triangle has shorter sides '+a+' cm and '+b+' cm. What is the length of the hypotenuse?',c+' cm',[a+b+' cm',b*b-a*a>0?Math.sqrt(b*b-a*a).toFixed(1)+' cm':a*b+' cm',c*c+' cm'],'Pythagoras: c² = '+a+'² + '+b+'² = '+(a*a+b*b)+', so c = '+c+'.');
+ return mc('A right-angled triangle has hypotenuse '+c+' cm and one shorter side '+a+' cm. What is the other shorter side?',b+' cm',[c-a+' cm',Math.sqrt(c*c+a*a).toFixed(1)+' cm',b*b+' cm'],'Pythagoras: b² = '+c+'² − '+a+'² = '+b*b+', so b = '+b+'.');}},
+{g:[4,5],f:()=>{if(Math.random()<.5){const l=R(3,9),w=R(2,8),h=R(2,9);return mc('A cuboid is '+l+' cm by '+w+' cm by '+h+' cm. What is its volume?',l*w*h+' cm³',[2*(l*w+w*h+l*h)+' cm³',l+w+h+' cm³',l*w*h+' cm²'],'Volume = length × width × height.');}
+ const r=R(2,6),h=R(2,10);return mc('A cylinder has radius '+r+' cm and height '+h+' cm. What is its volume in terms of π?',r*r*h+'π cm³',[2*r*h+'π cm³',r*h+'π cm³',r*r*h*3+'π cm³'],'Volume = πr²h = π × '+r+'² × '+h+' = '+r*r*h+'π.');}},
+{g:[5,6],f:()=>{const T=[[90,2],[60,3],[120,3],[45,4],[180,1],[90,4]],[th,step]=P(T),r=step*R(1,4);const arc=Math.random()<.5;const coef=arc?fr(th*r,180):fr(th*r*r,360);const alt=arc?fr(th*r*r,360):fr(th*r,180);return mc('A sector has radius '+r+' cm and angle '+th+'°. What is its '+(arc?'arc length':'area')+' in terms of π?',coef+'π cm'+(arc?'':'²'),[alt+'π cm'+(arc?'':'²'),fr(th*r,360)+'π cm'+(arc?'':'²'),fr(2*th*r*(arc?1:r),180)+'π cm'+(arc?'':'²')],arc?'Arc length = '+th+'/360 × 2π × '+r+' = '+coef+'π.':'Area = '+th+'/360 × π × '+r+'² = '+coef+'π.');}},
+{g:[6,7],f:()=>{const a=R(2,5),b=R(a+1,8);if(gcd(a,b)!==1)return null;const v=Math.random()<.5;return mc('Two similar shapes have corresponding lengths in the ratio '+a+' : '+b+'. What is the ratio of their '+(v?'volumes':'areas')+'?',v?a*a*a+' : '+b*b*b:a*a+' : '+b*b,[v?a*a+' : '+b*b:a+' : '+b,v?a*3+' : '+b*3:a*2+' : '+b*2,v?a*a*a+' : '+b*b:a*a+' : '+b],'Length ratio '+a+' : '+b+'; areas use the square ('+(v?'volumes the cube':'')+').');}},
+{g:[6,7],f:()=>{if(Math.random()<.5){const r=3*R(1,3),h=R(2,9);return mc('A cone has radius '+r+' cm and height '+h+' cm. What is its volume in terms of π?',r*r*h/3+'π cm³',[r*r*h+'π cm³',r*h/3+'π cm³',2*r*r*h/3+'π cm³'],'Volume = ⅓πr²h = ⅓ × π × '+r+'² × '+h+' = '+r*r*h/3+'π.');}
+ const r=3*R(1,3);const v=4*r*r*r/3;return mc('A sphere has radius '+r+' cm. What is its volume in terms of π?',v+'π cm³',[4*r*r+'π cm³',r*r*r+'π cm³',v*3/4*2+'π cm³'],'Volume = 4/3 πr³ = 4/3 × '+r*r*r+'π = '+v+'π.');}},
+{g:[7,8],f:()=>{const t=R(0,3);if(t===0){const a=2*R(10,40);return mc('The angle at the circumference is '+a/2+'°. What is the angle at the centre subtended by the same arc?',a+'°',[a/4+'°',180-a/2+'°',a/2+'°'],'The angle at the centre is twice the angle at the circumference.');}
+ if(t===1)return mc('Angle ABC is in a semicircle with AC as the diameter. What is angle ABC?','90°',['45°','180°','60°'],'The angle in a semicircle is always 90°.');
+ if(t===2){const a=R(60,120);return mc('ABCD is a cyclic quadrilateral. Angle ABC = '+a+'°. What is angle ADC?',180-a+'°',[360-a+'°',a+'°',90-a>0?90-a+'°':a-30+'°'],'Opposite angles in a cyclic quadrilateral add to 180°.');}
+ return mc('A tangent meets a radius at a point on the circle. What is the angle between them?','90°',['45°','180°','60°'],'A tangent is perpendicular to the radius at the point of contact.');}},
+{g:[8,9],f:()=>{const T=[[3,4,5],[5,12,13],[6,8,10]],[r,h,l]=P(T);if(Math.random()<.5)return mc('A cone has base radius '+r+' cm and perpendicular height '+h+' cm. What is its curved surface area in terms of π?',r*l+'π cm²',[r*h+'π cm²',r*r+'π cm²',2*r*l+'π cm²'],'Slant height = √('+r+'² + '+h+'²) = '+l+'. Curved surface area = πrl = π × '+r+' × '+l+' = '+r*l+'π.');
+ const R2=R(2,9);return mc('What is the surface area of a sphere with radius '+R2+' cm in terms of π?',4*R2*R2+'π cm²',[R2*R2+'π cm²',2*R2*R2+'π cm²',4*R2*R2*R2/3+'π cm²'],'Surface area = 4πr² = 4 × '+R2*R2+'π.');}}
+];
+// ---------- 5 TRIGONOMETRY ----------
+const trigW=(v,d)=>[v*1.15,v*0.8,v*1.4].map(x=>x.toFixed(d||1));
+G[5]=[
+{g:[4,5],f:()=>{const C=[['the opposite and the hypotenuse','sin'],['the adjacent and the hypotenuse','cos'],['the opposite and the adjacent','tan']],i=R(0,2);return mc('In a right-angled triangle you know '+C[i][0]+'. Which ratio do you use to find the angle?',C[i][1],['sin','cos','tan','Pythagoras'].filter(x=>x!==C[i][1]),'SOH CAH TOA: Sin = Opp/Hyp, Cos = Adj/Hyp, Tan = Opp/Adj.');}},
+{g:[4,5],f:()=>{const A=R(20,70),h=R(8,20),t=R(0,2);if(t===0){const v=h*sin(A);return mc('A right-angled triangle has hypotenuse '+h+' cm and an angle of '+A+'°. Find the side opposite the angle to 1 d.p.',d1(v)+' cm',[d1(h*cos(A))+' cm',d1(h/sin(A))+' cm',d1(h*tan(A))+' cm'],'Opp = Hyp × sin '+A+'° = '+h+' × sin '+A+'° = '+d1(v)+' cm.');}
+ if(t===1){const v=h*cos(A);return mc('A right-angled triangle has hypotenuse '+h+' cm and an angle of '+A+'°. Find the side adjacent to the angle to 1 d.p.',d1(v)+' cm',[d1(h*sin(A))+' cm',d1(h/cos(A))+' cm',d1(h*tan(A))+' cm'],'Adj = Hyp × cos '+A+'° = '+d1(v)+' cm.');}
+ const v=h*tan(A);return mc('In a right-angled triangle the side adjacent to a '+A+'° angle is '+h+' cm. Find the opposite side to 1 d.p.',d1(v)+' cm',[d1(h/tan(A))+' cm',d1(h*sin(A))+' cm',d1(h*cos(A))+' cm'],'Opp = Adj × tan '+A+'° = '+d1(v)+' cm.');}},
+{g:[5,6],f:()=>{const T=[['sin 30°','1/2',['√3/2','1','√2/2']],['cos 60°','1/2',['√3/2','1','0']],['tan 45°','1',['1/2','√3','0']],['sin 60°','√3/2',['1/2','√3','1']],['cos 30°','√3/2',['1/2','√3','1']],['tan 60°','√3',['1/√3','1','√3/2']],['sin 45°','√2/2',['1/2','√3/2','1']],['cos 0°','1',['0','1/2','√3/2']],['sin 90°','1',['0','1/2','√3/2']],['tan 30°','1/√3',['√3','1/2','√3/2']]];const t=P(T);return mc('What is the exact value of '+t[0]+'?',t[1],t[2],'These exact values come from the 30°–60°–90° and 45°–45°–90° triangles — learn them.');}},
+{g:[5,6],f:()=>{const o=R(3,9),h=o+R(2,8),a=R(3,9);const t=R(0,1);if(t===0)return mc('In a right-angled triangle the side opposite angle x is '+o+' cm and the hypotenuse is '+h+' cm. Find x to 1 d.p.',d1(deg(Math.asin(o/h)))+'°',[d1(deg(Math.acos(o/h)))+'°',d1(deg(Math.atan(o/h)))+'°',d1(o/h)+'°'],'sin x = '+o+'/'+h+', so x = sin⁻¹('+o+'/'+h+') = '+d1(deg(Math.asin(o/h)))+'°.');
+ return mc('In a right-angled triangle the side opposite angle x is '+o+' cm and the adjacent side is '+a+' cm. Find x to 1 d.p.',d1(deg(Math.atan(o/a)))+'°',[d1(deg(Math.atan(a/o)))+'°',d1(deg(Math.asin(o/a>1?a/o:o/a)))+'°',d1(o/a)+'°'],'tan x = '+o+'/'+a+', so x = tan⁻¹('+o+'/'+a+') = '+d1(deg(Math.atan(o/a)))+'°.');}},
+{g:[6,7],f:()=>{const a=R(5,12),b=R(5,12),C=R(30,120);const v=0.5*a*b*sin(C);return mc('A triangle has sides '+a+' cm and '+b+' cm with an included angle of '+C+'°. Find its area to 1 d.p.',d1(v)+' cm²',[d1(a*b*sin(C))+' cm²',d1(0.5*a*b*cos(C))+' cm²',d1(0.5*a*b)+' cm²'],'Area = ½ab sin C = ½ × '+a+' × '+b+' × sin '+C+'° = '+d1(v)+' cm².');}},
+{g:[6,7],f:()=>{const Q=[['two sides and the angle between them','Cosine rule'],['all three sides and you need an angle','Cosine rule'],['two angles and one side','Sine rule'],['a side and its opposite angle, plus one more angle','Sine rule']];const i=R(0,3);return mc('A triangle (not right-angled) has '+Q[i][0]+' known. Which rule do you use?',Q[i][1],['Sine rule','Cosine rule','Pythagoras','SOH CAH TOA'].filter(x=>x!==Q[i][1]),'Cosine rule: SAS or SSS. Sine rule: you have a side and its opposite angle (AAS/ASA).');}},
+{g:[7,8],f:()=>{const a=R(5,12),b=R(5,12),C=R(30,110);const v=Math.sqrt(a*a+b*b-2*a*b*cos(C));return mc('In triangle ABC, a = '+a+' cm, b = '+b+' cm and angle C = '+C+'°. Find c to 1 d.p.',d1(v)+' cm',[d1(Math.sqrt(a*a+b*b+2*a*b*cos(C)))+' cm',d1(a*a+b*b-2*a*b*cos(C))+' cm',d1(Math.sqrt(a*a+b*b))+' cm'],'c² = a² + b² − 2ab cos C = '+(a*a+b*b)+' − '+d1(2*a*b*cos(C))+' = '+d1(v*v)+', so c = '+d1(v)+'.');}},
+{g:[7,8],f:()=>{const a=R(6,14),A=R(30,70),B=R(30,80);if(A+B>=170)return null;const v=a*sin(B)/sin(A);return mc('In triangle ABC, a = '+a+' cm, angle A = '+A+'° and angle B = '+B+'°. Find b to 1 d.p.',d1(v)+' cm',[d1(a*sin(A)/sin(B))+' cm',d1(a*cos(B)/cos(A))+' cm',d1(a*B/A)+' cm'],'Sine rule: b/sin B = a/sin A, so b = '+a+' × sin '+B+'° ÷ sin '+A+'° = '+d1(v)+' cm.');}},
+{g:[8,9],f:()=>{const a=R(5,12),b=R(5,12),c=R(Math.abs(a-b)+2,a+b-2);const A=deg(Math.acos((b*b+c*c-a*a)/(2*b*c)));return mc('Triangle ABC has sides a = '+a+' cm, b = '+b+' cm and c = '+c+' cm. Find angle A to 1 d.p.',d1(A)+'°',[d1(deg(Math.acos((a*a+b*b-c*c)/(2*a*b))))+'°',d1(deg(Math.acos((b*b+c*c+a*a)/(2*b*c)>1?0.5:(b*b+c*c+a*a)/(2*b*c))))+'°',d1(deg(Math.asin(a/(b+c))))+'°'],'cos A = (b² + c² − a²) ÷ 2bc = '+(b*b+c*c-a*a)+' ÷ '+2*b*c+', so A = '+d1(A)+'°.');}},
+{g:[8,9],f:()=>{const T=[['sin x = 1/2','x = 30° and x = 150°',['x = 30° and x = 210°','x = 60° and x = 120°','x = 30° and x = 330°']],['cos x = 1/2','x = 60° and x = 300°',['x = 60° and x = 120°','x = 30° and x = 330°','x = 60° and x = 240°']],['tan x = 1','x = 45° and x = 225°',['x = 45° and x = 135°','x = 45° and x = 315°','x = 135° and x = 225°']],['sin x = −1/2','x = 210° and x = 330°',['x = 30° and x = 150°','x = 120° and x = 240°','x = 210° and x = 300°']],['cos x = −1/2','x = 120° and x = 240°',['x = 60° and x = 300°','x = 30° and x = 150°','x = 120° and x = 300°']]];const t=P(T);return mc('Solve '+t[0]+' for 0° ≤ x ≤ 360°.',t[1],t[2],'Find the acute angle from the calculator, then use the symmetry of the graph/CAST diagram for the second solution.');}}
+];
+// ---------- 6 STATISTICS ----------
+const med=a=>{a=a.slice().sort((x,y)=>x-y);const n=a.length;return n%2?a[(n-1)/2]:(a[n/2-1]+a[n/2])/2;};
+G[6]=[
+{g:[1,2],f:()=>{const n=R(4,5),m=R(4,12);const d=[];let s=0;for(let i=0;i<n-1;i++){const v=R(1,15);d.push(v);s+=v;}const last=m*n-s;if(last<1||last>20)return null;d.push(last);const ds=sh(d);return mc('Find the mean of '+ds.join(', ')+'.',m,[med(d),Math.max(...d)-Math.min(...d),m+1],'Mean = total ÷ number of values = '+m*n+' ÷ '+n+' = '+m+'.');}},
+{g:[1,2],f:()=>{const d=[];for(let i=0;i<5;i++)d.push(R(1,20));const ds=d.slice().sort((a,b)=>a-b);const t=R(0,1);if(t===0)return mc('Find the median of '+d.join(', ')+'.',ds[2],[d[2],Math.round(d.reduce((a,b)=>a+b)/5),ds[4]-ds[0]],'Put in order: '+ds.join(', ')+'. The middle value is '+ds[2]+'.');return mc('Find the range of '+d.join(', ')+'.',ds[4]-ds[0],[ds[2],ds[4]+ds[0],ds[4]],'Range = largest − smallest = '+ds[4]+' − '+ds[0]+'.');}},
+{g:[2,3],f:()=>{const d=[];for(let i=0;i<6;i++)d.push(R(2,30));const ds=d.slice().sort((a,b)=>a-b);const v=(ds[2]+ds[3])/2;return mc('Find the median of '+d.join(', ')+'.',v,[ds[2],ds[3],d[2]===v?v+1:d[2]],'Order: '+ds.join(', ')+'. Two middle values '+ds[2]+' and '+ds[3]+'; the median is halfway: '+v+'.');}},
+{g:[3,4],f:()=>{const xs=[0,1,2,3,4],f=xs.map(()=>R(1,8));const n=f.reduce((a,b)=>a+b),s=f.reduce((a,b,i)=>a+b*i,0);const v=s/n;return mc('A table shows the number of goals (0, 1, 2, 3, 4) scored with frequencies '+f.join(', ')+' respectively. Find the mean number of goals to 1 d.p.',d1(v),[d1(2),d1(s/5),d1(n/5)],'Mean = Σfx ÷ Σf = '+s+' ÷ '+n+' = '+d1(v)+'.');}},
+{g:[3,4],f:()=>{const tot=P([20,24,30,36,40,45,60]),f=R(2,tot/2);return mc(f+' out of '+tot+' students chose football. What angle represents football on a pie chart?',360*f/tot+'°',[100*f/tot+'°',360/f+'°',f*tot/10+'°'],'Angle = '+f+'/'+tot+' × 360° = '+360*f/tot+'°.');}},
+{g:[4,5],f:()=>{const n=P([7,11]);const d=[];for(let i=0;i<n;i++)d.push(R(1,40));const s=d.slice().sort((a,b)=>a-b);const lo=s.slice(0,(n-1)/2),hi=s.slice((n+1)/2);const q1=med(lo),q3=med(hi);return mc('Find the interquartile range of '+d.join(', ')+'.',q3-q1,[s[n-1]-s[0],q3,q1],'Order: '+s.join(', ')+'. Q1 = '+q1+', Q3 = '+q3+'. IQR = Q3 − Q1 = '+(q3-q1)+'.');}},
+{g:[4,5],f:()=>{const f=[R(2,9),R(3,12),R(2,9)],M=[5,15,25];const n=f[0]+f[1]+f[2],s=f[0]*5+f[1]*15+f[2]*25;return mc('A grouped table shows the classes 0–10, 10–20 and 20–30 with frequencies '+f.join(', ')+'. Estimate the mean to 1 d.p.',d1(s/n),[d1(15),d1(s/3),d1(s/n+1)],'Use midpoints 5, 15, 25: Σfm = '+s+'; ÷ '+n+' = '+d1(s/n)+'.');}},
+{g:[5,6],f:()=>{const w=P([2,5,10]),fr_=R(2,12);if(Math.random()<.5)return mc('A histogram bar has class width '+w+' and frequency density '+fr_+'. What is the frequency?',w*fr_,[fr_/w,w+fr_,w*fr_*2],'Frequency = frequency density × class width.');const f=w*fr_;return mc('A class of width '+w+' has frequency '+f+'. What is the frequency density?',fr_,[f*w,f+w,f-w],'Frequency density = frequency ÷ class width = '+f+' ÷ '+w+'.');}},
+{g:[6,7],f:()=>{const n=4*R(10,30),t=R(0,2);const lab=['median','lower quartile','upper quartile'],pos=[n/2,n/4,3*n/4];return mc('On a cumulative frequency graph with a total frequency of '+n+', at what cumulative frequency do you read off the '+lab[t]+'?',pos[t],[n/2+1,n/4+1,n].filter(x=>x!==pos[t]),'Median at ½n, lower quartile at ¼n, upper quartile at ¾n. Here n = '+n+'.');}},
+{g:[6,7],f:()=>{const N=P([240,300,400,480,600]),y=N/P([4,5,6,8]),s=N/P([4,5,6,8,10]);if(Math.round(s*y/N)!==s*y/N)return null;return mc('A school has '+N+' pupils; '+y+' are in Year 9. A stratified sample of '+s+' pupils is taken. How many should be from Year 9?',s*y/N,[s*N/y,y/s,s*y],'Sample Year 9 = '+y+'/'+N+' × '+s+' = '+s*y/N+'.');}},
+{g:[7,8],f:()=>{const a=R(55,80),b=a+R(-8,8),ia=R(4,12),ib=ia+P([-3,3,4,-2,2]);if(ib<=0||ia===ib||a===b)return null;const lowA=ia<ib;return mc('Class A scored a median of '+a+' (IQR '+ia+'). Class B scored a median of '+b+' (IQR '+ib+'). Which statement is correct?',(lowA?'Class A':'Class B')+' was more consistent because its IQR is smaller',['Class '+(lowA?'B':'A')+' was more consistent because its IQR is smaller',(a>b?'Class B':'Class A')+' did better because its median is higher',(lowA?'Class B':'Class A')+' was more consistent because its IQR is bigger'],'A smaller IQR means the middle 50% of scores are closer together, so more consistent. A higher median means a better typical score.');}},
+{g:[7,9],f:()=>{const n=R(4,8),m=R(5,15),k=R(3,9),t=R(0,1);if(t===0){const known=(n-1)*m+R(-3,3);const sum=n*m;const last=sum-known;return mc('The mean of '+n+' numbers is '+m+'. '+(n-1)+' of them add up to '+known+'. What is the other number?',last,[known-sum,Math.round(known/(n-1)),sum+known],'Total of all '+n+' numbers = '+n+' × '+m+' = '+sum+'. Other number = '+sum+' − '+known+' = '+last+'.');}
+ const nm=(n*m+k*3)/(n+1);return mc('The mean of '+n+' numbers is '+m+'. A new number '+k*3+' is added. What is the new mean to 1 d.p.?',d1(nm),[d1((m+k*3)/2),d1(m+k*3/n),d1(nm+1)],'New total = '+n+'×'+m+' + '+k*3+' = '+(n*m+k*3)+'. Divide by '+(n+1)+'.');}}
+];
+// ---------- 7 PROBABILITY ----------
+G[7]=[
+{g:[1,2],f:()=>{const r=R(2,9),b=R(2,9),w=R(1,6);const t=r+b+w;return mc('A bag has '+r+' red, '+b+' blue and '+w+' white counters. What is the probability of picking a red counter?',fr(r,t),[fr(r,b+w),fr(b,t),fr(1,t)],'P(red) = number of red ÷ total = '+r+'/'+t+'.');}},
+{g:[1,2],f:()=>{const p=P([0.1,0.2,0.25,0.3,0.35,0.4,0.6,0.65,0.7]);return mc('The probability it rains tomorrow is '+p+'. What is the probability it does not rain?',nz(1-p),[nz(p),nz(1+p),nz(p/2)],'Probabilities add to 1: 1 − '+p+' = '+nz(1-p)+'.');}},
+{g:[2,3],f:()=>{const p=P([0.1,0.2,0.25,0.3,0.4,0.5]),n=P([100,200,300,400,500]);return mc('The probability a biased spinner lands on blue is '+p+'. It is spun '+n+' times. How many times would you expect blue?',nz(p*n),[nz(n/p),nz(p+n),nz(n*(1-p))],'Expected = probability × number of trials = '+p+' × '+n+'.');}},
+{g:[2,3],f:()=>{const t=P([2,3,4,5,6,7,8,9,10,11,12]);const c=t<=7?t-1:13-t;return mc('Two fair dice are thrown. In how many ways can you get a total of '+t+'?',c,[c+1,c-1<1?c+2:c-1,6],'List the pairs that add to '+t+'; use a sample space grid of 36 outcomes.');}},
+{g:[3,4],f:()=>{const a=P([0.1,0.15,0.2,0.25,0.3]),b=P([0.2,0.25,0.3,0.35,0.4]);return mc('A and B are mutually exclusive events. P(A) = '+a+' and P(B) = '+b+'. Find P(A or B).',nz(a+b),[nz(a*b),nz(1-a-b),nz(b-a)],'Mutually exclusive: add the probabilities. '+a+' + '+b+' = '+nz(a+b)+'.');}},
+{g:[4,5],f:()=>{const a=P([0.2,0.3,0.4,0.5,0.6]),b=P([0.2,0.3,0.4,0.5]);return mc('A and B are independent. P(A) = '+a+' and P(B) = '+b+'. Find P(A and B).',nz(a*b),[nz(a+b),nz(a*b*2),nz(Math.abs(a-b))],'Independent events: multiply. '+a+' × '+b+' = '+nz(a*b)+'.');}},
+{g:[5,6],f:()=>{const m=R(10,30),s=R(8,25),both=R(2,Math.min(m,s)-2),none=R(1,6);return mc('In a class, '+m+' students study French, '+s+' study Spanish, '+both+' study both and '+none+' study neither. How many students are in the class?',m+s-both+none,[m+s+none,m+s-both,m+s-2*both+none],'Total = French + Spanish − both (counted twice) + neither = '+m+' + '+s+' − '+both+' + '+none+'.');}},
+{g:[6,7],f:()=>{const r=P([2,3,4,5]),b=P([3,4,5,6]);if(r===b)return null;const n=r+b;if(Math.random()<.5)return mc('A bag has '+r+' red and '+b+' blue counters. One is picked, replaced, and another is picked. What is the probability both are red?',fr(r*r,n*n),[fr(2*r,n),fr(r,n),fr(r*b*2,n*n)],'With replacement the probabilities stay the same: '+r+'/'+n+' × '+r+'/'+n+' = '+fr(r*r,n*n)+'.');
+ return mc('A bag has '+r+' red and '+b+' blue counters. One is picked, replaced, and another is picked. What is the probability of one of each colour?',fr(2*r*b,n*n),[fr(r*b,n*n),fr(r*r+b*b,n*n),fr(2*r*b,n*(n-1))],'Two ways (red then blue, blue then red): 2 × '+r+'/'+n+' × '+b+'/'+n+' = '+fr(2*r*b,n*n)+'.');}},
+{g:[6,7],f:()=>{const g=R(8,20),b=R(8,20),gp=R(2,g-2);const t=g+b;return mc('In a group of '+t+' students, '+g+' are girls. '+gp+' of the girls play chess. A girl is chosen at random. What is the probability she plays chess?',fr(gp,g),[fr(gp,t),fr(g,t),fr(gp,b)],'Only the girls matter: '+gp+' out of '+g+'.');}},
+{g:[7,8],f:()=>{const r=P([3,4,5,6]),b=P([2,3,4,5]);const n=r+b;if(Math.random()<.5)return mc('A bag has '+r+' red and '+b+' blue counters. Two are picked WITHOUT replacement. Find P(both red).',fr(r*(r-1),n*(n-1)),[fr(r*r,n*n),fr(r*(r-1),n*n),fr(2*r,n)],'First red: '+r+'/'+n+'. Then only '+(r-1)+' red out of '+(n-1)+' remain: '+r+'/'+n+' × '+(r-1)+'/'+(n-1)+'.');
+ return mc('A bag has '+r+' red and '+b+' blue counters. Two are picked WITHOUT replacement. Find P(one of each colour).',fr(2*r*b,n*(n-1)),[fr(r*b,n*n),fr(2*r*b,n*n),fr(r*b,n*(n-1))],'Two orders: 2 × '+r+'/'+n+' × '+b+'/'+(n-1)+' = '+fr(2*r*b,n*(n-1))+'.');}},
+{g:[8,9],f:()=>{const r=P([3,4,5]),b=P([3,4,5,6]);const n=r+b;if(Math.random()<.5){const a=R(6,14),bb=R(6,14),both=R(2,5);return mc('In a Venn diagram, '+a+' students are in set A (including '+both+' in both A and B) and '+bb+' are in set B (including those '+both+'). Given a student is in B, what is the probability they are also in A?',fr(both,bb),[fr(both,a),fr(both,a+bb-both),fr(a,a+bb)],'P(A | B) = number in both ÷ number in B = '+both+'/'+bb+'.');}
+ return mc('A bag has '+r+' red and '+b+' blue counters. Two are picked WITHOUT replacement. Find P(at least one red).',fr(n*(n-1)-b*(b-1),n*(n-1)),[fr(r*(r-1),n*(n-1)),fr(1,2),fr(r,n)],'P(at least one red) = 1 − P(both blue) = 1 − '+b+'/'+n+' × '+(b-1)+'/'+(n-1)+'.');}}
+];
+// ---------- 8 RATIO, PROPORTION & RATES ----------
+G[8]=[
+{g:[1,2],f:()=>{const g=R(2,6),a=R(1,5),b=R(1,5);if(a===b||gcd(a,b)!==1)return null;return mc('Simplify the ratio '+a*g+' : '+b*g+'.',a+' : '+b,[b+' : '+a,a*g+' : '+b,a+' : '+b*g],'Divide both parts by the highest common factor, '+g+'.');}},
+{g:[2,3],f:()=>{const a=R(1,5),b=R(2,7);if(a===b)return null;const u=R(3,15)*1,T=(a+b)*u*P([1,2,5,10]);const big=Math.max(a,b);return mc('Share £'+T+' in the ratio '+a+' : '+b+'. How much is the larger share?','£'+T/(a+b)*big,['£'+T/(a+b)*Math.min(a,b),'£'+T/(a+b),'£'+T/big],'Total parts = '+(a+b)+'. One part = £'+T/(a+b)+'. Larger share = '+big+' × £'+T/(a+b)+'.');}},
+{g:[2,3],f:()=>{const p=P([10,15,20,25,30,35,40]),v=P([80,120,160,240,320,400]);const up=Math.random()<.5;const r=v*(up?1+p/100:1-p/100);return mc((up?'Increase':'Decrease')+' £'+v+' by '+p+'%.','£'+nz(r),['£'+nz(v*p/100),'£'+nz(v*(up?1-p/100:1+p/100)),'£'+nz(up?v+p:v-p)],'Multiplier '+nz(up?1+p/100:1-p/100)+': '+v+' × '+nz(up?1+p/100:1-p/100)+' = '+nz(r)+'.');}},
+{g:[3,4],f:()=>{const s=P([30,40,50,60,80]),mins=P([15,30,45,90,120]);const d=s*mins/60;return mc('A car travels at '+s+' km/h for '+mins+' minutes. How far does it travel?',nz(d)+' km',[s*mins+' km',nz(s/mins*60)+' km',nz(s+mins/60)+' km'],'Convert time to hours ('+nz(mins/60)+' h). Distance = speed × time = '+nz(d)+' km.');}},
+{g:[3,4],f:()=>{const a=P([20,40,50,80,120,200,250]),pc=P([10,20,25,30,40,50,60]);const b=a*(1+pc/100);return mc('The price of a game goes up from £'+a+' to £'+nz(b)+'. What is the percentage increase?',pc+'%',[nz((b-a)/b*100)+'%',nz(b-a)+'%',nz(b/a*100)+'%'],'% change = (increase ÷ original) × 100 = '+nz(b-a)+' ÷ '+a+' × 100 = '+pc+'%.');}},
+{g:[4,5],f:()=>{const p=P([10,20,25,30,40]),o=P([40,60,80,120,200,300]);const sale=o*(1-p/100);return mc('After a '+p+'% discount, a coat costs £'+nz(sale)+'. What was the original price?','£'+o,['£'+nz(sale*(1+p/100)),'£'+nz(sale+p),'£'+nz(sale/(p/100))],'Sale price is '+(100-p)+'% of the original. Original = '+nz(sale)+' ÷ '+nz(1-p/100)+' = £'+o+'.');}},
+{g:[3,4],f:()=>{const n=P([2,3,4,5]),m=n*R(2,4),x=n*R(30,90)*1;const per=x/n;return mc('A recipe for '+n+' people needs '+x+' g of flour. How much flour is needed for '+m+' people?',per*m+' g',[x+m+' g',x*m+' g',per*(m-n)+' g'],'Flour per person = '+x+' ÷ '+n+' = '+per+' g. For '+m+' people: '+per+' × '+m+' = '+per*m+' g.');}},
+{g:[5,6],f:()=>{const P0=P([500,800,1000,2000,5000]),r=P([2,3,4,5]),n=R(2,4);const v=P0*Math.pow(1+r/100,n);return mc('£'+P0+' is invested at '+r+'% compound interest per year. What is it worth after '+n+' years?',m2(v),[m2(P0*(1+r*n/100)),m2(P0*Math.pow(1+r/100,n-1)),m2(P0*Math.pow(1+r/100,n+1))],'Multiplier '+(1+r/100)+'. '+P0+' × '+(1+r/100)+'^'+n+' = '+m2(v)+'.');}},
+{g:[5,6],f:()=>{const x=R(2,6),k=R(3,9),y=x*k,x2=x+R(1,4);return mc('y is directly proportional to x. When x = '+x+', y = '+y+'. Find y when x = '+x2+'.',k*x2,[y+x2-x,y*x2,Math.round(y/x2*10)/10],'y = kx with k = '+y+' ÷ '+x+' = '+k+'. So y = '+k+' × '+x2+' = '+k*x2+'.');}},
+{g:[6,7],f:()=>{const w=P([2,3,4,5,6]),d=P([6,8,10,12,15]);const k=w*d,w2=P([3,4,5,6,8,10,12,15,20].filter(x=>k%x===0&&x!==w)||[1]);if(!w2)return null;return mc(w+' workers take '+d+' days to build a wall. How long would '+w2+' workers take (same rate)?',nz(k/w2)+' days',[nz(d*w2/w)+' days',nz(d+w2-w)+' days',nz(d*w2)+' days'],'More workers means fewer days (inverse proportion). Total work = '+w+' × '+d+' = '+k+' worker-days. '+k+' ÷ '+w2+' = '+nz(k/w2)+'.');}},
+{g:[6,7],f:()=>{const m=P([60,90,120,150,200,300]),v=P([10,15,20,25,30,40,50]);const dens=m/v;return mc('A metal block has mass '+m+' g and volume '+v+' cm³. What is its density?',nz(dens)+' g/cm³',[nz(v/m)+' g/cm³',nz(m*v)+' g/cm³',nz(m-v)+' g/cm³'],'Density = mass ÷ volume = '+m+' ÷ '+v+' = '+nz(dens)+' g/cm³.');}},
+{g:[7,8],f:()=>{const s1=P([20,30,40,60]),s2=P([60,90,120,30,80]);if(s1===s2)return null;const d=P([60,120,180,240]);const t=d/s1+d/s2;const avg=2*d/t;return mc('A journey has two equal halves of '+d+' km each: the first at '+s1+' km/h and the second at '+s2+' km/h. What is the average speed for the whole journey (to 1 d.p.)?',d1(avg)+' km/h',[d1((s1+s2)/2)+' km/h',d1(Math.sqrt(s1*s2))+' km/h',d1(d/t)+' km/h'],'Total distance '+2*d+' km. Total time = '+d+'/'+s1+' + '+d+'/'+s2+' = '+d1(t)+' h. Average = '+2*d+' ÷ '+d1(t)+' = '+d1(avg)+' km/h.');}},
+{g:[8,9],f:()=>{const t=R(0,2);if(t===0){const k=R(2,6),x=R(2,4),x2=x+R(1,3);return mc('y is directly proportional to x². When x = '+x+', y = '+k*x*x+'. Find y when x = '+x2+'.',k*x2*x2,[k*x2,k*x*x*x2/x,k*x2*x2*x],'y = kx² with k = '+k*x*x+' ÷ '+x*x+' = '+k+'. Then y = '+k+' × '+x2+'² = '+k*x2*x2+'.');}
+ if(t===1){const k=R(2,5),x=P([4,9,16]),x2=P([25,36,49,64].filter(v=>v>x));return mc('y is directly proportional to √x. When x = '+x+', y = '+k*Math.sqrt(x)+'. Find y when x = '+x2+'.',k*Math.sqrt(x2),[k*x2,k*Math.sqrt(x)*x2/x,k*(x2-x)],'y = k√x with k = '+k+'. Then y = '+k+' × √'+x2+' = '+k*Math.sqrt(x2)+'.');}
+ const p=P([10,20,25,30,40,50]);const m=(1+p/100)*(1-p/100);const ch=(m-1)*100;return mc('A price increases by '+p+'% and then decreases by '+p+'%. What is the overall percentage change?',nz(Math.abs(ch))+'% '+(ch<0?'decrease':'increase'),['0%','1% decrease',nz(2*p)+'% increase'],'Multipliers '+nz(1+p/100)+' × '+nz(1-p/100)+' = '+nz(m)+', which is a '+nz(Math.abs(ch))+'% decrease.');}}
+];
+// ---------- 9 SEQUENCES & TRANSFORMATIONS ----------
+const pt=(x,y)=>'('+x+', '+y+')';
+G[9]=[
+{g:[1,2],f:()=>{const a=R(1,12),d=R(2,9);return mc('What is the next term in the sequence '+a+', '+(a+d)+', '+(a+2*d)+', '+(a+3*d)+', …?',a+4*d,[a+3*d+d+1,a+5*d,a+4*d-1],'The common difference is '+d+'; add it to '+(a+3*d)+'.');}},
+{g:[2,3],f:()=>{const a=R(2,7),b=R(-4,9),k=R(5,20);return mc('The nth term of a sequence is '+lin(a,b).replace('x','n')+'. What is the '+k+'th term?',a*k+b,[a*k,a+b+k,(a+b)*k],'Substitute n = '+k+': '+a+' × '+k+' '+sg(b)+' = '+(a*k+b)+'.');}},
+{g:[3,4],f:()=>{const d=R(2,7),a=R(1,12);const b=a-d;return mc('Find the nth term of the sequence '+a+', '+(a+d)+', '+(a+2*d)+', '+(a+3*d)+', …',lin(d,b).replace('x','n'),[lin(a,d).replace('x','n'),lin(d,a).replace('x','n'),lin(d,b+d).replace('x','n')],'The common difference is '+d+', so start with '+d+'n. The first term is '+a+' and '+d+'×1 = '+d+', so add '+b+'.');}},
+{g:[4,5],f:()=>{const a=R(2,7),b=R(-3,6),k=R(8,25);const yes=Math.random()<.5;const v=yes?a*k+b:a*k+b+R(1,a-1);if(!yes&&(v-b)%a===0)return null;const n=(v-b)/a;return mc('Is '+v+' a term in the sequence with nth term '+lin(a,b).replace('x','n')+'?',yes?'Yes — it is term number '+k:'No — n would not be a whole number',yes?['No — n would not be a whole number','Yes — it is term number '+(k+1),'Yes — it is term number '+(k-1)]:['Yes — it is term number '+Math.round(n),'Yes — it is term number '+Math.ceil(n)+'','No — the sequence stops before this'],'Solve '+lin(a,b).replace('x','n')+' = '+v+': n = '+nz(n)+(yes?', a whole number.':', not a whole number.'));}},
+{g:[4,5],f:()=>{const x=R(-6,6),y=R(-6,6),a=R(-5,5),b=R(-5,5);if(!a&&!b)return null;return mc('The point '+pt(x,y)+' is translated by the vector ('+a+', '+b+') (x-direction, y-direction). What is the new point?',pt(x+a,y+b),[pt(x+b,y+a),pt(x-a,y-b),pt(x*a,y*b)],'Add the x-movement to x and the y-movement to y: '+pt(x+a,y+b)+'.');}},
+{g:[4,5],f:()=>{const x=R(-6,6)||2,y=R(-6,6)||3;const t=R(0,2);const T=[['the x-axis',pt(x,-y)],['the y-axis',pt(-x,y)],['the line y = x',pt(y,x)]];const w=[pt(-x,-y),pt(y,-x),pt(-y,x),pt(x,-y),pt(-x,y)].filter(v=>v!==T[t][1]);return mc('Reflect the point '+pt(x,y)+' in '+T[t][0]+'. What is the image?',T[t][1],w,['Reflecting in the x-axis changes the sign of y.','Reflecting in the y-axis changes the sign of x.','Reflecting in y = x swaps x and y.'][t]);}},
+{g:[5,6],f:()=>{const x=R(-6,6)||2,y=R(-6,6)||3;const t=R(0,3);const T=[['90° anticlockwise about the origin',pt(-y,x)],['90° clockwise about the origin',pt(y,-x)],['180° about the origin',pt(-x,-y)],['an enlargement, scale factor 3, centre the origin',pt(3*x,3*y)]];const w=[pt(-y,x),pt(y,-x),pt(-x,-y),pt(3*x,3*y),pt(x+3,y+3)].filter(v=>v!==T[t][1]);return mc('The point '+pt(x,y)+' is transformed by '+T[t][0]+'. What is the image?',T[t][1],w,['90° anticlockwise: (x, y) → (−y, x).','90° clockwise: (x, y) → (y, −x).','180° rotation: (x, y) → (−x, −y).','Enlargement from the origin multiplies each coordinate by the scale factor.'][t]);}},
+{g:[5,6],f:()=>{const b=R(1,9);return mc('The nth term of a sequence is n² + '+b+'. What is the 5th term?',25+b,[10+b,5+b,2*5+b],'Substitute n = 5: 5² + '+b+' = 25 + '+b+' = '+(25+b)+'.');}},
+{g:[6,7],f:()=>{const a=R(1,4),r=P([2,3,4,5]);return mc('What is the next term of the geometric sequence '+a+', '+a*r+', '+a*r*r+', '+a*r*r*r+', …?',a*r*r*r*r,[a*r*r*r+r,a*r*r*r*2,a*r*r*r+a*r*r],'Each term is multiplied by '+r+'. '+a*r*r*r+' × '+r+' = '+a*r*r*r*r+'.');}},
+{g:[7,8],f:()=>{const a=P([1,2,3]),b=R(-3,5),c=R(-4,6);const t=n=>a*n*n+b*n+c;const s=[t(1),t(2),t(3),t(4)];const f=(A,B,C)=>quad(A,B,C).replace(/x/g,'n');return mc('Find the nth term of the quadratic sequence '+s.join(', ')+', …',f(a,b,c),[f(a,b+1,c),f(2*a,b,c),f(a,b,c+1)].map((x,i)=>x),'Second difference = '+2*a+', so the n² coefficient is '+a+'. Subtract '+a+'n² from each term and find the linear pattern '+lin(b,c).replace('x','n')+'.');}},
+{g:[8,9],f:()=>{const x=R(-5,5)||2,y=R(-5,5)||3,k=R(2,4);const t=R(0,1);if(t===0)return mc('Enlarge the point '+pt(x,y)+' by scale factor −'+k+' with centre the origin. What is the image?',pt(-k*x,-k*y),[pt(k*x,k*y),pt(-x/k,-y/k),pt(x-k,y-k)],'A negative scale factor sends the point to the opposite side of the centre: multiply each coordinate by −'+k+'.');
+ return mc('The point '+pt(x,y)+' is reflected in the x-axis, then rotated 90° anticlockwise about the origin. What is the final image?',pt(y,x),[pt(-y,-x),pt(-y,x),pt(y,-x)],'Reflect in x-axis: '+pt(x,-y)+'. Rotate 90° anticlockwise (x,y)→(−y,x): '+pt(y,x)+'.');}}
+];
+// ---------- 10 VECTORS ----------
+const vec=(a,b)=>'('+a+', '+b+')';
+G[10]=[
+{g:[5,6],f:()=>{const a=R(-5,6),b=R(-5,6),c=R(-5,6),d=R(-5,6),t=R(0,1);if(t===0)return mc('Column vectors: p = '+vec(a,b)+' and q = '+vec(c,d)+'. Find p + q.',vec(a+c,b+d),[vec(a-c,b-d),vec(a*c,b*d),vec(a+d,b+c)],'Add the top numbers and add the bottom numbers.');const k=R(2,4);return mc('Column vector p = '+vec(a,b)+'. Find '+k+'p.',vec(k*a,k*b),[vec(a+k,b+k),vec(a*k,b),vec(a/k,b/k)],'Multiply each component by '+k+'.');}},
+{g:[5,6],f:()=>{const T=[[3,4,5],[5,12,13],[6,8,10],[8,15,17]],[a,b,c]=P(T);return mc('Find the magnitude of the vector '+vec(a,b)+'.',c,[a+b,c*c,Math.sqrt(a+b).toFixed(1)],'|v| = √(a² + b²) = √('+a*a+' + '+b*b+') = √'+c*c+' = '+c+'.');}},
+{g:[6,7],f:()=>{const a=R(-4,6),b=R(-4,6),c=R(-4,6),d=R(-4,6);return mc('OA = '+vec(a,b)+' and OB = '+vec(c,d)+'. Find AB.',vec(c-a,d-b),[vec(a-c,b-d),vec(a+c,b+d),vec(c-b,d-a)],'AB = OB − OA = '+vec(c,d)+' − '+vec(a,b)+' = '+vec(c-a,d-b)+'.');}},
+{g:[6,7],f:()=>{const a=R(1,6),b=R(1,6);if(a===b)return null;const k=a*a+b*b;return mc('Find the magnitude of the vector '+vec(a,b)+'. Leave your answer as a surd if needed.','√'+k,[String(a+b),'√'+(a+b),String(k)],'|v| = √(a² + b²) = √('+a*a+' + '+b*b+') = √'+k+'.');}},
+{g:[7,8],f:()=>{const p=R(1,3),q=R(1,3),s=R(2,3);const u=vec(p,'k'),v=vec(p*s,q*s);return mc('The vectors '+u+' and '+v+' are parallel. Find k.',q,[q*s,p*s,p*q],'Parallel vectors are scalar multiples. The scale factor is '+s+' (from the x components), so k × '+s+' = '+q*s+', giving k = '+q+'.');}},
+{g:[7,8],f:()=>{const p=2*R(1,3),q=2*R(1,3);return mc('OA = '+p+'a and OB = '+q+'b. M is the midpoint of AB. Find OM.',(p/2===1?'':p/2)+'a + '+(q/2===1?'':q/2)+'b',[p+'a + '+q+'b',(p/2)+'a − '+(q/2)+'b',(p/2===1?'':p/2)+'a + '+q+'b'],'OM = ½(OA + OB) = ½('+p+'a + '+q+'b) = '+(p/2===1?'':p/2)+'a + '+(q/2===1?'':q/2)+'b.');}},
+{g:[8,9],f:()=>{const r=R(1,3),s=R(1,3);if(r===s&&r!==1)return null;const n=r+s;const A=[R(-3,3)*n,R(-3,3)*n],B=[R(-3,3)*n,R(-3,3)*n];const C=[(s*A[0]+r*B[0])/n,(s*A[1]+r*B[1])/n];const W=[(r*A[0]+s*B[0])/n,(r*A[1]+s*B[1])/n];if(vec(...C)===vec(...W))return null;return mc('OA = '+vec(...A)+' and OB = '+vec(...B)+'. C lies on AB so that AC : CB = '+r+' : '+s+'. Find OC.',vec(...C),[vec(...W),vec((A[0]+B[0])/2,(A[1]+B[1])/2),vec(B[0]-A[0],B[1]-A[1])],'OC = OA + ('+r+'/'+n+')AB = '+vec(...A)+' + '+r+'/'+n+' × '+vec(B[0]-A[0],B[1]-A[1])+' = '+vec(...C)+'.');}},
+{g:[8,9],f:()=>{const Q=[['OABC is a parallelogram with OA = a and OC = c. Find OB.','a + c',['a − c','c − a','½(a + c)'],'OB goes along OA then AB, and AB = OC = c, so OB = a + c.'],['OABC is a parallelogram with OA = a and OC = c. Find AC.','c − a',['a + c','a − c','½(c − a)'],'AC = AO + OC = −a + c = c − a.'],['OABC is a parallelogram with OA = a and OC = c. M is the midpoint of OB. Find OM.','½(a + c)',['a + c','½(c − a)','2(a + c)'],'OB = a + c, so OM = ½OB = ½(a + c).']];const t=P(Q);return mc(t[0],t[1],t[2],t[3]);}}
+];
+// ---------- 11 FUNCTIONS & FURTHER ALGEBRA ----------
+G[11]=[
+{g:[5,6],f:()=>{const a=R(2,5),b=R(-4,7),k=R(-3,6);if(Math.random()<.5)return mc('f(x) = '+lin(a,b)+'. Find f('+k+').',a*k+b,[a+k+b,(a+b)*k,a*k-b],'Substitute x = '+k+': '+a+' × '+(k<0?'('+k+')':k)+' '+sg(b)+' = '+(a*k+b)+'.');const c=R(-6,6)||2;return mc('f(x) = x² '+sg(c)+'. Find f('+k+').',k*k+c,[2*k+c,-k*k+c,k*k-c],'f('+k+') = ('+k+')² '+sg(c)+' = '+(k*k)+' '+sg(c)+' = '+(k*k+c)+'.');}},
+{g:[5,6],f:()=>{const a=R(1,6),k=R(2,5),n=R(1,6);const t=Math.random()<.5;return mc('f(x) = x + '+a+' and g(x) = '+k+'x. Find '+(t?'fg':'gf')+'('+n+').',t?k*n+a:k*(n+a),[t?k*(n+a):k*n+a,n+a+k,k*n*a],t?'fg('+n+') means f(g('+n+')): g('+n+') = '+k*n+', then f = '+(k*n+a)+'.':'gf('+n+') means g(f('+n+')): f('+n+') = '+(n+a)+', then g = '+k*(n+a)+'.');}},
+{g:[6,7],f:()=>{const a=R(2,5),b=R(1,9);return mc('f(x) = '+a+'x + '+b+'. Find f⁻¹(x).','(x − '+b+')/'+a,['(x + '+b+')/'+a,'x/'+a+' + '+b,'1/('+a+'x + '+b+')'],'Let y = '+a+'x + '+b+'. Subtract '+b+' then divide by '+a+': x = (y − '+b+')/'+a+'.');}},
+{g:[6,7],f:()=>{const a=R(2,4),b=R(1,6),c=R(2,4),d=R(1,6);if(a*c===1)return null;return mc('f(x) = '+a+'x + '+b+' and g(x) = '+c+'x + '+d+'. Find fg(x).',lin(a*c,a*d+b),[lin(a*c,c*b+d),lin(a+c,b+d),lin(a*c,b*d)],'fg(x) = f('+c+'x + '+d+') = '+a+'('+c+'x + '+d+') + '+b+' = '+lin(a*c,a*d+b)+'.');}},
+{g:[7,8],f:()=>{const a=R(1,9);const t=R(0,1);if(t===0)return mc('f(x) = 1/(x − '+a+'). Which value of x must be excluded from the domain?','x = '+a,['x = −'+a,'x = 0','x = 1/'+a],'The denominator cannot be zero: x − '+a+' = 0 → x = '+a+'.');return mc('f(x) = √(x − '+a+'). What is the largest possible domain?','x ≥ '+a,['x > '+a,'x ≤ '+a,'x ≥ 0'],'The expression under the square root must be ≥ 0: x − '+a+' ≥ 0, so x ≥ '+a+'.');}},
+{g:[7,8],f:()=>{const k=R(2,6),b=R(1,6);return mc('Simplify ('+k+'x + '+k*b+')/(x² + '+b+'x).',k+'/x',[k+'x',k+'/(x + '+b+')','x/'+k],'Factorise: '+k+'(x + '+b+') on top and x(x + '+b+') on the bottom. Cancel (x + '+b+').');}},
+{g:[8,9],f:()=>{const c=R(1,5),d=R(2,5),x0=R(1,3);const x1=(x0*x0+c)/d;return mc('The iteration x(n+1) = (x(n)² + '+c+')/'+d+' starts with x₀ = '+x0+'. Find x₁.',nz(x1),[nz((x0+c)/d),nz(x0*x0+c/d),nz(x1*d)],'x₁ = ('+x0+'² + '+c+') ÷ '+d+' = '+(x0*x0+c)+' ÷ '+d+' = '+nz(x1)+'.');}},
+{g:[8,9],f:()=>{const x=R(-3,6),a=R(1,5),b=R(1,5),p=R(1,5),q=R(1,5);if(a===b||p===q||x+p===0||x+q===0)return null;const lhs=a*(x+q),rhs=b*(x+p);const lv=a*(x+q),rv=b*(x+p);const A=a,B=b;const val=(b*p-a*q)/(a-b);if(!Number.isInteger(val))return null;if(val+p===0||val+q===0)return null;return mc('Solve '+a+'/(x + '+p+') = '+b+'/(x + '+q+').',val,[(b*p+a*q)/(a+b),-val,(a*p-b*q)/(a-b)],'Cross-multiply: '+a+'(x + '+q+') = '+b+'(x + '+p+'), so '+(a-b)+'x = '+(b*p-a*q)+' and x = '+val+'.');}},
+{g:[8,9],f:()=>{const a=R(2,4),b=R(1,6);return mc('f(x) = '+a+'x + '+b+'. Find ff(x).',lin(a*a,a*b+b),[lin(a*a,b*b),lin(2*a,2*b),lin(a*a,a*b)],'ff(x) = f('+a+'x + '+b+') = '+a+'('+a+'x + '+b+') + '+b+' = '+lin(a*a,a*b+b)+'.');}}
+];
+// ---------- 12 CONSTRUCTIONS, LOCI & BEARINGS ----------
+G[12]=[
+{g:[3,4],f:()=>{const D=[['north','000°'],['north-east','045°'],['east','090°'],['south-east','135°'],['south','180°'],['south-west','225°'],['west','270°'],['north-west','315°']];const t=P(D);return mc('What is the bearing of '+t[0]+'?',t[1],D.map(x=>x[1]).filter(x=>x!==t[1]),'Bearings are measured clockwise from north, always with 3 figures. North = 000°, East = 090°, South = 180°, West = 270°.');}},
+{g:[3,4],f:()=>{const a=R(5,95);return mc('How should a bearing of '+a+' degrees be written?',b3(a),[a+'°',(a+180)+'°',b3(360-a)],'Bearings always have three figures, so add leading zeros.');}},
+{g:[4,6],f:()=>{const b=R(10,350);const back=b<180?b+180:b-180;return mc('A ship sails on a bearing of '+b3(b)+'. What is the bearing needed to sail back to the start?',b3(back),[b3(360-b),b3(b+90),b3(back+10)],'Back bearing: '+(b<180?'add':'subtract')+' 180°. '+b+' '+(b<180?'+':'−')+' 180 = '+back+'.');}},
+{g:[4,5],f:()=>{const s=P([25000,50000,100000]),c=R(2,9);const km=c*s/100000;return mc('A map has scale 1 : '+s+'. Two towns are '+c+' cm apart on the map. How far apart are they in real life?',nz(km)+' km',[nz(c*s/1000)+' km',nz(c*s/10000)+' km',nz(c*s)+' km'],c+' cm × '+s+' = '+c*s+' cm = '+nz(km)+' km (÷ 100 000).');}},
+{g:[5,6],f:()=>{const a=R(10,170),b=R(10,170);if(a===b)return null;const d=Math.abs(a-b);return mc('From a lighthouse, a ship is on a bearing of '+b3(a)+' and a rock is on a bearing of '+b3(b)+'. What is the angle between them?',d+'°',[360-d+'°',a+b+'°',180-d+'°'],'Subtract the two bearings: '+Math.max(a,b)+' − '+Math.min(a,b)+' = '+d+'°.');}},
+{g:[7,8],f:()=>{const n=R(2,12),e=R(2,12),t=R(0,2);if(t===0){const b=deg(Math.atan2(e,n));return mc('Town B is '+n+' km north and '+e+' km east of town A. What is the bearing of B from A to the nearest degree?',b3(b),[b3(90-b),b3(360-b),b3(180-b)],'tan θ = east ÷ north = '+e+'/'+n+', so θ = '+Math.round(b)+'°. B is north-east of A, so the bearing is '+b3(b)+'.');}
+ if(t===1){const b=deg(Math.atan2(-e,n));return mc('Town B is '+n+' km north and '+e+' km west of town A. What is the bearing of B from A to the nearest degree?',b3(b),[b3(deg(Math.atan2(e,n))),b3(360-90+deg(Math.atan2(e,n))),b3(180+deg(Math.atan2(e,n)))],'The angle west of north is tan⁻¹('+e+'/'+n+') = '+Math.round(deg(Math.atan2(e,n)))+'°. Bearing = 360° − '+Math.round(deg(Math.atan2(e,n)))+'° = '+b3(b)+'.');}
+ const b=deg(Math.atan2(e,-n));return mc('Town B is '+n+' km south and '+e+' km east of town A. What is the bearing of B from A to the nearest degree?',b3(b),[b3(deg(Math.atan2(e,n))),b3(180+deg(Math.atan2(e,n))),b3(270-deg(Math.atan2(e,n)))],'The angle east of south is tan⁻¹('+e+'/'+n+') = '+Math.round(deg(Math.atan2(e,n)))+'°. Bearing = 180° − '+Math.round(deg(Math.atan2(e,n)))+'° = '+b3(b)+'.');}},
+{g:[4,5],f:()=>{const d=R(2,6);return mc('What is the locus of points exactly '+d+' cm from a fixed point P?','A circle with centre P and radius '+d+' cm',['A straight line '+d+' cm from P','A circle with centre P and diameter '+d+' cm','Two parallel lines '+d+' cm from P'],'All points a fixed distance from P form a circle.');}},
+{g:[5,6],f:()=>mc('What is the locus of points that are the same distance from two points A and B?','The perpendicular bisector of AB',['The angle bisector at A','A circle through A and B','The line AB itself'],'Equidistant from two points: construct the perpendicular bisector of the line joining them.')},
+{g:[6,7],f:()=>mc('What is the locus of points that are the same distance from two lines that meet at a point?','The angle bisector of the angle between the lines',['The perpendicular bisector of the two lines','A circle centred where they meet','One of the two lines'],'Equidistant from two intersecting lines: bisect the angle between them.')},
+{g:[6,7],f:()=>mc('Points are closer to A than to B. Which region is this?','The side of the perpendicular bisector of AB that contains A',['The side of the perpendicular bisector that contains B','The circle around A','The line AB'],'The perpendicular bisector is the boundary between "closer to A" and "closer to B".')},
+{g:[7,8],f:()=>mc('A region is described as: "within 3 cm of A AND within 2 cm of B". How do you show it?','Draw both circles and shade where they overlap',['Draw both circles and shade everything inside either','Draw both circles and shade the outside of both','Draw only the circle with the larger radius'],'"AND" means both conditions must hold at once: the overlap (intersection) of the two regions.')},
+{g:[7,8],f:()=>{const d=R(2,5);return mc('What is the locus of points exactly '+d+' cm from a line segment AB?','Two parallel lines '+d+' cm either side of AB joined by a semicircle (radius '+d+' cm) at each end',['Two parallel lines '+d+' cm either side of AB with flat ends','A circle with diameter AB','A single line '+d+' cm from AB'],'Along the segment you get parallel lines; around each end point you get a semicircle, making a "racetrack" shape.');}}
+];
+// ---------- 13 FINANCIAL MATHEMATICS ----------
+G[13]=[
+{g:[2,3],f:()=>{const r=R(8,15),h=R(10,40);if(Math.random()<.6)return mc('Sam earns £'+r+' per hour and works '+h+' hours. How much does he earn?','£'+r*h,['£'+(r+h),'£'+Math.round(r*h*1.5),'£'+Math.round(r*h/2)],'Pay = rate × hours = '+r+' × '+h+'.');const rate=P([1.15,1.2,1.25,1.3]),a=P([100,200,300,400,500]);return mc('£1 = €'+rate.toFixed(2)+'. How many euros do you get for £'+a+'?','€'+nz(a*rate),['€'+nz(a/rate),'€'+nz(a+rate),'€'+nz(a*(rate-1))],'Multiply pounds by the exchange rate: '+a+' × '+rate+'.');}},
+{g:[3,4],f:()=>{const h=R(20,36),o=R(2,8),r=R(9,14);const tot=h*r+o*r*1.5;return mc('Tom is paid £'+r+' per hour for '+h+' hours, plus overtime at time and a half for '+o+' more hours. What is his total pay?',m2(tot),[m2((h+o)*r),m2(h*r+o*r*2),m2(h*r+o*r/2)],'Normal pay '+h+' × '+r+' = £'+h*r+'. Overtime rate = £'+r*1.5+', so '+o+' × '+r*1.5+' = £'+o*r*1.5+'. Add them.');}},
+{g:[3,4],f:()=>{const p=P([10,15,20,25,30,40]),v=P([20,40,60,80,120,200]);const s=v*(1-p/100);return mc('A jacket costs £'+v+' and is reduced by '+p+'% in a sale. What is the sale price?','£'+nz(s),['£'+nz(v*p/100),'£'+nz(v*(1+p/100)),'£'+nz(v-p)],'Reduction = '+p+'% of '+v+' = £'+nz(v*p/100)+'. Sale price = '+v+' − '+nz(v*p/100)+'.');}},
+{g:[3,4],f:()=>{const Pr=P([500,800,1000,2000,2500]),r=P([2,3,4,5]),t=R(2,6);const I=Pr*r*t/100;return mc('Find the simple interest on £'+Pr+' at '+r+'% per year for '+t+' years.','£'+nz(I),['£'+nz(Pr*Math.pow(1+r/100,t)-Pr),'£'+nz(Pr*r/100),'£'+nz(Pr+I)],'Simple interest = P × r × t ÷ 100 = '+Pr+' × '+r+' × '+t+' ÷ 100 = £'+nz(I)+'.');}},
+{g:[5,6],f:()=>{const x=P([60,120,180,240,300,600,840,960]);return mc('A laptop costs £'+x+' including 20% VAT. What is the price before VAT?','£'+nz(x/1.2),['£'+nz(x*0.8),'£'+nz(x-20),'£'+nz(x/1.02)],'Price with VAT is 120% of the original. Original = '+x+' ÷ 1.2 = £'+nz(x/1.2)+'.');}},
+{g:[5,6],f:()=>{const Pr=P([1000,2000,5000,800]),r=P([2,3,4,5]),n=R(2,3);const v=Pr*Math.pow(1+r/100,n);return mc('£'+Pr+' is invested at '+r+'% compound interest per year. What is it worth after '+n+' years?',m2(v),[m2(Pr*(1+r*n/100)),m2(Pr*(1+r/100)),m2(Pr*Math.pow(1+r/100,n+1))],'Multiplier '+nz(1+r/100)+'. '+Pr+' × '+nz(1+r/100)+'^'+n+' = '+m2(v)+'.');}},
+{g:[6,7],f:()=>{const v0=P([8000,10000,12000,15000,20000]),r=P([10,12,15,20]),n=R(2,4);const v=v0*Math.pow(1-r/100,n);return mc('A car costs £'+v0+' and loses '+r+'% of its value each year. What is it worth after '+n+' years?',m2(v),[m2(v0*(1-r*n/100)),m2(v0*Math.pow(1+r/100,n)),m2(v0*Math.pow(1-r/100,n-1))],'Multiplier '+nz(1-r/100)+'. '+v0+' × '+nz(1-r/100)+'^'+n+' = '+m2(v)+'.');}},
+{g:[6,7],f:()=>{const A=P([12000,12500,12570]),k=R(5,40),I=A+k*1000,r=20;const tax=k*1000*r/100;return mc('A worker earns £'+I+' per year. The first £'+A+' is tax-free; the rest is taxed at '+r+'%. How much tax do they pay?','£'+nz(tax),['£'+nz(I*r/100),'£'+nz(A*r/100),'£'+nz(I-A)],'Taxable income = '+I+' − '+A+' = £'+k*1000+'. '+r+'% of that = £'+nz(tax)+'.');}},
+{g:[7,8],f:()=>{const p=P([10,20,25,30,40,50]);const m=(1+p/100)*(1-p/100);const ch=(1-m)*100;return mc('All prices rise by '+p+'% and then fall by '+p+'%. What is the overall percentage change?',nz(ch)+'% decrease',['No change',nz(2*p)+'% increase',nz(p/2)+'% decrease'],'Multipliers: '+nz(1+p/100)+' × '+nz(1-p/100)+' = '+nz(m)+', an overall decrease of '+nz(ch)+'%.');}},
+{g:[8,9],f:()=>{const r=P([10,20,30]),Pr=1000,n=2;const v=Pr*Math.pow(1+r/100,n);return mc('£'+Pr+' invested at a fixed compound interest rate grows to £'+nz(v)+' after '+n+' years. What is the annual rate?',r+'%',[nz(r*n)+'%',nz(r/2)+'%',nz((v-Pr)/Pr*100/n)+'%'].filter(x=>x!==r+'%'),'(1 + r/100)² = '+nz(v/Pr)+', so 1 + r/100 = '+nz(Math.sqrt(v/Pr))+' and r = '+r+'%.');}},
+{g:[8,9],f:()=>{const r=P([5,8,10]),Pr=1000,T=P([1500,2000]);let n=0,v=Pr;while(v<=T){v*=1+r/100;n++;}return mc('£1000 earns '+r+'% compound interest per year. After how many whole years will it first be worth more than £'+T+'?',n+' years',[n-1+' years',n+1+' years',Math.ceil((T-Pr)/(Pr*r/100))+' years'],'Multiply by '+nz(1+r/100)+' each year until the value exceeds £'+T+'. This first happens after '+n+' years.');}}
+];
+// ---------- 14 PROBLEM SOLVING & PROOF ----------
+G[14]=[
+{g:[3,4],f:()=>{const a=R(2,5),b=R(1,9),x=R(2,12),c=a*x+b;return mc('I think of a number, multiply it by '+a+' and add '+b+'. The answer is '+c+'. What was my number?',x,[(c+b)/a,c-b-a,c/a-b],'Work backwards: '+c+' − '+b+' = '+(c-b)+', then ÷ '+a+' = '+x+'.');}},
+{g:[4,5],f:()=>{const k=R(2,4),w=R(3,9),P_=2*(w+k*w);return mc('A rectangle has a perimeter of '+P_+' cm. Its length is '+k+' times its width. What is its area?',k*w*w+' cm²',[k*w*w*w+' cm²',(P_/2)*(P_/2)+' cm²',w*w+' cm²'],'Perimeter = 2(w + '+k+'w) = '+2*(1+k)+'w = '+P_+', so w = '+w+' and length = '+k*w+'. Area = '+w+' × '+k*w+'.');}},
+{g:[4,5],f:()=>{const Q=[['All prime numbers are odd','2'],['All square numbers are even','9'],['n² is always bigger than n (for whole numbers n)','1'],['The sum of any two prime numbers is even','2 + 3'],['All multiples of 3 are odd','6'],['Every number ending in 5 is prime','25']];const t=P(Q);const w=['4','15','7','10','2 + 2','11','12','8'].filter(x=>x!==t[1]);return mc('Which is a counter-example to the statement: "'+t[0]+'"?',t[1],sh(w).slice(0,3),'A counter-example is a case that makes the statement false.');}},
+{g:[5,6],f:()=>{const k=P([3,4,5,6,7]);const odd=k%2===1;const list=Array.from({length:k},(_,i)=>i+1);const s=k*(k+1)/2;return mc('Is it always true that the sum of '+k+' consecutive integers is a multiple of '+k+'?',odd?'Yes — the sum equals '+k+'(n + '+(k-1)/2+')':'No — for example '+list.join(' + ')+' = '+s,odd?['No — for example 1 + 2 + 3 = 6 is not','Only when the first integer is even','Yes — but only for positive integers']:['Yes — the sum is always '+k+'(n + '+k/2+')','Yes — it is true for every k','No — it is only true when n is even'],odd?'Starting at n: n + (n+1) + … + (n+'+(k-1)+') = '+k+'n + '+k*(k-1)/2+' = '+k+'(n + '+(k-1)/2+').':'Counter-example: '+list.join(' + ')+' = '+s+', which is not a multiple of '+k+'.');}},
+{g:[6,7],f:()=>{const a=R(1,6);return mc('Simplify (n + '+a+')² − n².',lin(2*a,a*a).replace('x','n'),[lin(a*a,2*a).replace('x','n'),lin(2*a,0).replace('x','n'),'n² + '+a*a],'Expand (n + '+a+')² = n² + '+2*a+'n + '+a*a+'. Subtract n² to leave '+lin(2*a,a*a).replace('x','n')+'.');}},
+{g:[6,7],f:()=>{const Q=[['n² + n','always even',['always odd','sometimes even, sometimes odd','always a multiple of 3'],'n² + n = n(n + 1): one of two consecutive integers is even, so the product is even.'],['n² + n + 1','always odd',['always even','sometimes even, sometimes odd','always a multiple of 3'],'n(n + 1) is even, so adding 1 makes it odd.'],['2n + 1','always odd',['always even','sometimes even, sometimes odd','always prime'],'2n is even, so 2n + 1 is odd.']];const t=P(Q);return mc('For any whole number n, the expression '+t[0]+' is…',t[1],t[2],t[3]);}},
+{g:[7,8],f:()=>{const x=R(2,9),a=R(1,5),b=R(1,4);const per=2*((x+a)+(2*x-b));return mc('A rectangle has sides (x + '+a+') cm and (2x − '+b+') cm. Its perimeter is '+per+' cm. Find x.',x,[(per/2-a+b)/2,(per-a+b)/3,x+1],'Perimeter = 2(3x + '+(a-b)+') = '+per+', so 3x + '+(a-b)+' = '+per/2+' and x = '+x+'.');}},
+{g:[8,9],f:()=>{const a=P([3,5,7]),b=a-2;if(b<1)return null;const c1=4*(a-b),c0=(a-b)*(a+b);const g=gcd(c1,c0);const w=[g*2,g/2,4,g+2,g+4].filter(v=>Number.isInteger(v)&&v>0&&v!==g);return mc('Show that (2n + '+a+')² − (2n + '+b+')² is always a multiple of which largest number?',g,Array.from(new Set(w)).slice(0,3),'Difference of two squares: (2n + '+a+' − 2n − '+b+')(2n + '+a+' + 2n + '+b+') = '+(a-b)+'('+4+'n + '+(a+b)+') = '+lin(c1,c0).replace('x','n')+' = '+g+'('+lin(c1/g,c0/g).replace('x','n')+').');}}
+];
+// ---------- ENGINE ----------
+function range(t){const gs=G[t];let lo=9,hi=1;gs.forEach(o=>{if(o.g[0]<lo)lo=o.g[0];if(o.g[1]>hi)hi=o.g[1];});return [lo,hi];}
+function gen(t,g,avoid){
+  const gs=G[t];let c=gs.filter(o=>g>=o.g[0]&&g<=o.g[1]);
+  if(!c.length){c=gs.slice().sort((a,b)=>Math.abs((a.g[0]+a.g[1])/2-g)-Math.abs((b.g[0]+b.g[1])/2-g)).slice(0,2);}
+  for(let i=0;i<40;i++){
+    const o=P(c);let q=null;try{q=o.f();}catch(e){q=null;}
+    if(!q||!q.q||!q.opts||q.ans<0||q.opts.length!==4||q.opts.some(x=>/None of these|NaN|undefined|Infinity/.test(String(x))))continue;
+    if(avoid&&avoid.has(q.q))continue;
+    q.g=g;q.t=t;return q;
+  }
+  return null;
+}
+function testSet(t){
+  const [lo,hi]=range(t),n=15,out=[],seen=new Set();
+  for(let i=0;i<n;i++){
+    const g=Math.round(lo+(hi-lo)*i/(n-1));let q=gen(t,g,seen);
+    if(!q)q=gen(t,Math.min(hi,Math.max(lo,g+1)),seen)||gen(t,lo,null);
+    if(q){seen.add(q.q);out.push(q);}
+  }
+  return out;
+}
+return{G:G,range:range,gen:gen,testSet:testSet};
+})();
+
+
+/* ===== Maths Trainer UI ===== */
+(function(){
+var LO={}, W=window;
+function rng(t){return MTG.range(t);}
+function cap(t){return (rng(t)[1]-1)*3+2;}
+function floorP(t){return (rng(t)[0]-1)*3;}
+function gOf(P){return Math.min(9,Math.floor(P/3)+1);}
+function lbl(P){return 'Grade '+gOf(P)+' · step '+(P%3+1)+'/3';}
+function cl(P,t){return Math.max(floorP(t),Math.min(cap(t),P));}
+var KEY='ares_mths_guest';
+function load(){var p=null;try{
+  if(currentUser){var a=getAccounts()[currentUser];p=a&&a.mathsProg;}
+  else p=JSON.parse(localStorage.getItem(KEY)||'null');}catch(e){}
+  if(!p||typeof p!=='object'||!p.topics)p={v:1,topics:{}};return p;}
+function save(p){try{
+  if(currentUser){var a=getAccounts();if(a[currentUser]){a[currentUser].mathsProg=p;saveAccounts(a);}}
+  else localStorage.setItem(KEY,JSON.stringify(p));}catch(e){}}
+function tp(p,id){return p.topics[id]||(p.topics[id]={P:null,tests:[],trained:0,correct:0,studied:0,secs:0,last:0});}
+function mathTopic(id){try{return getMATH().find(function(t){return t.id===id;});}catch(e){return null;}}
+function mins(s){return s<60?'<1 min':Math.round(s/60)+' min';}
+
+/* ---- coach (AI with local fallback) ---- */
+async function coach(prompt,fallback){
+  try{
+    var r=await Promise.race([_aresProxyText(prompt,170),new Promise(function(_,j){setTimeout(function(){j(0);},9000);})]);
+    r=(typeof r==='string'?r:(r&&r.text)||'').trim();
+    if(r&&r.length>20&&r.length<900)return r.replace(/[<>]/g,'');
+  }catch(e){}
+  return fallback;
+}
+
+/* ---- home dashboard + grid chips ---- */
+function decorate(){
+  if(currentSubject!=='mth')return;
+  var c=document.querySelector('#page-home .content');if(!c)return;
+  var p=load(),ids=Object.keys(p.topics).filter(function(i){return p.topics[i].P!=null;});
+  var gr=ids.length?(ids.reduce(function(a,i){return a+p.topics[i].P;},0)/ids.length):null;
+  var tot=ids.reduce(function(a,i){return a+p.topics[i].trained;},0);
+  var old=document.getElementById('mt-dash');if(old)old.remove();
+  var d=document.createElement('div');d.id='mt-dash';
+  d.innerHTML='<div class="mt-dash-h">🎯 Ares Maths Trainer</div>'+
+   '<div class="mt-dash-p">Open a topic, take a <b>15-question mini test</b>, then train from your current grade: <b>2 steps forward for a right answer, 1 step back for a wrong one</b>.</div>'+
+   '<div class="mt-dash-s"><span><b>'+ids.length+'</b>/15 topics tested</span><span><b>'+(gr==null?'–':'G'+gOf(Math.round(gr)))+'</b> average level</span><span><b>'+tot+'</b> trained answers</span></div>';
+  var hero=c.firstElementChild;if(hero)hero.insertAdjacentElement('afterend',d);else c.prepend(d);
+  document.querySelectorAll('#topic-grid-container .topic-thumb').forEach(function(el){
+    var m=(el.getAttribute('onclick')||'').match(/openTopic\((\d+)\)/);if(!m)return;
+    var t=tp(p,+m[1]);if(el.querySelector('.mt-chip'))return;
+    var s=document.createElement('div');s.className='mt-chip';
+    s.textContent=t.P==null?'Not tested yet':'Level: '+lbl(t.P);el.appendChild(s);});
+}
+
+/* ---- topic banner ---- */
+var seen={};
+function onOpen(quiet){
+  if(currentSubject!=='mth'||!currentTopic)return;
+  var id=currentTopic.id,p=load(),t=tp(p,id);
+  if(!quiet){t.studied++;t.last=Date.now();save(p);}
+  var pg=document.getElementById('page-topic'),tabs=document.getElementById('topic-tabs');if(!pg||!tabs)return;
+  var old=document.getElementById('mt-banner');if(old)old.remove();
+  var b=document.createElement('div');b.id='mt-banner';
+  var msg,btn;
+  if(t.P==null){msg='Ares sees you\'re working on <b>'+_esc(currentTopic.name)+'</b>. Read the notes, then take the 15-question mini test so I can find your level.';btn='Take the mini test';}
+  else{msg='<b>'+_esc(currentTopic.name)+'</b> — your level: <b>'+lbl(t.P)+'</b> · studied '+mins(t.secs)+' · '+t.trained+' trained answers.';btn='Train from '+lbl(t.P);}
+  b.innerHTML='<div class="mt-b-t">🎯 <span>'+msg+'</span></div><div class="mt-b-btns"><button class="mt-btn" id="mt-go">'+btn+'</button>'+
+   (t.P!=null?'<button class="mt-btn mt-ghost" id="mt-re">Retake test</button>':'')+'</div>';
+  tabs.parentNode.insertBefore(b,tabs);
+  document.getElementById('mt-go').onclick=function(){t.P==null?startTest(id):startTrain(id);};
+  var re=document.getElementById('mt-re');if(re)re.onclick=function(){startTest(id);};
+}
+setInterval(function(){
+  if(currentSubject!=='mth'||!currentTopic||document.hidden||(S&&S.mode))return;
+  var pg=document.getElementById('page-topic');if(!pg||pg.style.display==='none')return;
+  var p=load();tp(p,currentTopic.id).secs+=20;save(p);
+},20000);
+
+/* ---- overlay ---- */
+var S=null;
+function ov(){var o=document.getElementById('mt-overlay');if(!o){o=document.createElement('div');o.id='mt-overlay';document.body.appendChild(o);}o.style.display='flex';return o;}
+function closeOv(){var o=document.getElementById('mt-overlay');if(o)o.style.display='none';document.removeEventListener('keydown',keys);
+  if(S&&S.mode==='train'&&S.n>0)finishTrain(true);S=null;try{decorate();onOpen(true);}catch(e){}}
+W.mtClose=closeOv;
+function shell(inner,prog){
+  var o=ov();o.innerHTML='<div class="mt-box"><div class="mt-top"><span class="mt-ttl">'+_esc(S.name)+'</span><button class="mt-x" onclick="mtClose()" aria-label="Close">✕</button></div>'+
+   (prog!=null?'<div class="mt-bar"><i style="width:'+prog+'%"></i></div>':'')+inner+'</div>';
+}
+function keys(e){
+  if(!S||!S.cur)return;var k=e.key;
+  if(/^[1-4]$/.test(k)&&!S.locked){pick(+k-1);}
+  else if((k==='Enter'||k===' ')&&S.locked){e.preventDefault();next();}
+}
+function startTest(id){
+  var t=mathTopic(id);if(!t)return;
+  var qs=MTG.testSet(id);
+  if(qs.length<10){alert('Could not build the test — please try again.');return;}
+  S={mode:'test',t:id,name:t.name,qs:qs,i:0,res:[],cur:null,locked:false};
+  var o=ov();
+  shell('<div class="mt-c"><div class="mt-big">📝</div><h2>Mini test · '+_esc(t.name)+'</h2>'+
+   '<p>'+qs.length+' questions, easiest first and getting harder. No feedback until the end — answer honestly so Ares can place you at the right grade.</p>'+
+   '<button class="mt-btn" id="mt-start">Start test</button></div>');
+  document.getElementById('mt-start').onclick=function(){document.addEventListener('keydown',keys);showQ();};
+}
+function showQ(){
+  var q=S.mode==='test'?S.qs[S.i]:S.cur;S.cur=q;S.locked=false;
+  var n=S.mode==='test'?S.qs.length:S.total;var i=S.mode==='test'?S.i:S.n;
+  var head=S.mode==='test'?'Question '+(i+1)+' of '+n:'<span class="mt-lvl">'+lbl(S.P)+'</span> · Q'+(i+1)+'/'+n;
+  var ladder='';
+  if(S.mode==='train'){var lo=floorP(S.t),hi=cap(S.t),span=hi-lo||1;
+    ladder='<div class="mt-lad"><i style="width:'+Math.round((S.P-lo)/span*100)+'%"></i></div>';}
+  var opts=q.opts.map(function(o,k){return '<button class="mt-opt" data-k="'+k+'"><span>'+(k+1)+'</span>'+_esc(o)+'</button>';}).join('');
+  shell('<div class="mt-c">'+'<div class="mt-meta">'+head+'</div>'+ladder+'<div class="mt-q">'+_esc(q.q)+'</div><div class="mt-opts">'+opts+'</div><div id="mt-fb"></div></div>',Math.round(i/n*100));
+  document.querySelectorAll('.mt-opt').forEach(function(b){b.onclick=function(){pick(+b.dataset.k);};});
+}
+function pick(k){
+  if(S.locked)return;S.locked=true;var q=S.cur,ok=k===q.ans;
+  var btns=document.querySelectorAll('.mt-opt');
+  if(S.mode==='test'){
+    S.res.push({g:q.g,ok:ok});btns.forEach(function(b){b.disabled=true;});btns[k].classList.add('sel');
+    var fb=document.getElementById('mt-fb');fb.innerHTML='<button class="mt-btn" id="mt-next">'+(S.i+1>=S.qs.length?'See results':'Next')+'</button>';
+    document.getElementById('mt-next').onclick=next;return;}
+  btns.forEach(function(b,j){b.disabled=true;if(j===q.ans)b.classList.add('ok');});if(!ok)btns[k].classList.add('bad');
+  var before=S.P;S.P=cl(ok?S.P+2:S.P-1,S.t);var moved=S.P-before;
+  S.n++;if(ok)S.right++;S.peak=Math.max(S.peak,S.P);S.log.push(ok);
+  var arrow=ok?(moved===2?'▲▲ +2 steps':moved>0?'▲ +'+moved+' (top of the ladder!)':'🏆 Top of the ladder'):(moved<0?'▼ −1 step':'▬ Lowest step');
+  var fb=document.getElementById('mt-fb');
+  fb.innerHTML='<div class="mt-f '+(ok?'g':'r')+'"><b>'+(ok?'Correct! ':'Not quite. ')+arrow+'</b><p>'+_esc(q.exp||'')+'</p>'+(ok?'':'<p>Answer: <b>'+_esc(q.opts[q.ans])+'</b></p>')+
+   '<button class="mt-btn" id="mt-next">'+(S.n>=S.total?'Finish':'Next')+'</button></div>';
+  document.getElementById('mt-next').onclick=next;
+  var lad=document.querySelector('.mt-lad i');if(lad){var lo=floorP(S.t),hi=cap(S.t);lad.style.width=Math.round((S.P-lo)/((hi-lo)||1)*100)+'%';}
+  var lv=document.querySelector('.mt-lvl');if(lv)lv.textContent=lbl(S.P);
+}
+function next(){
+  if(S.mode==='test'){S.i++;if(S.i>=S.qs.length)return testDone();return showQ();}
+  if(S.n>=S.total)return finishTrain(false);
+  var q=nextQ();if(!q){return finishTrain(false);}S.cur=q;showQ();
+}
+function nextQ(){
+  var q=MTG.gen(S.t,Math.min(9,gOf(S.P)),S.seen);if(q)S.seen.add(q.q);return q;
+}
+function testDone(){
+  var qs=S.res,r=rng(S.t),lo=r[0],hi=r[1],sc=qs.filter(function(x){return x.ok;}).length;
+  var wt=0,got=0;qs.forEach(function(x){var w=x.g-lo+1;wt+=w;if(x.ok)got+=w;});
+  var estG=(lo-1)+(hi-lo+1)*(got/wt);var P=cl(Math.round((estG-1)*3),S.t);
+  var p=load(),t=tp(p,S.t);t.P=P;t.tests.push({ts:Date.now(),score:sc,n:qs.length,P:P});t.tests=t.tests.slice(-10);save(p);
+  var weak=qs.filter(function(x){return !x.ok;}).map(function(x){return x.g;});
+  S.after={P:P,sc:sc};
+  var fb='You scored '+sc+'/'+qs.length+'. Ares places you at '+lbl(P)+' for '+S.name+'. Training will start there and climb as you get questions right.';
+  shell('<div class="mt-c"><div class="mt-big">'+(sc>=qs.length*0.8?'🏆':sc>=qs.length*0.5?'👍':'💪')+'</div><h2>'+sc+' / '+qs.length+'</h2><p class="mt-lv">Starting level: <b>'+lbl(P)+'</b></p>'+
+   '<div class="mt-coach" id="mt-coach">Ares is looking at your answers…</div>'+
+   '<button class="mt-btn" id="mt-tr">Start training</button> <button class="mt-btn mt-ghost" id="mt-rt">Retake test</button></div>',100);
+  document.getElementById('mt-tr').onclick=function(){startTrain(S.t);};
+  document.getElementById('mt-rt').onclick=function(){startTest(S.t);};
+  var id=S.t,nm=S.name;
+  coach('You are Ares, a friendly GCSE maths coach. A student just did a 15-question mini test on "'+nm+'" and scored '+sc+'/'+qs.length+', so they start training at '+lbl(P)+'. Questions they got wrong were at grades: '+(weak.join(', ')||'none')+'. In 2 short sentences (max 45 words), encourage them and say what to focus on. Plain text, no markdown.',fb).then(function(m){
+    var el=document.getElementById('mt-coach');if(el&&S&&S.t===id)el.textContent=m;});
+}
+function startTrain(id){
+  var t=mathTopic(id);if(!t)return;var p=load(),tt=tp(p,id);
+  if(tt.P==null){return startTest(id);}
+  S={mode:'train',t:id,name:t.name,P:cl(tt.P,id),start:cl(tt.P,id),n:0,total:15,right:0,peak:cl(tt.P,id),log:[],seen:new Set(),cur:null,locked:false,saved:false};
+  var q=nextQ();if(!q){alert('Could not build questions — try again.');S=null;return;}
+  S.cur=q;document.removeEventListener('keydown',keys);document.addEventListener('keydown',keys);showQ();
+}
+function finishTrain(silent){
+  if(!S||S.saved)return;S.saved=true;
+  var p=load(),t=tp(p,S.t);t.P=S.P;t.trained+=S.n;t.correct+=S.right;t.last=Date.now();save(p);
+  if(silent||S.n===0)return;
+  try{if(typeof awardXP==='function')awardXP(5+S.right,'Maths training: '+S.right+'/'+S.n+' correct','correct');}catch(e){}
+  var up=S.P-S.start,mast=S.P>=cap(S.t);
+  var fb=up>0?'You climbed '+up+' step'+(up===1?'':'s')+' and finished at '+lbl(S.P)+'.':up<0?'You dropped '+(-up)+' step'+(up===-1?'':'s')+'. Review the notes for this topic, then try again.':'You held your level at '+lbl(S.P)+'.';
+  var nm=S.name,id=S.t,right=S.right,n=S.n,start=S.start,P=S.P,peak=S.peak;
+  shell('<div class="mt-c"><div class="mt-big">'+(mast?'🏆':up>0?'🚀':'💪')+'</div><h2>'+(mast?'Topic mastered!':'Session complete')+'</h2>'+
+   '<p class="mt-lv">'+right+'/'+n+' correct · '+lbl(start)+' → <b>'+lbl(P)+'</b> · peak '+lbl(peak)+'</p><div class="mt-coach" id="mt-coach">'+_esc(fb)+'</div>'+
+   '<button class="mt-btn" id="mt-more">Keep training</button> <button class="mt-btn mt-ghost" id="mt-done">Done</button></div>',100);
+  document.getElementById('mt-more').onclick=function(){S=null;startTrain(id);};
+  document.getElementById('mt-done').onclick=closeOv;
+  coach('You are Ares, a friendly GCSE maths coach. A student finished a training round on "'+nm+'": '+right+'/'+n+' correct, moved from '+lbl(start)+' to '+lbl(P)+' (peak '+lbl(peak)+'). In 2 short sentences (max 40 words) give feedback and one next step. Plain text.',fb).then(function(m){
+    var el=document.getElementById('mt-coach');if(el&&S&&S.t===id)el.textContent=m;});
+}
+
+/* ---- hooks (wrap, don't edit, existing functions) ---- */
+var _rh=W.renderHome;W.renderHome=function(){var r=_rh.apply(this,arguments);try{decorate();}catch(e){}return r;};
+var _ot=W.openTopic;W.openTopic=function(){var r=_ot.apply(this,arguments);try{onOpen();}catch(e){}return r;};
+W._mt={startTest:startTest,startTrain:startTrain,load:load,S:function(){return S;}};
+})();
+
+</script>
 </body>
 </html>
