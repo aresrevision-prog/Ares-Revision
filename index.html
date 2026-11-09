@@ -1921,8 +1921,13 @@ async function submitWritten(){
   fb.innerHTML='<div class="ai-loading"><div class="dot"></div><div class="dot"></div><div class="dot"></div><span>AI is reading your answer...</span></div>';
   try{
     const _wprompt=q.sci?`You are an experienced GCSE ${q.subj||'Science'} examiner marking against a mark scheme. Be fair, encouraging and accurate.\n\nQuestion (${q.marks} marks): ${q.q}\n\nMark scheme points (each point is worth 1 mark; accept equivalent wording, units and sensible alternatives; do not award marks for incorrect science): ${q.modelAns}\n\nStudent's answer: ${answer}\n\nAward 1 mark per valid point up to ${q.marks}. Reply ONLY in JSON: {\"score\":0-${q.marks},\"feedback\":\"2-3 sentences naming which mark points were gained and which were missed\",\"correct\":true_if_score_at_least_half}`:`You are marking a GCSE English answer. Be encouraging but honest.\n\nQuestion: ${q.q}\n\nModel answer key points: ${q.modelAns}\n\nStudent's answer: ${answer}\n\nMark out of ${q.marks||6}. Does the student: identify literary techniques? Quote or reference the text? Explain effect on reader? Show analytical thinking?\n\nReply ONLY in JSON: {"score":0-${q.marks||6},"feedback":"2-3 sentences of specific, helpful feedback","correct":true_if_score_above_half}`;
-    let result;
-    try{ const _wtext=await aresAICall(_wprompt,500); result=JSON.parse(_wtext.replace(/```json|```/g,'').trim()); }catch(e){result={score:0,feedback:'Could not parse response — please try again.',correct:false};}
+    let result=null;
+    let _lastE=null;
+    for(let _a=0;_a<3&&!result;_a++){
+      try{ const _wtext=await aresAICall(_wprompt,900); const _m=String(_wtext).replace(/```json|```/g,'').match(/\{[\s\S]*\}/); const _j=JSON.parse(_m[0]); if(_j&&isFinite(+_j.score)){ const _mx=q.marks||6; _j.score=Math.max(0,Math.min(_mx,Math.round(+_j.score))); _j.correct=_j.score>=Math.ceil(_mx/2); _j.feedback=_j.feedback||''; result=_j; } }
+      catch(e){ _lastE=e; await new Promise(r=>setTimeout(r,700)); }
+    }
+    if(!result) throw (_lastE||new Error('AI unavailable'));
     const pct2=Math.round((result.score/(q.marks||6))*100);
     fb.className='written-fb show '+(result.correct?'right':pct2>=35?'partial':'wrong-f');
     fb.innerHTML=`<div style="font-weight:600;margin-bottom:6px">${result.correct?'✓':'◑'} ${result.score}/${q.marks||6} marks — ${pct2}%</div><div>${result.feedback}</div><div class="written-model"><strong>Model answer:</strong> ${q.modelAns}</div>`;
@@ -1930,7 +1935,7 @@ async function submitWritten(){
     else{updateStreak(false);showShield(null,'wrong',0);}
   }catch(err){
     fb.className='written-fb show partial';
-    fb.innerHTML=`<div style="font-weight:600">⚠ Could not connect to AI marker</div><div style="margin-top:6px">Check your connection. <div class="written-model"><strong>Model answer to self-mark:</strong> ${q.modelAns}</div></div>`;
+    fb.innerHTML=`<div style="font-weight:600">⚠ The AI marker is busy right now</div><div style="margin-top:6px">This answer was NOT counted against you. Compare it with the model answer and self-mark, or retake the quiz later. <div class="written-model"><strong>Model answer to self-mark:</strong> ${q.modelAns}</div></div>`;
   }
   document.getElementById('qnext').classList.add('show');
 }
@@ -15738,7 +15743,7 @@ function localRisk(text,tel){var r=0,why=[],len=text.length,words=wc(text);
  return {r:Math.min(100,r),why:why};}
 async function aiCheck(text,tel){var L=localRisk(text,tel),ai=null,reason='';
  if(wc(text)>=25){var p='You are an academic-integrity checker for GCSE (age 14-16) answers. Estimate the probability (0-100) that the text below was produced by an AI language model rather than typed by a teenage student. Real student writing is usually uneven: awkward phrasing, repeated words, spelling or punctuation slips, inconsistent paragraph length, simple connectives. AI text is evenly polished, balanced and formulaic with stock phrases and flawless grammar. Do NOT give a high number just because an answer is well-structured or follows exam technique like PEEL; be calibrated and avoid false accusations. Reply with ONLY JSON: {"ai_pct":number,"reason":"one short sentence"}\n\nTEXT:\n'+text.slice(0,4500);
-  var j=jparse(await race(_aresProxyText(p,150),25000));if(j&&isFinite(j.ai_pct)){ai=Math.max(0,Math.min(100,+j.ai_pct));reason=j.reason||'';}}
+  var j=jparse(await race(_aresProxyText(p,400),25000));if(j&&isFinite(j.ai_pct)){ai=Math.max(0,Math.min(100,+j.ai_pct));reason=j.reason||'';}}
  var pct=Math.max(ai==null?0:ai,L.r);return {pct:Math.round(pct),ai:ai,local:L,reason:reason,checked:ai!=null};}
 async function markIt(T,text){var parts=T.scale2?[['Content & organisation',T.scale,24],['Technical accuracy',T.scale2,16]]:[['Answer',T.scale,T.marks-(T.spag!=null?T.spag:(T.marks===34?4:0))]];
  var bands=parts.map(function(p){return p[0]+' (max '+p[2]+'):\n'+EL_S[p[1]].map(function(r){return '  '+r[0]+'-'+r[1]+': '+r[2]}).join('\n');}).join('\n');
