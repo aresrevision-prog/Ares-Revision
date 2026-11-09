@@ -15436,5 +15436,274 @@ W._mt={startTest:startTest,startTrain:startTrain,load:load,S:function(){return S
 })();
 
 </script>
+<style id="eng-lab-css">#el-ov{display:none;position:fixed;inset:0;z-index:1000002;background:#0b0b12;color:#eee;overflow:auto;font-family:'DM Sans',system-ui,sans-serif}
+.el-top{position:sticky;top:0;background:#12121c;border-bottom:1px solid rgba(255,255,255,.1);padding:12px 16px;display:flex;gap:14px;align-items:center;z-index:2}
+.el-x{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:8px 14px;cursor:pointer;font-family:inherit}
+.el-body{max-width:820px;margin:0 auto;padding:16px 16px 60px;display:grid;gap:14px}
+.el-ex{background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.25);border-radius:14px;padding:14px 16px;font-size:14px}
+.el-q{font-weight:700;font-size:15px;line-height:1.6}
+.el-ta{width:100%;box-sizing:border-box;background:#14141f;color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:14px;font:15px/1.7 'DM Sans',system-ui,sans-serif;resize:vertical;min-height:160px}
+.el-stats{display:flex;gap:16px;font-size:12px;color:#9a9aa8;flex-wrap:wrap}
+.el-note{font-size:12px;color:#9a9aa8}
+.el-btn{background:rgba(248,113,113,.15);color:#fca5a5;border:1px solid rgba(248,113,113,.4);border-radius:9px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.el-btn.big{background:#f87171;color:#1a0505;font-size:14px;padding:12px 18px;border:0}
+.el-btn:disabled{opacity:.5}
+.el-wrap{display:grid;gap:12px}
+.el-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:14px 16px;font-size:13px;line-height:1.6}
+.el-card ul{margin:.3rem 0 .6rem 1.1rem;padding:0}
+.el-k{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#f87171;margin-bottom:.3rem;font-weight:700}
+.el-big{font-size:1.05rem;font-weight:700}
+.el-paper{margin-top:.5rem;padding:.6rem .8rem;border-radius:10px;background:rgba(255,255,255,.04)}
+.el-paper span{color:#9a9aa8;font-size:12px}
+.el-ao{margin:.25rem 0;font-size:13px}.el-ao b{color:#f87171}
+.el-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 0;flex-wrap:wrap}
+.el-pill{background:rgba(52,211,153,.15);color:#6ee7b7;border-radius:99px;padding:2px 9px;font-size:11px;margin-right:6px}
+.el-banner{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.3);border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:13px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;color:#eee}
+.el-tag{display:block;margin-top:6px;font-size:10px;color:#fca5a5;letter-spacing:.04em}
+.el-warn{background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.4);color:#fde68a;border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.6}
+.el-fail{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.5);color:#fecaca;border-radius:14px;padding:16px}
+.el-score{display:flex;gap:14px;align-items:center;font-size:2.2rem;font-weight:800}.el-score small{font-size:1rem;color:#9a9aa8}
+details summary{cursor:pointer;color:#fca5a5;font-size:12px}
+</style>
+<script id="eng-lab">
+/* ===== Ares English Lab — data (original wording; modelled on the published AQA 8700/8702 structure) ===== */
+var EL_AO={
+ L1:'Find and understand information; select evidence',
+ L2:'Explain how language, structure and form create effects (use terminology)',
+ L3:'Compare writers’ ideas and perspectives and how they are conveyed',
+ L4:'Evaluate a text critically, supporting with textual detail',
+ L5:'Content & organisation of your own writing (audience, purpose, tone, structure)',
+ L6:'Technical accuracy: vocabulary, sentence variety, spelling, punctuation',
+ T1:'Respond to the task with a personal, well-developed argument and precise quotations',
+ T2:'Analyse language, form and structure with accurate terminology',
+ T3:'Link to context (the writer’s time, setting, audience, ideas)',
+ T4:'Spelling, punctuation and grammar (4 marks on Shakespeare & the modern text only)'
+};
+var EL_S={ /* mark bands, top level first: [min,max,descriptor] */
+ S4:[[4,4,'All four points correct and distinct'],[3,3,'Three correct'],[2,2,'Two correct'],[1,1,'One correct']],
+ S8:[[7,8,'L4 Perceptive: detailed, precise, well-chosen quotations, subject terms used accurately'],[5,6,'L3 Clear: relevant, organised, clear explanation of effects'],[3,4,'L2 Some: partial understanding, some relevant comment'],[1,2,'L1 Simple: basic, mostly description or paraphrase']],
+ S12:[[10,12,'L4 Perceptive analysis of the writer’s methods with apt quotations'],[7,9,'L3 Clear, explained analysis'],[4,6,'L2 Some analysis, some quotation'],[1,3,'L1 Simple, mostly description']],
+ S16:[[13,16,'L4 Perceptive, detailed comparison of ideas AND methods'],[9,12,'L3 Clear comparison with relevant support'],[5,8,'L2 Some comparison, partly supported'],[1,4,'L1 Simple, little comparison']],
+ S20:[[16,20,'L4 Perceptive, convincing evaluation; critical judgement throughout; precise quotations'],[11,15,'L3 Clear, consistent evaluation with relevant detail'],[6,10,'L2 Some evaluation, partly supported'],[1,5,'L1 Simple, limited opinion']],
+ S24W:[[19,24,'L4 Compelling, convincing, crafted; highly engaging; structure is sophisticated'],[13,18,'L3 Consistent, clear, well-organised; clear tone & style'],[7,12,'L2 Some success; some organisation and awareness of reader'],[1,6,'L1 Simple, limited organisation']],
+ S16T:[[13,16,'L4 Wide ambitious vocabulary; full range of punctuation; accurate spelling; varied sentences'],[9,12,'L3 Increasingly varied vocabulary; mostly accurate punctuation and spelling'],[5,8,'L2 Some variety; some errors that do not block meaning'],[1,4,'L1 Simple vocabulary; frequent errors']],
+ S30:[[26,30,'L6 Convincing, critical, exploratory; judicious references; analysis of methods is assured; context integrated'],[21,25,'L5 Thoughtful, developed; apt references; thoughtful analysis of methods; context well linked'],[16,20,'L4 Clear, explained; effective references; clear explanation of methods'],[11,15,'L3 Some explained response; some support; some subject terms'],[6,10,'L2 Supported but simple; some awareness of methods'],[1,5,'L1 Simple, limited response']],
+ S24U:[[21,24,'L6 Critical, exploratory; judicious detail; assured analysis of methods'],[17,20,'L5 Thoughtful, developed; apt textual references'],[13,16,'L4 Clear, explained; effective use of references'],[9,12,'L3 Some explanation; some support'],[5,8,'L2 Simple; some awareness of methods'],[1,4,'L1 Limited, general comment']]
+};
+var EL_PAPERS={
+ L1:{n:'Language Paper 1 · Explorations in Creative Reading and Writing',t:'1h 45m',m:80,sec:'Section A Reading (40): Q1 4 · Q2 8 · Q3 8 · Q4 20 — Section B Writing (40): 24 content + 16 technical'},
+ L2:{n:'Language Paper 2 · Writers’ Viewpoints and Perspectives',t:'1h 45m',m:80,sec:'Section A Reading (40): Q1 4 · Q2 8 · Q3 12 · Q4 16 — Section B Writing (40): 24 + 16'},
+ T1:{n:'Literature Paper 1 · Shakespeare and the 19th-century novel',t:'1h 45m',m:64,sec:'Section A Shakespeare (30 + 4 SPaG, extract + whole play) · Section B 19th-century novel (30, extract + whole book)'},
+ T2:{n:'Literature Paper 2 · Modern texts and poetry',t:'2h 15m',m:96,sec:'A Modern text (30 + 4 SPaG, essay choice) · B Power & Conflict poetry (30, compare) · C Unseen poetry (24 + 8 comparison)'}
+};
+/* topic key -> where it lives in the exam */
+var EL_MAP={
+ devices:{p:['L1','L2','T1','T2'],q:'Lang P1 Q2–Q3 · Lang P2 Q3 · Lit AO2',ao:['L2','T2'],scale:'S8',tip:['Name the technique, quote it, then say the EFFECT on the reader — never stop at "it is a metaphor".','Zoom into a single word or image inside the quotation.','Link the effect back to the question focus every time.']},
+ essay:{p:['T1','T2'],q:'Lit essays · 30-mark questions',ao:['T1','T2','T3'],scale:'S30',tip:['Open with a thesis that answers the question, not a plot summary.','Weave short quotations into your own sentences.','Context (AO3) must explain an idea in the text, not float as a fact.']},
+ macbeth:{p:['T1'],q:'Lit Paper 1 · Section A (Shakespeare)',ao:['T1','T2','T3','T4'],scale:'S30',tip:['Start from the extract, then range across the whole play.','Track the arc: beginning → turning point → end.','Spend ~5 minutes planning and leave time to check SPaG (4 marks).']},
+ rj:{p:['T1'],q:'Lit Paper 1 · Section A (Shakespeare)',ao:['T1','T2','T3','T4'],scale:'S30',tip:['Link fate, conflict and love to the extract AND the whole play.','Use Shakespeare’s methods: imagery, dramatic irony, soliloquy, structure.','Leave time to check SPaG (4 marks).']},
+ ic:{p:['T2'],q:'Lit Paper 2 · Section A (Modern text, essay choice)',ao:['T1','T2','T3','T4'],scale:'S30',tip:['Choose one of two questions and plan for 5 minutes.','Use stage directions and structure (the final twist) as methods.','Context: 1912 vs 1945 and Priestley’s socialism.']},
+ cc:{p:['T1'],q:'Lit Paper 1 · Section B (19th-century novel)',ao:['T1','T2','T3'],scale:'S30',tip:['Begin with the extract, then trace the idea across the novella.','Comment on structure: the stave pattern, the ghosts, Scrooge’s shifts.','No SPaG marks here, but accuracy still feeds AO1.']},
+ jh:{p:['T1'],q:'Lit Paper 1 · Section B (19th-century novel)',ao:['T1','T2','T3'],scale:'S30',tip:['Link to duality and Victorian reputation/science.','Track narrative structure: layered narrators and the mystery.','Embed short quotations.']},
+ pc:{p:['T2'],q:'Lit Paper 2 · Section B (Power & Conflict, compare)',ao:['T1','T2','T3'],scale:'S30',tip:['Compare ideas and methods with linking words every paragraph.','Pick a second poem that clearly shares or contrasts with the printed one.','No SPaG marks, but clear comparison is essential.']},
+ unseen:{p:['T2'],q:'Lit Paper 2 · Section C (Unseen poetry 24 + 8)',ao:['T1','T2'],scale:'S24U',tip:['27.1: analyse ONE poem (approx. 25 min). 27.2: compare two (approx. 10 min).','Read twice: first for gist and tone, then for methods and shifts.','Comment on form and structure (stanzas, rhyme, volta) not just imagery.']},
+ langwrite:{p:['L1','L2'],q:'Lang P1 Q5 · Lang P2 Q5 (40 marks)',ao:['L5','L6'],scale:'S24W',tip:['Plan a clear structure with a deliberate opening and ending.','Use a range of sentence types and punctuation on purpose.','Check spelling and punctuation in the last 5 minutes.']},
+ creative:{p:['L1'],q:'Lang Paper 1 · Q5 Creative writing (40)',ao:['L5','L6'],scale:'S24W',tip:['Zoom in: focus on a few details, not a whole day.','Shift perspective or time for structure; end with an echo of the opening.','Use figurative language sparingly and precisely.']},
+ nonfic:{p:['L2'],q:'Lang Paper 2 · Q1–Q4 (reading two sources)',ao:['L1','L2','L3'],scale:'S16',tip:['Q1: choose four true statements only; Q2 synthesises both sources.','Q3 = language of Source B. Q4 = compare perspectives and methods.','Use comparative connectives: whereas, similarly, in contrast.']},
+ p1tech:{p:['L1'],q:'Language Paper 1 (80 marks, 1h45)',ao:['L1','L2','L4','L5','L6'],scale:'S20',tip:['Spend ~60 min reading (Q1–4), ~45 min on Q5 (plan 5).','Q4 evaluation: agree to an extent, quote, evaluate HOW the writer achieves it.','Q5 is half of Section B — do not rush it.']},
+ p2tech:{p:['L2'],q:'Language Paper 2 (80 marks, 1h45)',ao:['L1','L2','L3','L5','L6'],scale:'S16',tip:['Q2 is a summary of the DIFFERENCES between the two sources.','Q4 needs methods as well as ideas for each source.','Q5 is a persuasive/viewpoint piece — match the form named in the question.']},
+ littech:{p:['T1','T2'],q:'Literature Papers 1 & 2 (160 marks total)',ao:['T1','T2','T3','T4'],scale:'S30',tip:['Time: roughly 1 mark = 1 minute; 5 minutes planning.','Every paragraph: point → quote → method → effect → context.','Reserve final 3–5 minutes to check SPaG and quotations.']}
+};
+/* -- tasks (ORIGINAL questions written for Ares, in the style of the 2024 AQA papers; not AQA content) -- */
+var EL_EX={
+ ferry:{t:'Extract (original): “The Last Ferry”',h:'The ferry shuddered against the quay and the engine coughed itself into silence. Mara stood at the rail with her case clamped between her knees, watching the island wait for her. It looked smaller than she remembered: a low grey back of rock, a scatter of white cottages, one lighthouse standing like a held breath. Rain began, thin and sideways. Nobody came down to meet the boat. A gull stalked the slipway, one eye on her. She had promised herself she would feel something when she saw the house — grief, perhaps, or relief — but there was only the cold seeping through her coat and the old, small voice asking whether it was too late to climb back on board. Behind her the deckhand coiled a rope and did not look up. “Last one till Thursday,” he said. The words fell between them like a dropped coin, and rolled away. Mara lifted her case and stepped onto the island.'},
+ srcA:{t:'Source A (original): “Let teenagers sleep”',h:'Every weekday morning, millions of teenagers drag themselves to school in the dark, and every weekday their brains are telling them it is still the middle of the night. This is not laziness. During adolescence the body clock shifts later, so a 7 a.m. alarm can feel like a 4 a.m. one to an adult. Schools that have moved their start time to nine o’clock report fewer late arrivals, better attention in lessons and improved mood. It would cost very little to copy them. We ask young people to learn complicated algebra on half a night’s rest, then act surprised when they struggle. Surely the sensible response is to change the timetable, not the teenager.'},
+ srcB:{t:'Source B (original): a head teacher’s letter',h:'Dear parents, I have read the recent calls for a later school day with interest, but I must urge caution. A nine o’clock start means a four o’clock finish, which collides with sport, part-time jobs and the care of younger siblings. Many families rely on the current day to match their working hours, and our bus contracts are fixed. Sleep matters, of course, and we teach it in every year group; however, sleep habits are formed at home, not in the timetable. Pupils who go to bed at midnight with a phone will still be tired at nine. I would rather work with you on routines than rearrange a whole community.'},
+ poems:{t:'Two unseen poems (original)',h:'<b>Poem A — “Low Tide”</b><br>The sea has slipped away again,<br>leaving the harbour’s ribs exposed,<br>boats tilted on their sides like tired animals,<br>the mud shining, silver, closed.<br>My father used to walk me here<br>to count what water leaves behind —<br>a rope, a shell, a single shoe —<br>and say that nothing is ever lost,<br>only waiting to be found.<br><br><b>Poem B — “Inheritance”</b><br>I have my grandmother’s hands,<br>the knuckles knotted like old string,<br>and when I knead the bread I feel<br>her patience press into the dough.<br>She never spoke of the long years;<br>she folded them, like linen, away.<br>Now I turn the loaf out, warm and whole,<br>and wonder what I carry that I cannot name.'}
+};
+var EL_T=[
+ {id:'l1q1',k:['p1tech','creative','devices'],paper:'L1',q:'Q1',marks:4,scale:'S4',ao:['L1'],mins:5,ex:'ferry',title:'P1 Q1 — List four things',p:'Read the first sentences of the extract (from “The ferry shuddered…” to “…one lighthouse standing like a held breath”). List FOUR things you learn about the island. (Write each as a short separate line.)'},
+ {id:'l1q2',k:['p1tech','devices'],paper:'L1',q:'Q2',marks:8,scale:'S8',ao:['L2'],mins:10,ex:'ferry',title:'P1 Q2 — Language',p:'Look in detail at the sentences from “She had promised herself…” to “…climb back on board.” How does the writer use language here to describe Mara’s feelings? You could write about: words and phrases, language features and techniques, sentence forms.'},
+ {id:'l1q3',k:['p1tech','devices','creative'],paper:'L1',q:'Q3',marks:8,scale:'S8',ao:['L2'],mins:10,ex:'ferry',title:'P1 Q3 — Structure',p:'The whole extract describes a moment of arrival. How has the writer structured the text to interest you as a reader? You could write about: what the writer focuses your attention on at the start, how and why the writer changes this focus as the extract develops, any other structural features.'},
+ {id:'l1q4',k:['p1tech','devices'],paper:'L1',q:'Q4',marks:20,scale:'S20',ao:['L4'],mins:25,ex:'ferry',title:'P1 Q4 — Evaluation',p:'Focus on the extract from \u201cNobody came down\u2026\u201d to the end. A student said: “The writer makes the island feel lonely and unwelcoming, and Mara seems unwilling to arrive.” To what extent do you agree? Write about: your own impressions, how the writer creates these impressions, support your opinions with quotations.'},
+ {id:'l1q5a',k:['langwrite','creative','p1tech'],paper:'L1',q:'Q5a',marks:40,scale:'S24W',scale2:'S16T',ao:['L5','L6'],mins:45,title:'P1 Q5 — Describe',p:'Write a description of a seaside town in winter, when almost everyone has left. (24 marks content and organisation + 16 marks technical accuracy.)'},
+ {id:'l1q5b',k:['langwrite','creative','p1tech'],paper:'L1',q:'Q5b',marks:40,scale:'S24W',scale2:'S16T',ao:['L5','L6'],mins:45,title:'P1 Q5 — Narrate',p:'Write the opening of a story that begins with a journey you did not want to make.'},
+ {id:'l2q1',k:['p2tech','nonfic'],paper:'L2',q:'Q1',marks:4,scale:'S4',ao:['L1'],mins:5,ex:'srcA',title:'P2 Q1 — Four true statements',p:'Read Source A. Choose FOUR statements the source tells us to be true: (1) teenagers’ body clocks shift later; (2) schools starting at 9 report better attention; (3) it is laziness; (4) start times are expensive to change; (5) teenagers learn algebra badly on little sleep; (6) schools that moved the start time report improved mood. Write the four numbers and a short reason for each.'},
+ {id:'l2q2',k:['p2tech','nonfic'],paper:'L2',q:'Q2',marks:8,scale:'S8',ao:['L1'],mins:10,ex:'both',title:'P2 Q2 — Summarise differences',p:'You need Source A and Source B. Write a summary of the DIFFERENCES between the two writers’ views on the school day. Use evidence from both sources.'},
+ {id:'l2q3',k:['p2tech','nonfic','devices'],paper:'L2',q:'Q3',marks:12,scale:'S12',ao:['L2'],mins:15,ex:'srcB',title:'P2 Q3 — Language (Source B)',p:'How does the head teacher use language to try to influence parents? Write about words and phrases, language features and techniques, sentence forms.'},
+ {id:'l2q4',k:['p2tech','nonfic'],paper:'L2',q:'Q4',marks:16,scale:'S16',ao:['L3'],mins:20,ex:'both',title:'P2 Q4 — Compare perspectives',p:'Compare how the two writers convey their different perspectives on school start times. In your answer you could: compare their different perspectives, compare the methods they use to convey their perspectives, support your response with references to both texts.'},
+ {id:'l2q5a',k:['langwrite','p2tech'],paper:'L2',q:'Q5a',marks:40,scale:'S24W',scale2:'S16T',ao:['L5','L6'],mins:45,title:'P2 Q5 — Article',p:'“School should start later so that teenagers can sleep.” Write an article for a broadsheet newspaper in which you argue your point of view.'},
+ {id:'l2q5b',k:['langwrite','p2tech'],paper:'L2',q:'Q5b',marks:40,scale:'S24W',scale2:'S16T',ao:['L5','L6'],mins:45,title:'P2 Q5 — Speech',p:'“Social media does more harm than good to young people.” Write a speech to be given to your year group in which you explain your point of view.'},
+ {id:'mac1',k:['macbeth','essay','littech'],paper:'T1',q:'A',marks:34,scale:'S30',ao:['T1','T2','T3','T4'],mins:45,title:'Macbeth — Ambition',p:'Write about how Shakespeare presents ambition in Macbeth. Write about the play as a whole (use at least four quotations). (30 marks + 4 SPaG)'},
+ {id:'mac2',k:['macbeth'],paper:'T1',q:'A',marks:34,scale:'S30',ao:['T1','T2','T3','T4'],mins:45,title:'Macbeth — Lady Macbeth',p:'Starting with Lady Macbeth’s “unsex me here” speech, explore how Shakespeare presents her as a powerful and later vulnerable character. Write about the speech and the play as a whole. (30 + 4 SPaG)'},
+ {id:'rj1',k:['rj'],paper:'T1',q:'A',marks:34,scale:'S30',ao:['T1','T2','T3','T4'],mins:45,title:'Romeo & Juliet — Fate',p:'How does Shakespeare present fate and free will in Romeo and Juliet? Write about the play as a whole. (30 + 4 SPaG)'},
+ {id:'rj2',k:['rj'],paper:'T1',q:'A',marks:34,scale:'S30',ao:['T1','T2','T3','T4'],mins:45,title:'Romeo & Juliet — Friar Lawrence',p:'How far do you think Friar Lawrence is to blame for the tragedy? Write about the play as a whole. (30 + 4 SPaG)'},
+ {id:'ic1',k:['ic'],paper:'T2',q:'A',marks:34,scale:'S30',ao:['T1','T2','T3','T4'],mins:45,title:'An Inspector Calls — Responsibility',p:'How does Priestley present responsibility in An Inspector Calls? Write about the play as a whole. (30 + 4 SPaG)'},
+ {id:'ic2',k:['ic'],paper:'T2',q:'A',marks:34,scale:'S30',ao:['T1','T2','T3','T4'],mins:45,title:'An Inspector Calls — Sheila',p:'How does Priestley present the character of Sheila and her change through the play? (30 + 4 SPaG)'},
+ {id:'cc1',k:['cc'],paper:'T1',q:'B',marks:30,scale:'S30',ao:['T1','T2','T3'],mins:45,title:'A Christmas Carol — Redemption',p:'How does Dickens present Scrooge’s change from selfishness to generosity in A Christmas Carol? Write about the novella as a whole. (30 marks)'},
+ {id:'cc2',k:['cc'],paper:'T1',q:'B',marks:30,scale:'S30',ao:['T1','T2','T3'],mins:45,title:'A Christmas Carol — Poverty',p:'How does Dickens use the characters of the Cratchits, Ignorance and Want to make a point about poverty? (30 marks)'},
+ {id:'jh1',k:['jh'],paper:'T1',q:'B',marks:30,scale:'S30',ao:['T1','T2','T3'],mins:45,title:'Jekyll & Hyde — Duality',p:'How does Stevenson present the duality of human nature in Dr Jekyll and Mr Hyde? Write about the novella as a whole. (30 marks)'},
+ {id:'jh2',k:['jh'],paper:'T1',q:'B',marks:30,scale:'S30',ao:['T1','T2','T3'],mins:45,title:'Jekyll & Hyde — Reputation',p:'How does Stevenson explore the importance of reputation in Victorian London? (30 marks)'},
+ {id:'pc1',k:['pc'],paper:'T2',q:'B',marks:30,scale:'S30',ao:['T1','T2','T3'],mins:45,title:'Power & Conflict — Ozymandias vs another',p:'Compare how poets present the effects of power in “Ozymandias” and in ONE other poem from the anthology. (30 marks)'},
+ {id:'pc2',k:['pc'],paper:'T2',q:'B',marks:30,scale:'S30',ao:['T1','T2','T3'],mins:45,title:'Power & Conflict — War',p:'Compare how poets present the experience of conflict in “Exposure” and in ONE other poem from the anthology. (30 marks)'},
+ {id:'un1',k:['unseen'],paper:'T2',q:'C 27.1',marks:24,scale:'S24U',ao:['T1','T2'],mins:25,ex:'poems',title:'Unseen 27.1 — Low Tide',p:'In “Low Tide” (Poem A), how does the poet present the speaker’s feelings about the sea and about the father’s words? (24 marks)'},
+ {id:'un2',k:['unseen'],paper:'T2',q:'C 27.2',marks:8,scale:'S8',ao:['T1','T2'],mins:10,ex:'poems',title:'Unseen 27.2 — Compare',p:'In both poems the speaker thinks about someone from the past. What are the similarities and/or differences between the ways the poets present memory? (8 marks)'}
+];
+/* extra multiple-choice items to strengthen the AQA structure (original) */
+var EL_MCQ=[
+ {k:['p1tech','creative','devices'],q:'How many marks is Language Paper 1 Question 4 (the evaluation question) worth?',opts:['8','12','16','20'],ans:3,exp:'Q4 is 20 marks (AO4 evaluation), the biggest reading question on Paper 1.'},
+ {k:['p1tech','langwrite','creative'],q:'Language Paper 1 Section B writing is marked out of:',opts:['24','32','40','48'],ans:2,exp:'40 marks: 24 for content & organisation (AO5) and 16 for technical accuracy (AO6).'},
+ {k:['p2tech','nonfic'],q:'What does Language Paper 2 Question 4 ask you to do?',opts:['Summarise differences','Compare writers’ perspectives and methods','Evaluate a statement','Write a speech'],ans:1,exp:'P2 Q4 (16 marks, AO3) compares the two writers’ perspectives and how they are conveyed.'},
+ {k:['p2tech','nonfic'],q:'Language Paper 2 Question 2 asks you to write a summary of:',opts:['Similarities and differences','Differences only','Language techniques','The structure of both texts'],ans:1,exp:'Q2 (8 marks, AO1) summarises the differences between the sources, using evidence from both.'},
+ {k:['littech','essay','macbeth','rj'],q:'In AQA Literature, which assessment objective is about context?',opts:['AO1','AO2','AO3','AO4'],ans:2,exp:'AO3 = ideas, perspectives and contexts. AO1 = personal response with quotations; AO2 = language, form and structure; AO4 = SPaG.'},
+ {k:['littech','essay','macbeth','rj','ic'],q:'On the Shakespeare and modern-text questions, how many extra marks are there for spelling, punctuation and grammar (AO4)?',opts:['2','4','6','8'],ans:1,exp:'Those two questions are 30 marks + 4 SPaG marks. The 19th-century novel and poetry questions do not carry SPaG marks.'},
+ {k:['littech','essay','cc','jh','macbeth','rj'],q:'Which two texts are tested together on Literature Paper 1?',opts:['Modern text and poetry','Shakespeare and the 19th-century novel','Poetry and unseen poetry','Shakespeare and Power & Conflict'],ans:1,exp:'Literature Paper 1: Section A Shakespeare, Section B 19th-century novel. Total 64 marks, 1h45.'},
+ {k:['littech','pc','unseen','ic'],q:'Literature Paper 2 contains which three sections?',opts:['Shakespeare, novel, poetry','Modern text, Power & Conflict poetry, unseen poetry','Unseen poetry only','Poetry, Shakespeare, modern text'],ans:1,exp:'Paper 2 (2h15, 96 marks): A modern text, B Power & Conflict poetry, C unseen poetry.'},
+ {k:['unseen'],q:'Unseen poetry on Literature Paper 2 is split into which two questions?',opts:['24 marks then 8 marks (compare)','16 then 16','30 then 4','20 then 12'],ans:0,exp:'27.1 analyses one poem (24 marks); 27.2 compares two poems (8 marks).'},
+ {k:['pc'],q:'The Power & Conflict question asks you to compare the printed poem with:',opts:['A poem you choose from the anthology','An unseen poem','A poem from another century','No second poem'],ans:0,exp:'You compare the named poem with one other chosen from the cluster, covering ideas AND methods.'},
+ {k:['devices','essay','littech'],q:'What does AO2 reward most?',opts:['Retelling the plot','Explaining how writers’ methods create effects, using terminology','Quoting long passages','Learning dates'],ans:1,exp:'AO2 = language, form and structure and the effect they have on the reader.'},
+ {k:['p1tech','p2tech','devices'],q:'What is the best sequence for an analytical paragraph?',opts:['Point → quote → method → effect','Quote only','Summary of plot','Context only'],ans:0,exp:'Point, short embedded quote, name the method, then explain the effect (and link back to the question).'}
+];
+
+/* ===== Ares English Lab — UI ===== */
+(function(){
+var W=window,KEY='ares_eng_guest';
+function load(){var p=null;try{if(typeof currentUser!=='undefined'&&currentUser){var a=getAccounts()[currentUser];p=a&&a.engProg;}else p=JSON.parse(localStorage.getItem(KEY)||'null');}catch(e){}
+ if(!p||!Array.isArray(p.att))p={v:1,att:[]};return p;}
+function save(p){try{if(currentUser){var a=getAccounts();if(a[currentUser]){a[currentUser].engProg=p;saveAccounts(a);}}else localStorage.setItem(KEY,JSON.stringify(p));}catch(e){}}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function $(id){return document.getElementById(id);}
+/* topic -> key */
+function keyOf(subj,t){var n=(t.name||'').toLowerCase();
+ if(/macbeth/.test(n))return'macbeth';if(/romeo/.test(n))return'rj';if(/inspector/.test(n))return'ic';if(/christmas/.test(n))return'cc';if(/jekyll/.test(n))return'jh';
+ if(/unseen/.test(n))return'unseen';if(/power|conflict|comparing/.test(n))return'pc';if(/19th/.test(n))return'cc';
+ if(/literary devices/.test(n))return'devices';if(/literature essay/.test(n))return'littech';if(/essay/.test(n))return'essay';
+ if(/paper 1/.test(n))return'p1tech';if(/paper 2/.test(n))return'p2tech';if(/non-fiction/.test(n))return'nonfic';if(/creative/.test(n))return'creative';
+ if(/language writing/.test(n))return'langwrite';return'essay';}
+function tasksFor(k){return EL_T.filter(function(t){return t.k.indexOf(k)>-1;});}
+function best(id){var b=null;load().att.forEach(function(a){if(a.id===id&&a.st!=='failed'&&a.st!=='held'&&(!b||a.mark>b.mark))b=a;});return b;}
+function bandHTML(sc,mx){return '<table style="width:100%;border-collapse:collapse;font-size:12px;margin:.4rem 0">'+EL_S[sc].map(function(r){return '<tr><td style="padding:4px 8px;border-bottom:1px solid rgba(255,255,255,.07);color:#f87171;white-space:nowrap;font-weight:700">'+(r[0]===r[1]?r[0]:r[0]+'–'+r[1])+'</td><td style="padding:4px 8px;border-bottom:1px solid rgba(255,255,255,.07);color:#ccc">'+esc(r[2])+'</td></tr>';}).join('')+'</table>';}
+/* ---------- AQA guide tab ---------- */
+function aqaHTML(t,subj){var k=keyOf(subj,t),m=EL_MAP[k]||EL_MAP.essay,tk=tasksFor(k);
+ var h='<div class="el-wrap"><div class="el-card"><div class="el-k">Where this topic sits in the exam</div><div class="el-big">'+esc(m.q)+'</div><div style="margin-top:.5rem">'+m.p.map(function(p){var P=EL_PAPERS[p];return '<div class="el-paper"><b>'+esc(P.n)+'</b><br><span>'+P.t+' · '+P.m+' marks</span><br><span>'+esc(P.sec)+'</span></div>';}).join('')+'</div></div>';
+ h+='<div class="el-card"><div class="el-k">What the examiners reward (assessment objectives)</div>'+m.ao.map(function(a){return '<div class="el-ao"><b>'+(a[0]==='L'?'Lang AO'+a[1]:'Lit AO'+a[1])+'</b> '+esc(EL_AO[a])+'</div>';}).join('')+'</div>';
+ h+='<div class="el-card"><div class="el-k">How to climb the levels</div><ul>'+m.tip.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul><details><summary>Mark bands for this question type</summary>'+bandHTML(m.scale)+'<div style="font-size:11px;color:#9a9aa8">Own-words summary of the published AQA level structure; always check the official mark schemes on aqa.org.uk.</div></details></div>';
+ h+='<div class="el-card"><div class="el-k">Practise it</div>'+(tk.length?tk.map(function(x){var b=best(x.id);return '<div class="el-row"><div><b>'+esc(x.title)+'</b><div style="font-size:11px;color:#9a9aa8">'+x.marks+' marks · suggested '+x.mins+' min · 2024-style</div></div><div>'+(b?'<span class="el-pill">best '+b.mark+'/'+b.max+'</span>':'')+'<button class="el-btn" onclick="_el.open(\''+x.id+'\')">Write →</button></div></div>';}).join(''):'<div style="color:#9a9aa8">No written task for this topic yet — use the Quiz tab.</div>')+'</div></div>';
+ return h;}
+function writeHTML(t,subj){var k=keyOf(subj,t),all=tasksFor(k);if(!all.length)all=EL_T.slice(0,4);
+ var att=load().att.slice(-6).reverse();
+ var h='<div class="el-wrap"><div class="el-card"><div class="el-k">⌨️ Typing practice & AI marking</div><div style="font-size:13px;color:#ccc;line-height:1.6">Type your answer by hand — pasting is blocked. Your answer is marked against the AQA-style level bands, then checked for AI-written text. <b>75%+</b> AI likelihood is questioned (you must verify). <b>85%+</b> is not allowed and the attempt is automatically failed.</div></div>';
+ h+=all.map(function(x){var b=best(x.id);return '<div class="el-card"><div class="el-row"><div><b>'+esc(x.title)+'</b><div style="font-size:12px;color:#aaa;margin-top:4px;max-width:46ch">'+esc(x.p.slice(0,150))+(x.p.length>150?'…':'')+'</div></div><div style="text-align:right"><div style="font-size:11px;color:#9a9aa8">'+x.marks+' marks · '+x.mins+' min</div>'+(b?'<span class="el-pill">best '+b.mark+'/'+b.max+'</span><br>':'')+'<button class="el-btn" onclick="_el.open(\''+x.id+'\')">Start</button></div></div></div>';}).join('');
+ if(att.length)h+='<div class="el-card"><div class="el-k">Recent attempts</div>'+att.map(function(a){var tt=EL_T.filter(function(z){return z.id===a.id})[0];return '<div class="el-row" style="font-size:12px"><span>'+esc(tt?tt.title:a.id)+'</span><span>'+(a.st==='failed'?'❌ failed integrity':a.st==='held'?'⏳ held for review':a.mark+'/'+a.max+(a.st==='verified'?' · verified':''))+' · AI '+Math.round(a.ai)+'%</span></div>';}).join('')+'</div>';
+ return h+'</div>';}
+/* ---------- writing overlay ---------- */
+var S=null;
+function exHTML(x){if(!x)return'';var ids=x==='both'?['srcA','srcB']:[x];return ids.map(function(i){var e=EL_EX[i];return '<div class="el-ex"><div class="el-k">'+esc(e.t)+'</div><div style="line-height:1.7">'+e.h+'</div></div>';}).join('');}
+function openTask(id){var T=EL_T.filter(function(z){return z.id===id;})[0];if(!T)return;
+ S={T:T,t0:null,typed:0,ev:[],paste:0,blur:0,keys:0,maxCps:0,done:false};
+ var o=$('el-ov');if(!o){o=document.createElement('div');o.id='el-ov';document.body.appendChild(o);}
+ o.style.display='block';
+ o.innerHTML='<div class="el-top"><button class="el-x" onclick="_el.close()">✕ Close</button><div><b>'+esc(T.title)+'</b><div style="font-size:11px;color:#9a9aa8">'+T.marks+' marks · suggested '+T.mins+' min · 2024-style original task</div></div></div>'
+ +'<div class="el-body">'+exHTML(T.ex)+'<div class="el-q">'+esc(T.p)+'</div>'
+ +'<textarea id="el-ta" class="el-ta" rows="14" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" placeholder="Start typing your answer… (pasting is disabled)"></textarea>'
+ +'<div class="el-stats"><span id="el-wc">0 words</span><span id="el-wpm">0 wpm</span><span id="el-tm">0:00</span></div>'
+ +'<div class="el-note">Typed by hand only. Your typing pattern and text are checked for AI-written content (≥75% = questioned, ≥85% = automatic fail).</div>'
+ +'<button class="el-btn big" id="el-go" onclick="_el.submit()">Submit for marking</button><div id="el-res"></div></div>';
+ wire($('el-ta'),true);o.scrollTop=0;
+ S.timer=setInterval(function(){if(!S||!S.t0)return;var s=Math.floor((Date.now()-S.t0)/1000);var tm=$('el-tm');if(tm)tm.textContent=Math.floor(s/60)+':'+('0'+s%60).slice(-2);var w=wc($('el-ta')&&$('el-ta').value),p=$('el-wpm');if(p&&s>5)p.textContent=Math.round(w/(s/60))+' wpm';},1000);}
+function wc(v){v=(v||'').trim();return v?v.split(/\s+/).length:0;}
+function wire(ta,main){var tel=main?S:(S.v=S.v||{typed:0,ev:[],paste:0});
+ function block(e){e.preventDefault();tel.paste=(tel.paste||0)+1;S.paste=(S.paste||0)+(main?0:1);note();}
+ function note(){var n=$('el-note2')||document.querySelector('.el-note');if(n){n.style.color='#fbbf24';n.textContent='⚠ Paste / drag-drop / cut is disabled. Type your answer by hand.';}}
+ ['paste','drop','cut','copy','contextmenu'].forEach(function(ev){ta.addEventListener(ev,block);});
+ ta.addEventListener('beforeinput',function(e){var it=e.inputType||'';
+  if(/Paste|Drop|Cut|History|insertFromYank|insertTranspose/.test(it)){e.preventDefault();block(e);return;}
+  var n=e.data?e.data.length:(it==='insertParagraph'||it==='insertLineBreak'?1:0);
+  if(n>12){ /* a single big insertion: autofill / voice / injected */ e.preventDefault();block(e);return;}
+  if(n>0){tel.typed+=n;var now=Date.now();if(main&&!S.t0)S.t0=now;tel.ev.push(now);if(tel.ev.length>3000)tel.ev.shift();
+   var c=0;for(var i=tel.ev.length-1;i>=0&&now-tel.ev[i]<1000;i--)c++;if(c>(tel.maxCps||0))tel.maxCps=c;}});
+ ta.addEventListener('keydown',function(e){if((e.ctrlKey||e.metaKey)&&/^[vxVX]$/.test(e.key)){e.preventDefault();block(e);}if(main)S.keys++;});
+ ta.addEventListener('input',function(){var w=$('el-wc');if(main&&w)w.textContent=wc(ta.value)+' words';});}
+document.addEventListener('visibilitychange',function(){if(S&&!S.done&&document.hidden)S.blur++;});
+/* ---------- marking + integrity ---------- */
+function race(p,ms){return Promise.race([p,new Promise(function(r){setTimeout(function(){r(null)},ms)})]);}
+function jparse(t){if(!t)return null;try{var m=String(t).match(/\{[\s\S]*\}/);return m?JSON.parse(m[0]):null;}catch(e){return null;}}
+var MARKERS=/\b(delve|tapestry|testament|multifaceted|underscore[sd]?|intricate|moreover|furthermore|in conclusion|it is important to note|navigate|realm|pivotal|showcases?|evoke[sd]?|resonate[sd]?|juxtapos\w+|nuanced|seamless\w*|vibrant)\b/gi;
+function localRisk(text,tel){var r=0,why=[],len=text.length,words=wc(text);
+ if(len>40&&len>tel.typed*1.2+30){r+=(len>tel.typed*1.5+60?90:60);why.push('Much of the text did not come from the keyboard ('+tel.typed+' typed of '+len+' characters).');}
+ if(tel.maxCps>25){r+=30;why.push('Impossible typing speed ('+tel.maxCps+' characters in one second).');}
+ if(tel.paste>=4){r+=10;why.push('Repeated paste attempts.');}
+ if(words>=60){var mk=(text.match(MARKERS)||[]).length;if(mk>=4){r+=Math.min(40,mk*7);why.push('Many stock AI-style phrases ('+mk+').');}
+  var ss=text.split(/[.!?]+\s/).map(function(s){return wc(s)}).filter(Boolean);if(ss.length>=6){var mean=ss.reduce(function(a,b){return a+b},0)/ss.length,v=ss.reduce(function(a,b){return a+(b-mean)*(b-mean)},0)/ss.length;if(Math.sqrt(v)/mean<0.22){r+=15;why.push('Unusually uniform sentence lengths.');}}}
+ return {r:Math.min(100,r),why:why};}
+async function aiCheck(text,tel){var L=localRisk(text,tel),ai=null,reason='';
+ if(wc(text)>=25){var p='You are an academic-integrity checker for GCSE (age 14-16) English answers. Estimate the probability (0-100) that the text below was produced by an AI language model rather than typed by a teenage student. Real student writing is usually uneven: awkward phrasing, repeated words, spelling or punctuation slips, inconsistent paragraph length, simple connectives. AI text is evenly polished, balanced and formulaic with stock phrases and flawless grammar. Do NOT give a high number just because an answer is well-structured or follows exam technique like PEEL; be calibrated and avoid false accusations. Reply with ONLY JSON: {"ai_pct":number,"reason":"one short sentence"}\n\nTEXT:\n'+text.slice(0,4500);
+  var j=jparse(await race(_aresProxyText(p,150),25000));if(j&&isFinite(j.ai_pct)){ai=Math.max(0,Math.min(100,+j.ai_pct));reason=j.reason||'';}}
+ var pct=Math.max(ai==null?0:ai,L.r);return {pct:Math.round(pct),ai:ai,local:L,reason:reason,checked:ai!=null};}
+async function markIt(T,text){var parts=T.scale2?[['Content & organisation',T.scale,24],['Technical accuracy',T.scale2,16]]:[['Answer',T.scale,T.marks>30&&T.scale==='S30'?30:T.marks]];
+ var bands=parts.map(function(p){return p[0]+' (max '+p[2]+'):\n'+EL_S[p[1]].map(function(r){return '  '+r[0]+'-'+r[1]+': '+r[2]}).join('\n');}).join('\n');
+ var spag=T.marks===34?'\nAlso award a SPaG mark 0-4 (4 = high accuracy, wide vocabulary; 0 = negligible). Total = answer(30)+spag(4).':'';
+ var ex=T.ex?'\nSOURCE MATERIAL:\n'+(T.ex==='both'?['srcA','srcB']:[T.ex]).map(function(i){return EL_EX[i].t+': '+EL_EX[i].h.replace(/<br>/g,'\n').replace(/<[^>]+>/g,'')}).join('\n\n'):'';
+ var pr='You are an experienced AQA GCSE English examiner marking a student answer. Use ONLY these level bands (own-words summary of AQA structure). Mark conservatively and fairly; place the answer in a level first, then choose the mark within the band. Do not reward length for its own sake. Assessment focus: '+T.ao.map(function(a){return EL_AO[a]}).join('; ')+'.\n\nQUESTION ('+T.marks+' marks): '+T.p+ex+'\n\nBANDS:\n'+bands+spag+'\n\nSTUDENT ANSWER:\n'+text.slice(0,6000)+'\n\nReply ONLY JSON: {"mark":number,"max":'+T.marks+',"level":"e.g. Level 3","www":["2 short strengths"],"ebi":["2 short specific improvements"],"next":"one sentence: how to reach the next level"}';
+ return jparse(await race(_aresProxyText(pr,700),35000));}
+function fb(m,T){var mk=Math.max(0,Math.min(T.marks,Math.round(+m.mark||0)));return '<div class="el-score"><span>'+mk+'<small>/'+T.marks+'</small></span><div><b>'+esc(m.level||'')+'</b><div style="font-size:12px;color:#9a9aa8">'+Math.round(mk/T.marks*100)+'%</div></div></div>'
+ +'<div class="el-card"><div class="el-k">Went well</div><ul>'+(m.www||[]).map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul><div class="el-k">Even better if</div><ul>'+(m.ebi||[]).map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul><div style="font-size:13px;color:#fbbf24">⬆ '+esc(m.next||'')+'</div></div>';}
+function record(a){var p=load();p.att.push(a);if(p.att.length>80)p.att=p.att.slice(-80);save(p);}
+async function submit(){if(!S||S.done)return;var ta=$('el-ta'),T=S.T,text=(ta.value||'').trim(),res=$('el-res'),go=$('el-go');
+ var min=T.marks<=8?12:25;if(wc(text)<min){res.innerHTML='<div class="el-warn">Write a little more first (at least '+min+' words).</div>';return;}
+ S.done=true;ta.readOnly=true;go.disabled=true;go.textContent='Checking…';clearInterval(S.timer);
+ var secs=S.t0?Math.round((Date.now()-S.t0)/1000):0,words=wc(text),wpm=secs>5?Math.round(words/(secs/60)):0;
+ res.innerHTML='<div class="el-card">⏳ Running integrity check…</div>';
+ var chk=await aiCheck(text,S);S.chk=chk;
+ var base={id:T.id,t:Date.now(),max:T.marks,ai:chk.pct,words:words,secs:secs,wpm:wpm};
+ if(chk.pct>=85){record(Object.assign(base,{mark:0,st:'failed'}));res.innerHTML=failHTML(chk,'This attempt is NOT allowed.');go.style.display='none';return;}
+ res.innerHTML='<div class="el-card">⏳ Marking…</div>';
+ var m=await markIt(T,text);
+ if(!m){record(Object.assign(base,{mark:0,st:'held'}));res.innerHTML='<div class="el-warn">The AI marker could not be reached, so this answer was saved without a mark. Try again later, or self-mark with the bands in the AQA tab.</div>';go.style.display='none';return;}
+ var mk=Math.max(0,Math.min(T.marks,Math.round(+m.mark||0)));
+ if(chk.pct>=75){S.pend={base:base,m:m};res.innerHTML=questionedHTML(chk);return;}
+ record(Object.assign(base,{mark:mk,st:'ok'}));try{awardXP(Math.min(60,5+mk*2),'English answer marked: '+mk+'/'+T.marks,'correct');}catch(e){}
+ res.innerHTML=(chk.checked?'':'<div class="el-warn">AI check was unavailable; only typing signals were checked.</div>')+fb(m,T)+'<div class="el-note">Integrity check: '+chk.pct+'% (pass).</div>';go.style.display='none';}
+function failHTML(chk,h){return '<div class="el-fail"><div style="font-size:1.1rem;font-weight:800">❌ '+h+'</div><div style="margin:.5rem 0">Integrity check: <b>'+chk.pct+'%</b> likelihood of AI-written text. At 85% or above the test is automatically failed as cheating, and it scores 0.</div>'+(chk.local.why.length?'<ul>'+chk.local.why.map(function(w){return '<li>'+esc(w)+'</li>'}).join('')+'</ul>':'')+(chk.reason?'<div style="font-size:12px;opacity:.85">'+esc(chk.reason)+'</div>':'')+'<div style="font-size:12px;margin-top:.5rem;opacity:.8">AI detectors can be wrong. If you wrote this yourself, ask a teacher or parent to review it.</div></div>';}
+function questionedHTML(chk){return '<div class="el-warn"><b>⚠ Questioned.</b> The integrity check scored this <b>'+chk.pct+'%</b>, which is in the questioned range (75–84%). Your mark is held until you verify the work is yours: in your own words, pick one quotation or idea from your answer, say why you chose it, and what you would add with ten more minutes.</div><textarea id="el-v" class="el-ta" rows="5" spellcheck="false" placeholder="Explain in your own words (typed by hand)…"></textarea><button class="el-btn big" id="el-vgo" onclick="_el.verify()">Submit verification</button>';}
+async function verify(){var v=$('el-v'),txt=(v.value||'').trim(),res=$('el-res');if(wc(txt)<20){var w=document.getElementById('el-vw')||document.createElement('div');w.id='el-vw';w.className='el-warn';w.textContent='Write at least 20 words in your own words.';v.parentNode.insertBefore(w,v);return;}
+ S.vt=S.vt||{typed:0,ev:[],paste:0,maxCps:0};var b=S.pend.base,m=S.pend.m,T=S.T,orig=$('el-ta').value;
+ var vc=localRisk(txt,{typed:S.vt.typed||(txt.length),paste:S.vt.paste,maxCps:S.vt.maxCps}).r;
+ $('el-vgo').disabled=true;$('el-vgo').textContent='Checking…';
+ var p='A GCSE student\'s English answer was flagged as possibly AI-written. They then wrote a short explanation. Decide whether the explanation is consistent with the same person having written the answer (shows real understanding of choices made in it, similar voice/level). Reply ONLY JSON {"consistent":true|false,"reason":"short"}.\n\nANSWER:\n'+orig.slice(0,3500)+'\n\nEXPLANATION:\n'+txt;
+ var j=jparse(await race(_aresProxyText(p,120),25000)),mk=Math.max(0,Math.min(T.marks,Math.round(+m.mark||0)));
+ if(!j){record(Object.assign(b,{mark:mk,st:'held'}));res.innerHTML='<div class="el-warn">Verification could not be checked right now. Your mark ('+mk+'/'+T.marks+') is held for a teacher or parent to review.</div>';return;}
+ if(j.consistent&&vc<60){record(Object.assign(b,{mark:mk,st:'verified'}));try{awardXP(Math.min(40,3+mk),'English answer verified','correct');}catch(e){}res.innerHTML='<div class="el-card">✅ Verified. '+esc(j.reason||'')+'</div>'+fb(m,T);}
+ else{record(Object.assign(b,{mark:0,st:'failed'}));res.innerHTML=failHTML({pct:b.ai,local:{why:['Verification explanation did not match the submitted answer.']},reason:j.reason},'Verification failed — attempt not allowed.');}}
+function close(){if(S){clearInterval(S.timer);}S=null;var o=$('el-ov');if(o)o.style.display='none';try{if(typeof _lessonRenderTabs==='function'&&_lessonActiveTab)_lessonRenderTabs(_lessonActiveTab);}catch(e){}}
+/* ---------- tab hooks ---------- */
+var isE=function(s){return s==='eng'||s==='bks';};
+var oT=W._lessonRenderTabs;
+W._lessonRenderTabs=function(active){
+ if(!isE(_lessonSubj))return oT.apply(this,arguments);
+ var real=(active==='aqa'||active==='write')?'notes':active;oT.call(this,real);
+ var c=_lessonColors[_lessonSubj]||'#f87171',tabs=$('lesson-ov-tabs'),body=$('lesson-ov-body');if(!tabs||!body)return;
+ [['aqa','🎯 AQA'],['write','⌨️ Write & AI mark']].forEach(function(x){var on=x[0]===active;var b=document.createElement('button');b.setAttribute('onclick',"_lessonRenderTabs('"+x[0]+"')");
+  b.style.cssText='background:'+(on?c:'rgba(255,255,255,0.05)')+';color:'+(on?'#0a0a0a':'#fff')+';border:1px solid '+(on?c:'rgba(255,255,255,0.12)')+';border-radius:10px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit';b.textContent=x[1];tabs.appendChild(b);});
+ if(real!==active){_lessonActiveTab=active;
+  // un-highlight the notes button
+  Array.prototype.forEach.call(tabs.children,function(b){if(/Notes/.test(b.textContent)){b.style.background='rgba(255,255,255,0.05)';b.style.color='#fff';b.style.borderColor='rgba(255,255,255,0.12)';}});
+  body.innerHTML=active==='aqa'?aqaHTML(_lessonTopic,_lessonSubj):writeHTML(_lessonTopic,_lessonSubj);
+ }else if(active==='notes'){var k=keyOf(_lessonSubj,_lessonTopic),m=EL_MAP[k]||EL_MAP.essay;
+  var ban=document.createElement('div');ban.className='el-banner';ban.innerHTML='🎯 <b>'+esc(m.q)+'</b> · '+m.ao.map(function(a){return (a[0]==='L'?'Lang':'Lit')+' AO'+a[1]}).join(' · ')+' <button class="el-btn" onclick="_lessonRenderTabs(\'aqa\')">Mark scheme</button> <button class="el-btn" onclick="_lessonRenderTabs(\'write\')">Practise writing</button>';body.insertBefore(ban,body.firstChild);}
+ body.scrollTop=0;};
+/* topic-grid tags */
+var oG=W._renderTopicGrid;
+if(oG)W._renderTopicGrid=function(topics,label,subj){var r=oG.apply(this,arguments);try{if(isE(subj))setTimeout(function(){document.querySelectorAll('.splash-topic-btn').forEach(function(b){var m=(b.getAttribute('onclick')||'').match(/openLessonOverlay\('(eng|bks)',(\d+)\)/);if(!m||b.querySelector('.el-tag'))return;var t=_getTopicsFor(m[1]).filter(function(x){return String(x.id)===m[2]})[0];if(!t)return;var mp=EL_MAP[keyOf(m[1],t)];if(!mp)return;var s=document.createElement('span');s.className='el-tag';s.textContent='🎯 '+mp.q.split(' · ')[0];b.appendChild(s);});},0);}catch(e){}return r;};
+/* add MCQs once */
+function inject(){try{[getENG(),getBKS()].forEach(function(arr,ai){arr.forEach(function(t){if(t._elq)return;t._elq=1;var k=keyOf(ai?'bks':'eng',t);EL_MCQ.forEach(function(q){if(q.k.indexOf(k)>-1){(t.quiz=t.quiz||[]).push({q:q.q,opts:q.opts.slice(),ans:q.ans,exp:q.exp});}});});});}catch(e){}}
+inject();
+W._el={open:openTask,close:close,submit:submit,verify:verify,keyOf:keyOf,tasks:EL_T,localRisk:localRisk,wire:wire};
+/* verification textarea needs paste blocking too */
+var oo=new MutationObserver(function(){var v=$('el-v');if(v&&!v._w&&S){v._w=1;S.vt={typed:0,ev:[],paste:0,maxCps:0};var tel=S.vt;['paste','drop','cut','contextmenu'].forEach(function(e){v.addEventListener(e,function(ev){ev.preventDefault();tel.paste++;});});v.addEventListener('beforeinput',function(e){var it=e.inputType||'';if(/Paste|Drop|Cut/.test(it)){e.preventDefault();tel.paste++;return;}var n=e.data?e.data.length:0;if(n>12){e.preventDefault();tel.paste++;return;}tel.typed+=n;var now=Date.now();tel.ev.push(now);var c=0;for(var i=tel.ev.length-1;i>=0&&now-tel.ev[i]<1000;i--)c++;if(c>tel.maxCps)tel.maxCps=c;});}});
+oo.observe(document.body,{childList:true,subtree:true});
+})();
+
+</script>
 </body>
 </html>
