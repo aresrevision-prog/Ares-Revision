@@ -1,19 +1,8 @@
 {
   "rewrites": [
     {
-      "source": "/",
-      "destination": "/app.html"
-    },
-    {
       "source": "/functions/v1/:path*",
       "destination": "https://lakjmdyzuqrwcncxybcw.supabase.co/functions/v1/:path*"
-    }
-  ],
-  "redirects": [
-    {
-      "source": "/",
-      "destination": "/app.html",
-      "permanent": false
     }
   ]
 }
