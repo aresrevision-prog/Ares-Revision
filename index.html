@@ -3329,7 +3329,7 @@ function splashBack(){
   }
   var tv=document.getElementById('splash-topics-view'); if(tv) tv.style.display='none';
   // Bring the logo/menu view back
-  var lv=document.getElementById('splash-logo-view'); if(lv) lv.style.display='';
+  var lv=document.getElementById('splash-logo-view');
   // Figure out which category menu to re-open
   var menuId=null;
   if(['bio','chem','phys'].includes(splashSelectedSubject)) menuId='splash-sci-menu';
@@ -3338,10 +3338,10 @@ function splashBack(){
   else if(['spa','fre','ivr'].includes(splashSelectedSubject)) menuId='splash-lang-menu';
   else if(['eng','bks'].includes(splashSelectedSubject)) menuId='splash-eng-menu';
   else if(['art','dra','mus'].includes(splashSelectedSubject)) menuId='splash-arts-menu';
-  if(menuId){
-    var m=document.getElementById(menuId);
-    if(m){ m.style.display=''; m.classList.add('active'); }
-  }
+  // Show the category menu OR the logo/home view, never both (showing both put the menu under the home screen)
+  var _shown=false;
+  if(menuId && document.getElementById(menuId)){ _splashShowMenu(menuId); _shown=true; }
+  if(!_shown && lv) lv.style.display='';
   splashSelectedSubject=null;
   window._splashCurrentReligionGroup=null;
 }
