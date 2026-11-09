@@ -14711,10 +14711,13 @@ function closeDinoDash(){
 }
 window.openDinoDash=openDinoDash;window.closeDinoDash=closeDinoDash;
 </script>
-<style id="maths-trainer-css">#mt-dash{background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.3);border-radius:14px;padding:1rem 1.2rem;margin:-.5rem 0 1.25rem}
-.mt-dash-h{font-family:'Fraunces',serif;font-size:1.1rem;color:var(--text);margin-bottom:.3rem}.mt-dash-p{font-size:13px;color:var(--text2);line-height:1.55;margin-bottom:.6rem}
-.mt-dash-s{display:flex;gap:1rem;flex-wrap:wrap;font-size:12px;color:var(--text2)}.mt-dash-s b{color:#A78BFA}
-.mt-chip{margin-top:6px;font-size:11px;color:#A78BFA;font-weight:600}
+<style id="maths-trainer-css">#mt-dash{display:flex;gap:1rem;align-items:center;background:linear-gradient(135deg,rgba(124,92,252,.16),rgba(34,211,238,.07));border:1px solid rgba(167,139,250,.32);border-radius:16px;padding:1rem 1.2rem;margin:-.5rem 0 1.25rem}
+.mt-dr{position:relative;flex:none;width:72px;height:72px}.mt-dr svg{width:100%;height:100%}.mt-dr .bg{fill:none;stroke:rgba(255,255,255,.1);stroke-width:7}.mt-dr .fg{fill:none;stroke:#34D399;stroke-width:7;stroke-linecap:round}
+.mt-dr b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--text)}
+.mt-dm{min-width:0;flex:1}.mt-dash-h{font-family:'Fraunces',serif;font-size:1.15rem;color:var(--text);margin-bottom:.2rem}.mt-dash-p{font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:.5rem}
+.mt-dash-s{display:flex;gap:.9rem;flex-wrap:wrap;font-size:12px;color:var(--text2);margin-bottom:.6rem}.mt-dash-s b{color:#A78BFA}
+.mt-chip{margin-top:8px;font-size:11px;color:#A78BFA;font-weight:600}.mt-mb{height:5px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden;margin-bottom:4px}.mt-mb i{display:block;height:100%;background:linear-gradient(90deg,#7C5CFC,#34D399)}
+@media(max-width:420px){#mt-dash{flex-direction:column;align-items:flex-start}}
 #mt-banner{display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.3);border-radius:12px;padding:.7rem 1rem;margin:0 0 .75rem;font-size:13px;color:var(--text)}
 .mt-b-t{flex:1 1 240px;line-height:1.5}.mt-b-btns{display:flex;gap:.5rem;flex-wrap:wrap}
 .mt-btn{background:#7C5CFC;color:#fff;border:0;border-radius:10px;padding:.6rem 1.1rem;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
@@ -14774,6 +14777,21 @@ window.openDinoDash=openDinoDash;window.closeDinoDash=closeDinoDash;
 .mt-fr{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 .15em;line-height:1.15;font-size:.9em}.mt-fr>span:first-child{border-bottom:2px solid currentColor;padding:0 .25em}.mt-fr>span:last-child{padding:0 .25em}.mt-fr u{text-decoration:none;opacity:.45}
 .mt-k.fr{background:#0e7490;color:#fff;font-size:13px}.mt-cr .mt-fr{font-size:.8em}
 @media(max-width:480px){.mt-q{font-size:1.1rem}.mt-opt{font-size:15px}}
+
+.mt-card,.mt-ladder{animation:mtUp .35s ease both}@keyframes mtUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.mt-opt.ok{animation:mtPop .35s}.mt-opt.bad{animation:mtShake .35s}@keyframes mtPop{50%{transform:scale(1.025)}}@keyframes mtShake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.mt-gs i.now{animation:mtPulse 1.4s infinite}@keyframes mtPulse{50%{box-shadow:0 0 16px rgba(251,191,36,.95)}}
+.mt-gs i,.mt-pips i{transition:background .3s}
+.mt-q{font-family:'Fraunces',Georgia,serif;font-weight:400;letter-spacing:.005em}
+.mt-fr{font-family:system-ui,sans-serif}
+.mt-up{background:linear-gradient(90deg,#7C5CFC,#22D3EE);color:#fff;font-weight:800;text-align:center;border-radius:10px;padding:.45rem;margin-bottom:.6rem;animation:mtPop .5s}
+.mt-rev{text-align:left;margin:.8rem 0;background:#191e38;border-radius:14px;padding:.2rem .9rem}.mt-rev summary{cursor:pointer;padding:.7rem 0;font-weight:700;font-size:14px;color:#fff}
+.mt-ri{border-top:1px solid #272d52;padding:.7rem 0}.mt-rq{font-size:15px;color:#fff;margin-bottom:.4rem}.mt-ra{display:flex;gap:.5rem;flex-wrap:wrap;font-size:12px;font-weight:700}.mt-ra span{border-radius:99px;padding:.2rem .6rem}.mt-ra .b{background:rgba(248,113,113,.15);color:#fca5a5}.mt-ra .g{background:rgba(52,211,153,.15);color:#6ee7b7}.mt-ri p{margin:.4rem 0 0;font-size:13px;color:#c9c6e6;line-height:1.5}
+.mt-conf{position:fixed;inset:0;z-index:100001;pointer-events:none;overflow:hidden}.mt-conf i{position:absolute;top:-12px;width:8px;height:14px;border-radius:2px;animation:mtFall linear forwards}@keyframes mtFall{to{top:105%;transform:rotate(720deg)}}
+.mt-calc{box-shadow:0 8px 24px rgba(0,0,0,.35)}.mt-cd{background:linear-gradient(180deg,#05060f,#0a0d1c);border:1px solid #1c2140}
+.mt-k{box-shadow:0 2px 0 rgba(0,0,0,.35)}
+.mt-btn:focus-visible,.mt-opt:focus-visible,.mt-k:focus-visible{outline:2px solid #22D3EE;outline-offset:2px}
+@media(prefers-reduced-motion:reduce){.mt-card,.mt-ladder,.mt-opt,.mt-gs i,.mt-up{animation:none!important}}
 </style>
 <script id="maths-trainer">
 /* ===== Maths Trainer: graded question generators ===== */
@@ -15108,6 +15126,11 @@ function save(p){try{
   else localStorage.setItem(KEY,JSON.stringify(p));}catch(e){}}
 function tp(p,id){return p.topics[id]||(p.topics[id]={P:null,tests:[],trained:0,correct:0,studied:0,secs:0,last:0});}
 function mathTopic(id){try{return getMATH().find(function(t){return t.id===id;});}catch(e){return null;}}
+function qF(t){return _esc(t).replace(/(?<![\w.\/²³])(\d+)\/(\d+)(?![\w.\/²³])/g,function(m,n,d){return '<span class="mt-fr"><span>'+n+'</span><span>'+d+'</span></span>';});}
+function mp(P,t){if(P==null)return 0;var f=floorP(t),c=cap(t);return Math.max(0,Math.min(100,Math.round((P-f)/((c-f)||1)*100)));}
+function confetti(n){var d=document.createElement('div');d.className='mt-conf';var cols=['#7C5CFC','#22D3EE','#34D399','#FBBF24','#F472B6'];
+  for(var i=0;i<(n||36);i++){var e=document.createElement('i');e.style.cssText='left:'+Math.random()*100+'%;background:'+cols[i%5]+';animation-delay:'+Math.random()*.4+'s;animation-duration:'+(1.2+Math.random()*1)+'s;transform:rotate('+Math.random()*360+'deg)';d.appendChild(e);}
+  document.body.appendChild(d);setTimeout(function(){d.remove();},2600);}
 function mins(s){return s<60?'<1 min':Math.round(s/60)+' min';}
 
 /* ---- coach (AI with local fallback) ---- */
@@ -15129,15 +15152,22 @@ function decorate(){
   var tot=ids.reduce(function(a,i){return a+p.topics[i].trained;},0);
   var old=document.getElementById('mt-dash');if(old)old.remove();
   var d=document.createElement('div');d.id='mt-dash';
-  d.innerHTML='<div class="mt-dash-h">🎯 Ares Maths Trainer</div>'+
-   '<div class="mt-dash-p">Open a topic, take a <b>15-question mini test</b>, then train from your current grade: <b>2 steps forward for a right answer, 1 step back for a wrong one</b>.</div>'+
-   '<div class="mt-dash-s"><span><b>'+ids.length+'</b>/15 topics tested</span><span><b>'+(gr==null?'–':'G'+gOf(Math.round(gr)))+'</b> average level</span><span><b>'+tot+'</b> trained answers</span></div>';
+  var avg=0,weak=null,first=null;
+  for(var i=0;i<15;i++){var tt=p.topics[i];if(tt&&tt.P!=null){avg+=mp(tt.P,i);if(weak==null||mp(tt.P,i)<mp(p.topics[weak].P,weak))weak=i;}else if(first==null)first=i;}
+  avg=Math.round(avg/15);
+  var go=first!=null?{id:first,txt:'Test '+(mathTopic(first)||{}).name,m:0}:weak!=null?{id:weak,txt:'Train '+(mathTopic(weak)||{}).name,m:1}:null;
+  var C=2*Math.PI*26;
+  d.innerHTML='<div class="mt-dr"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" class="bg"/><circle cx="32" cy="32" r="26" class="fg" stroke-dasharray="'+(C*avg/100).toFixed(1)+' '+C.toFixed(1)+'" transform="rotate(-90 32 32)"/></svg><b>'+avg+'%</b></div>'+
+   '<div class="mt-dm"><div class="mt-dash-h">Ares Maths Trainer</div><div class="mt-dash-p">Test a topic, then train: <b>+2 steps</b> for a right answer, <b>−1</b> for a wrong one.</div>'+
+   '<div class="mt-dash-s"><span><b>'+ids.length+'</b>/15 tested</span><span><b>'+tot+'</b> answers trained</span>'+(gr==null?'':'<span>avg <b>Grade '+gOf(Math.round(gr))+'</b></span>')+'</div>'+
+   (go?'<button class="mt-btn" id="mt-dgo">'+_esc(go.txt)+' →</button>':'')+'</div>';
   var hero=c.firstElementChild;if(hero)hero.insertAdjacentElement('afterend',d);else c.prepend(d);
+  var gb=document.getElementById('mt-dgo');if(gb&&go)gb.onclick=function(){openTopic(go.id);go.m?startTrain(go.id):startTest(go.id);};
   document.querySelectorAll('#topic-grid-container .topic-thumb').forEach(function(el){
     var m=(el.getAttribute('onclick')||'').match(/openTopic\((\d+)\)/);if(!m)return;
     var t=tp(p,+m[1]);if(el.querySelector('.mt-chip'))return;
     var s=document.createElement('div');s.className='mt-chip';
-    s.textContent=t.P==null?'Not tested yet':'Level: '+lbl(t.P);el.appendChild(s);});
+    s.innerHTML=t.P==null?'<span>Not tested yet</span>':'<div class="mt-mb"><i style="width:'+mp(t.P,+m[1])+'%"></i></div><span>Grade '+gOf(t.P)+' · '+mp(t.P,+m[1])+'% mastered</span>';el.appendChild(s);});
 }
 
 /* ---- topic banner ---- */
@@ -15278,9 +15308,9 @@ function showQ(){
   var q=S.mode==='test'?S.qs[S.i]:S.cur;S.cur=q;S.locked=false;
   var n=S.mode==='test'?S.qs.length:S.total;var i=S.mode==='test'?S.i:S.n;
   var tag=S.mode==='test'?'Test':'Training';
-  var opts=q.opts.map(function(o,k){return '<button class="mt-opt" data-k="'+k+'"><span>'+'ABCD'[k]+'</span><em>'+_esc(o)+'</em></button>';}).join('');
+  var opts=q.opts.map(function(o,k){return '<button class="mt-opt" data-k="'+k+'"><span>'+'ABCD'[k]+'</span><em>'+qF(o)+'</em></button>';}).join('');
   shell((S.mode==='train'?ladderHTML():'')+'<div class="mt-card"><div class="mt-meta"><b>'+tag+' · Question '+(i+1)+' <small>of '+n+'</small></b>'+(S.mode==='train'?'<span class="mt-gp">Grade '+gOf(S.P)+'</span>':'')+'</div>'+
-    '<div class="mt-q">'+_esc(q.q)+'</div><div class="mt-opts">'+opts+'</div><div id="mt-fb"></div></div>'+calcHTML(),
+    '<div class="mt-q">'+qF(q.q)+'</div><div class="mt-opts">'+opts+'</div><div id="mt-fb"></div></div>'+calcHTML(),
     pips(n,i,S.mode==='train'?S.log:null));
   document.querySelectorAll('.mt-opt').forEach(function(b){b.onclick=function(){pick(+b.dataset.k);};});
   cx={e:'',r:'',done:false};bindCalc();
@@ -15290,15 +15320,16 @@ function pick(k){
   if(S.locked)return;S.locked=true;var q=S.cur,ok=k===q.ans;
   var btns=document.querySelectorAll('.mt-opt');
   if(S.mode==='test'){
-    S.res.push({g:q.g,ok:ok});btns.forEach(function(b){b.disabled=true;});btns[k].classList.add('sel');
+    S.res.push({g:q.g,ok:ok,q:q.q,a:q.opts[q.ans],y:q.opts[k],exp:q.exp});btns.forEach(function(b){b.disabled=true;});btns[k].classList.add('sel');
     var fb=document.getElementById('mt-fb');fb.innerHTML='<button class="mt-btn mt-lg" id="mt-next">'+(S.i+1>=S.qs.length?'See results':'Next question')+' →</button>';
     document.getElementById('mt-next').onclick=next;return;}
   btns.forEach(function(b,j){b.disabled=true;if(j===q.ans)b.classList.add('ok');});if(!ok)btns[k].classList.add('bad');
   var before=S.P;S.P=cl(ok?S.P+2:S.P-1,S.t);var moved=S.P-before;
   S.n++;if(ok){S.right++;S.streak++;}else S.streak=0;S.peak=Math.max(S.peak,S.P);S.log.push(ok);
+  var up=gOf(S.P)>gOf(before);if(up||(S.P>=cap(S.t)&&before<cap(S.t)))confetti(up?30:50);
   var arrow=ok?(moved===2?'▲▲ +2 steps':moved>0?'▲ +'+moved+' step':'🏆 Top of the ladder'):(moved<0?'▼ −1 step':'Lowest step');
   var fb=document.getElementById('mt-fb');
-  fb.innerHTML='<div class="mt-f '+(ok?'g':'r')+'"><div class="mt-fh"><b>'+(ok?'Correct':'Not quite')+'</b><span class="mt-mv">'+arrow+'</span></div><p>'+_esc(q.exp||'')+'</p>'+(ok?'':'<p>Answer: <b>'+_esc(q.opts[q.ans])+'</b></p>')+
+  fb.innerHTML='<div class="mt-f '+(ok?'g':'r')+'">'+(up?'<div class="mt-up">⬆ Grade '+gOf(S.P)+' unlocked</div>':'')+'<div class="mt-fh"><b>'+(ok?'Correct':'Not quite')+'</b><span class="mt-mv">'+arrow+'</span></div><p>'+qF(q.exp||'')+'</p>'+(ok?'':'<p>Answer: <b>'+qF(q.opts[q.ans])+'</b></p>')+
    '<button class="mt-btn mt-lg" id="mt-next">'+(S.n>=S.total?'Finish':'Next question')+' →</button></div>';
   document.getElementById('mt-next').onclick=next;
   var lad=document.querySelector('.mt-ladder');if(lad)lad.outerHTML=ladderHTML();
@@ -15316,6 +15347,8 @@ function nextQ(){
   var q=MTG.gen(S.t,Math.min(9,gOf(S.P)),S.seen);if(q)S.seen.add(q.q);return q;
 }
 function ring(v,n,c){var C=2*Math.PI*42,d=C*v/n;return '<div class="mt-ring"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" class="bg"/><circle cx="50" cy="50" r="42" class="fg" style="stroke:'+c+'" stroke-dasharray="'+d.toFixed(1)+' '+C.toFixed(1)+'" transform="rotate(-90 50 50)"/></svg><div><b>'+v+'</b><small>/ '+n+'</small></div></div>';}
+function revHTML(qs){var w=qs.filter(function(x){return !x.ok;});if(!w.length)return '';
+  return '<details class="mt-rev"><summary>Review '+w.length+' missed question'+(w.length===1?'':'s')+'</summary>'+w.map(function(x){return '<div class="mt-ri"><div class="mt-rq">'+qF(x.q)+'</div><div class="mt-ra"><span class="b">You: '+qF(x.y)+'</span><span class="g">Answer: '+qF(x.a)+'</span></div><p>'+qF(x.exp||'')+'</p></div>';}).join('')+'</details>';}
 function testDone(){
   var qs=S.res,r=rng(S.t),lo=r[0],hi=r[1],sc=qs.filter(function(x){return x.ok;}).length;
   var wt=0,got=0;qs.forEach(function(x){var w=x.g-lo+1;wt+=w;if(x.ok)got+=w;});
@@ -15324,9 +15357,10 @@ function testDone(){
   var weak=qs.filter(function(x){return !x.ok;}).map(function(x){return x.g;});
   var fb='You scored '+sc+'/'+qs.length+'. Ares places you at '+lbl(P)+' for '+S.name+'. Training starts there and climbs as you get questions right.';
   var col=sc>=qs.length*0.7?'#34D399':sc>=qs.length*0.4?'#FBBF24':'#F87171';
+  if(sc>=qs.length*0.8)confetti(30);
   shell('<div class="mt-card mt-res">'+ring(sc,qs.length,col)+'<h2>'+(sc>=qs.length*0.8?'Brilliant':sc>=qs.length*0.5?'Good start':'Let\'s build this up')+'</h2>'+
    '<div class="mt-badge">Starting level <b>'+lbl(P)+'</b></div><div class="mt-coach" id="mt-coach"><span class="mt-av">A</span><div>Ares is looking at your answers…</div></div>'+
-   '<div class="mt-row"><button class="mt-btn mt-lg" id="mt-tr">Start training</button><button class="mt-btn mt-ghost mt-lg" id="mt-rt">Retake test</button></div></div>',pips(qs.length,qs.length,qs.map(function(x){return x.ok;})));
+   revHTML(qs)+'<div class="mt-row"><button class="mt-btn mt-lg" id="mt-tr">Start training</button><button class="mt-btn mt-ghost mt-lg" id="mt-rt">Retake test</button></div></div>',pips(qs.length,qs.length,qs.map(function(x){return x.ok;})));
   document.getElementById('mt-tr').onclick=function(){startTrain(S.t);};
   document.getElementById('mt-rt').onclick=function(){startTest(S.t);};
   var id=S.t,nm=S.name;
