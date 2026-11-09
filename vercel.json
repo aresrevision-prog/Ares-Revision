@@ -1,5 +1,12 @@
 {
   "rewrites": [
-    { "source": "/functions/v1/:path*", "destination": "https://lakjmdyzuqrwcncxybcw.supabase.co/functions/v1/:path*" }
+    {
+      "source": "/",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/functions/v1/:path*",
+      "destination": "https://lakjmdyzuqrwcncxybcw.supabase.co/functions/v1/:path*"
+    }
   ]
 }
