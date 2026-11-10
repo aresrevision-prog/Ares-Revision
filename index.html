@@ -15877,5 +15877,11 @@ add("BIO","getBIO");add("CHEM","getCHEM");add("PHYS","getPHYS");
 var oP=W._pickQ;if(oP)W._pickQ=function(all,n){var r=oP.apply(this,arguments);try{var ws=(all||[]).filter(function(q){return q&&q.sci;});if(!ws.length||n<5)return r;var have=r.filter(function(q){return q.sci;}).length;if(have>=2)return r;var inR={};r.forEach(function(q){inR[_qKey(q)]=1;});var extra=shuffle(ws.filter(function(q){return !inR[_qKey(q)];})).slice(0,2-have);var keep=r.filter(function(q){return !q.sci;});extra.forEach(function(){keep.pop();});return shuffle(keep.concat(r.filter(function(q){return q.sci;}),extra));}catch(e){return r;}};
 })();
 </script>
+<script id="home-fix">
+(function(){var W=window;
+function clearOverlays(){try{var l=document.getElementById('lesson-overlay');if(l)l.style.setProperty('display','none','important');var f=document.getElementById('subject-folder-overlay');if(f)f.style.display='none';var e=document.getElementById('el-ov');if(e&&e.parentNode)e.parentNode.removeChild(e);}catch(x){}}
+['goHome','showHome'].forEach(function(n){var o=W[n];if(typeof o!=='function')return;W[n]=function(){clearOverlays();return o.apply(this,arguments);};});
+})();
+</script>
 </body>
 </html>
