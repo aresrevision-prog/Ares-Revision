@@ -15969,5 +15969,35 @@ wo.observe(D.body,{childList:true,subtree:true});
 var oB=bankTopics;bankTopics=function(T){var r=oB(T);if(!r.length&&typeof currentTopic!=='undefined'&&currentTopic)r=[currentTopic];return r;};
 })();
 </script>
+<script id="ai-diag-js">
+(function(){var W=window,D=document;
+function esc(s){return String(s==null?'':s).replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c];});}
+function hint(st,body){var b=String(body||'').toLowerCase();
+ if(/missing gemini_key|no ai key/.test(b))return 'Vercel has no GEMINI_KEY. Add it in Vercel → Project → Settings → Environment Variables, then redeploy.';
+ if(/api key not valid|api_key_invalid|permission_denied|expired/.test(b)||st===401)return 'The AI key is invalid or expired. Make a new key at aistudio.google.com and replace GEMINI_KEY.';
+ if(st===429||/quota|rate|exhausted|resource_exhausted/.test(b))return 'The free AI quota is used up. Wait for it to reset, or add a second key (ANTHROPIC_KEY) as a backup.';
+ if(st===404)return 'This route does not exist (function not deployed here).';
+ if(/model.*not found|not found.*model|unsupported/.test(b))return 'The AI model name was rejected.';
+ if(st===0)return 'Network blocked or offline (school filter, VPN or no internet).';
+ if(st>=500)return 'The server reached the AI but it failed. See the message.';
+ return '';}
+async function probe(name,url,headers){var t0=Date.now(),st=0,body='',ok=false;
+ var c=typeof AbortController!=='undefined'?new AbortController():null,tm=c?setTimeout(function(){c.abort();},20000):null;
+ try{var r=await fetch(url,{method:'POST',headers:headers,body:JSON.stringify({prompt:'Reply with the single word OK',maxTokens:300}),signal:c?c.signal:undefined});st=r.status;var txt=await r.text();body=txt.slice(0,220);try{var j=JSON.parse(txt);if(j.text){ok=true;body='Replied: '+String(j.text).slice(0,40)+(j.via?' (via '+j.via+')':'');}else if(j.error)body=String(j.error).slice(0,200);}catch(e){}}
+ catch(e){body=(e&&e.name==='AbortError')?'timeout after 20s':'network error';}
+ if(tm)clearTimeout(tm);return {name:name,ok:ok,st:st,ms:Date.now()-t0,body:body,hint:ok?'':hint(st,body)};}
+W.AresAICheck=async function(){var o=D.getElementById('ai-diag');if(!o){o=D.createElement('div');o.id='ai-diag';o.style.cssText='position:fixed;inset:0;z-index:2000000;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;padding:16px;font-family:inherit';D.body.appendChild(o);}
+ o.style.display='flex';o.innerHTML='<div style="background:#14141c;color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:16px;max-width:560px;width:100%;max-height:88vh;overflow:auto;padding:18px"><div style="font-weight:700;font-size:16px">🩺 AI check</div><div style="color:#9a9aa8;font-size:12px;margin-top:4px">Testing every AI route…</div></div>';
+ var H={'Content-Type':'application/json'},SB={'Content-Type':'application/json',apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+SUPABASE_ANON_KEY};
+ var res=await Promise.all([probe('Supabase function',SUPABASE_URL+'/functions/v1/ares-ai',SB),probe('This site /api/ai','/api/ai',H),probe('Vercel /api/ai','https://ares-revision.vercel.app/api/ai',H)]);
+ var any=res.some(function(r){return r.ok;});
+ o.firstChild.innerHTML='<div style="font-weight:700;font-size:16px">🩺 AI check — '+(any?'<span style="color:#4ade80">working</span>':'<span style="color:#f87171">not working</span>')+'</div>'+res.map(function(r){return '<div style="margin-top:12px;padding:10px;border-radius:10px;background:rgba(255,255,255,.05)"><div><b>'+(r.ok?'✅':'❌')+' '+esc(r.name)+'</b> <span style="color:#9a9aa8;font-size:12px">HTTP '+r.st+' · '+r.ms+' ms</span></div><div style="font-size:12.5px;color:#ddd;margin-top:4px;word-break:break-word">'+esc(r.body)+'</div>'+(r.hint?'<div style="font-size:12.5px;color:#fbbf24;margin-top:4px">➜ '+esc(r.hint)+'</div>':'')+'</div>';}).join('')+(any?'<div style="margin-top:12px;font-size:12.5px;color:#9a9aa8">At least one route works, so marking will use it automatically.</div>':'<div style="margin-top:12px;font-size:12.5px;color:#9a9aa8">While every route is down, science and RS written answers are marked offline and other answers are not counted against you.</div>')+'<div style="margin-top:14px;display:flex;gap:8px"><button id="ai-diag-again" style="background:#f87171;color:#0a0a0a;border:0;border-radius:10px;padding:9px 14px;font-weight:700;cursor:pointer">Test again</button><button id="ai-diag-x" style="background:rgba(255,255,255,.1);color:#fff;border:0;border-radius:10px;padding:9px 14px;cursor:pointer">Close</button></div>';
+ D.getElementById('ai-diag-x').onclick=function(){o.style.display='none';};D.getElementById('ai-diag-again').onclick=function(){W.AresAICheck();};return res;};
+if(location.hash==='#aicheck')setTimeout(W.AresAICheck,1500);
+/* add a "Check AI" button to the busy message */
+var mo=new MutationObserver(function(){var f=D.getElementById('qfb');if(!f||f.querySelector('.ai-diag-btn'))return;if(/AI marker is busy/.test(f.textContent)){var b=D.createElement('button');b.className='ai-diag-btn';b.textContent='🩺 Check AI';b.style.cssText='margin-top:8px;background:#f87171;color:#0a0a0a;border:0;border-radius:10px;padding:7px 12px;font-weight:700;cursor:pointer';b.onclick=function(){W.AresAICheck();};f.appendChild(b);}});
+mo.observe(D.body,{childList:true,subtree:true});
+})();
+</script>
 </body>
 </html>
