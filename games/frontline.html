@@ -1670,6 +1670,9 @@ const PASSES = {
 };
 const PROFILE = (() => { const d = { coins: 0, owned: ['m4', 'l96', 'rpg'], equip: ['m4', 'l96', 'rpg'], upg: [], passes: [], honors: 0, earned: 0 }; try { return Object.assign(d, JSON.parse(localStorage.getItem('fl_profile')) || {}); } catch (e) { return d; } })();
 const saveProfile = () => { try { localStorage.setItem('fl_profile', JSON.stringify(PROFILE)); } catch (e) { } };
+function saveName() { const n = (($('name') && $('name').value) || '').trim().slice(0, 14); if (!n) return; PROFILE.name = n; if (typeof me !== 'undefined' && !playing) me.name = n; try { localStorage.setItem('fl_name', n); } catch (e) { } saveProfile(); }
+function saveAll() { saveProfile(); try { if (typeof saveCamp === 'function') saveCamp(); } catch (e) { } }
+setInterval(saveAll, 15000); addEventListener('pagehide', saveAll); addEventListener('beforeunload', saveAll); document.addEventListener('visibilitychange', () => { if (document.hidden) saveAll(); });
 const hasUpg = k => PROFILE.upg.includes(k), hasPass = k => PROFILE.passes.includes(k);
 // ── Ranks, XP and daily missions ──
 const RANKS = ['Recruit', 'Private', 'Private First Class', 'Lance Corporal', 'Corporal', 'Sergeant', 'Staff Sergeant', 'Sergeant First Class', 'Master Sergeant', 'First Sergeant', 'Sergeant Major', 'Warrant Officer', 'Second Lieutenant', 'First Lieutenant', 'Captain', 'Major', 'Lieutenant Colonel', 'Colonel', 'Brigadier General', 'Major General', 'Lieutenant General', 'General', 'General of the Army'];
@@ -2169,7 +2172,7 @@ function joinFriend(p, team) { if (!p.h) return joinOnline(p.room, team); const 
   if (playing || (p.m || null) !== MAPV || !!p.sn !== MAPSNOW) { try { sessionStorage.setItem('fl_coop', JSON.stringify(info)); if (info.w >= 0) sessionStorage.setItem('fl_ww2go', String(info.w)); } catch (e) { } location.reload(); return; }
   joinCoop(info); }
 async function joinCoop(info) { if (!$('online').dataset.ok) return; $('friends').classList.add('hide'); $('invite').classList.add('hide'); $('ww2').classList.add('hide');
-  me.name = ($('name').value.trim() || 'Soldier').slice(0, 14); me.id = 'p' + Math.random().toString(36).slice(2, 10); NET.coop = 'guest'; NET.coopName = info.b || 'Co-op battle'; $('onlinenote').textContent = 'Joining ' + info.n + '…';
+  saveName(); me.name = ($('name').value.trim() || 'Soldier').slice(0, 14); me.id = 'p' + Math.random().toString(36).slice(2, 10); NET.coop = 'guest'; NET.coopName = info.b || 'Co-op battle'; $('onlinenote').textContent = 'Joining ' + info.n + '…';
   try { if (info.w >= 0) ww2Style(info.w); await netJoin(info.room, info.team); start('online'); NET.coopW = info.w; announce(`Joined ${info.n}'s battle · ${NET.coopName} · you are on ${me.team === 'A' ? 'Blue' : 'Red'}`, true); lobbyTrack(); }
   catch (e) { NET.coop = null; $('onlinenote').textContent = e.message; } }
 function showCoopJoin(info) { const b = $('invite'); b.innerHTML = `Ready to join <b>${esc(info.n)}</b>'s battle (${esc(info.b || 'battle')})<button class="pri" id="cjgo">Join battle</button><button id="cjno">Cancel</button>`; b.classList.remove('hide'); $('cjgo').onclick = () => joinCoop(info); $('cjno').onclick = () => b.classList.add('hide'); }
@@ -2566,7 +2569,7 @@ function respawn() { dropTempWeapons(); clearC4(); if (PA.on) { PA.on = false; s
   streaks.forEach(s => { s.ready = false; s.used = false; }); wstate.forEach((s, i) => { s.mag = WEAPONS[i].mag; s.res = WEAPONS[i].res; }); VMG.forEach(g => { if (g.userData.warhead) g.userData.warhead.visible = true; }); reloading = 0; updAmmo(); updHp(); drawStreaks(); $('msg').innerHTML = ''; }
 function showPause(on) { paused = on; $('pause').classList.toggle('hide', !on); mouseDown = false; rmb = false; eFire = false; for (const k in keys) keys[k] = false; if (!on) lockPointer(); }
 function applyQuality() { sun.shadow.mapSize.set(SET.ultra ? 4096 : 2048, SET.ultra ? 4096 : 2048); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; } sun.shadow.radius = SET.ultra ? 3 : 1; const low = SET.quality !== 'high'; R.setPixelRatio(low ? Math.min(devicePixelRatio, .85) : Math.min(devicePixelRatio, 1.25)); if (low) { R.shadowMap.enabled = false; sun.castShadow = false; fireLights.forEach(f => scene.remove(f.l)); fireLights.length = 0; scene.remove(flareLight); scene.remove(boomLights[1]); boomLights.length = 1; scene.traverse(o => { if (o.material) [].concat(o.material).forEach(m => m.needsUpdate = true); }); } resize(); }
-try { $('name').value = localStorage.getItem('fl_name') || 'Soldier' + (Math.random() * 900 + 100 | 0); $('sens').value = localStorage.getItem('fl_sens') || 1; } catch (e) { $('name').value = 'Soldier' + (Math.random() * 900 + 100 | 0); }
+try { $('name').value = localStorage.getItem('fl_name') || PROFILE.name || 'Soldier' + (Math.random() * 900 + 100 | 0); saveName(); $('sens').value = localStorage.getItem('fl_sens') || 1; } catch (e) { $('name').value = 'Soldier' + (Math.random() * 900 + 100 | 0); }
 /* ---------------- scenarios ---------------- */
 const SCEN = {
   dawn: { name: 'Dawn Assault', light: 'dawn', mode: 'front', tag: 'Offensive', desc: 'Push the front line at first light. Capture every sector.', reward: 400 },
@@ -2721,7 +2724,7 @@ function conqWin(region) { const st = conqState(); if (!region || st.owned.inclu
 function renderScenarios() { const done = PROFILE.scen || {}; $('scenlist').innerHTML = Object.entries(SCEN).map(([k, d]) => `<button class="scard ${done[k] ? 'done' : ''}" data-k="${k}"><span class="sl ${d.light}"></span><b>${d.name}</b><em>${d.tag} · ${{ noon: 'Midday', dawn: 'Dawn', dusk: 'Dusk', night: 'Night', fog: 'Fog' }[d.light]}</em><small>${d.desc}</small><i>${done[k] ? '✓ Completed' : `Reward <i class="coin"></i>${d.reward}`}</i></button>`).join(''); }
 function start(m) { wi = 0; applyLoadout(); if (!PROPS.length) spawnProps(); battleCoins = 0; battleXP = 0; xpStart = PROFILE.xp;
   if (!RPM) { $('err').textContent = 'Still loading soldiers…'; return; }
-  audioInit(); me.name = ($('name').value.trim() || 'Soldier').slice(0, 14); sens = +$('sens').value; SET.ultra = $('qual').value === 'ultra'; SET.quality = SET.ultra ? 'high' : $('qual').value; SET.diff = $('diff').value; SET.arty = $('arty').checked; DIFF = DIFFS[SET.diff];
+  audioInit(); saveName(); me.name = ($('name').value.trim() || 'Soldier').slice(0, 14); sens = +$('sens').value; SET.ultra = $('qual').value === 'ultra'; SET.quality = SET.ultra ? 'high' : $('qual').value; SET.diff = $('diff').value; SET.arty = $('arty').checked; DIFF = DIFFS[SET.diff];
   try { localStorage.setItem('fl_name', me.name); localStorage.setItem('fl_sens', sens); } catch (e) { }
   applyQuality(); mode = m; GOAL = m === 'tdm' ? 50 : m === 'front' ? Infinity : m === 'online' ? (NET.coop === 'guest' ? Infinity : 30) : 25; const onT = me.team; me.team = m === 'ffa' ? null : m === 'online' ? onT : 'A'; if (m === 'online') streaks[3].need = 99; score.clear(); teamScore.A = teamScore.B = 0; sc(me.id, me.name, me.team);
   const n = +$('botn').value; if (m === 'front') { const own = OWNERS[String(clamp(camp.f, -2, 2))]; SECTORS.forEach((s, i) => setOwner(s, own[i] === 'N' ? null : own[i])); showSectors(true); }
@@ -2827,9 +2830,10 @@ function updFriendBadge() { const n = PROFILE.friends.filter(f => LOBBY.st[f.cod
 function showInvite(p, who) { const b = $('invite'); b.innerHTML = `<b>${esc(who)}</b> invited you to a battle (room ${esc(p.room)})<button class="pri" id="invsame">Join their team</button><button id="invother">Join other team</button><button id="invno">No thanks</button>`; b.classList.remove('hide');
   $('invsame').onclick = () => { b.classList.add('hide'); joinFriend(p, p.team); }; $('invother').onclick = () => { b.classList.add('hide'); joinFriend(p, p.team === 'A' ? 'B' : 'A'); }; $('invno').onclick = () => b.classList.add('hide'); }
 async function joinOnline(room, forceTeam) { if (!$('online').dataset.ok) return; room = (room || 'ares').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 20) || 'ares'; $('room').value = room; $('friends').classList.add('hide');
-  me.name = ($('name').value.trim() || 'Soldier').slice(0, 14); me.id = 'p' + Math.random().toString(36).slice(2, 10); $('online').disabled = true; $('onlinenote').textContent = 'Connecting…';
+  saveName(); me.name = ($('name').value.trim() || 'Soldier').slice(0, 14); me.id = 'p' + Math.random().toString(36).slice(2, 10); $('online').disabled = true; $('onlinenote').textContent = 'Connecting…';
   try { await netJoin(room, forceTeam); start('online'); lobbyTrack(); } catch (e) { $('onlinenote').textContent = e.message; $('online').disabled = false; } }
 $('online').onclick = () => joinOnline($('room').value.trim());
+$('name').addEventListener('input', () => { saveName(); try { renderProfile(); } catch (e) { } lobbyTrack(); }); $('name').addEventListener('change', saveName);
 $('mfriends').onclick = () => { $('friends').classList.remove('hide'); renderFriends(); };
 $('frclose').onclick = () => $('friends').classList.add('hide');
 $('frcopy').onclick = () => { try { navigator.clipboard.writeText(PROFILE.pcode); $('frcopy').textContent = 'Copied'; setTimeout(() => $('frcopy').textContent = 'Copy', 1500); } catch (e) { } };
