@@ -1378,7 +1378,7 @@ function makeTank(x, z, yaw, team, ai) { const heavy = !ai && team === me.team &
   vmesh(gun, rbox(.9, .6, .7, .1), paint, 0, 0, .15); vmesh(gun, CY(.11, .13, 4.2, 16), MAT.dark, 0, 0, 2.1, Math.PI / 2); vmesh(gun, CY(.19, .19, .7, 14), MAT.dark, 0, 0, 2.3, Math.PI / 2);
   vmesh(gun, CY(.17, .17, .4, 14), MAT.dark, 0, 0, 4.05, Math.PI / 2); for (const s of [-1, 1]) vmesh(gun, rbox(.08, .1, .3, .02), MAT.black, s * .17, 0, 4.1); vmesh(gun, CY(.035, .035, .5, 8), MAT.black, .3, -.05, .5, Math.PI / 2);
   }
-  const v = { type: 'tank', g, wheels, turret, gun, team, armed: true, ai, heavy, pos: new V(x, th(x, z), z), yaw, speed: 0, steer: 0, hp: heavy ? 3600 : 1800, max: heavy ? 3600 : 1800, driver: null, dead: false, home: [x, z, yaw], respawnT: 0, cool: 0, mg: 0, think: 0, repath: 0, stuck: 0, reverse: 0, tYaw: 0, tPitch: 0 }; if (WW2ON && WW2CUR === 3 && team === 'B') { v.hp = v.max = 900; v.slow = 2.2; }
+  const v = { type: 'tank', g, wheels, turret, gun, team, armed: true, ai, heavy, pos: new V(x, th(x, z), z), yaw, speed: 0, steer: 0, hp: heavy ? 3600 : 1800, max: heavy ? 3600 : 1800, driver: null, dead: false, home: [x, z, yaw], respawnT: 0, cool: 0, mg: 0, think: 0, repath: 0, stuck: 0, reverse: 0, tYaw: 0, tPitch: 0 }; if (WW2ON && WW2CUR === 3 && team === 'B') { v.hp = v.max = 1250; v.slow = 2.2; }
   v.hit = hitBox(g, 3.6, 2.6, 6.8, 1.3); v.hit.userData.veh = v; vehicles.push(v); placeVeh(v); return v;
 }
 function makeTransport(x, z, yaw, team, gunship) { if (WW2ON && !(gunship && WW2CUR === 3)) return null;
