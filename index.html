@@ -15880,6 +15880,10 @@ var oP=W._pickQ;if(oP)W._pickQ=function(all,n){var r=oP.apply(this,arguments);tr
 <script id="home-fix">
 (function(){var W=window;
 function clearOverlays(){try{var l=document.getElementById('lesson-overlay');if(l)l.style.setProperty('display','none','important');var f=document.getElementById('subject-folder-overlay');if(f)f.style.display='none';var e=document.getElementById('el-ov');if(e&&e.parentNode)e.parentNode.removeChild(e);}catch(x){}}
+var MENUS=['splash-sci-menu','splash-tech-menu','splash-hum-menu','splash-lang-menu','splash-eng-menu','splash-arts-menu'];
+function hideMenus(){try{MENUS.forEach(function(id){var m=document.getElementById(id);if(m){m.classList.remove('active');m.style.setProperty('display','none','important');}});var tv=document.getElementById('splash-topics-view');if(tv)tv.style.display='none';var lv=document.getElementById('splash-logo-view');if(lv)lv.style.display='block';}catch(x){}}
+['splashSciBack','splashTechBack','splashHumBack','splashLangBack','splashEngBack','splashArtsBack'].forEach(function(n){var o=W[n];W[n]=function(){var r;try{r=typeof o==='function'?o.apply(this,arguments):undefined;}catch(x){}hideMenus();return r;};});
+var st=document.createElement('style');st.textContent='body>#ch-memorise,body>#ch-test,body>#ch-score{display:none!important}';document.head.appendChild(st);
 ['goHome','showHome'].forEach(function(n){var o=W[n];if(typeof o!=='function')return;W[n]=function(){clearOverlays();return o.apply(this,arguments);};});
 })();
 </script>
