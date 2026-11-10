@@ -1909,6 +1909,16 @@ function answerQuiz(i){
   if (qnextEl) { qnextEl.style.display='inline-block'; qnextEl.style.marginTop='10px'; }
 }
 
+// Offline backup marker: keyword-matches the answer against each mark-scheme point when every AI route is down.
+function _localMark(q,answer){
+  const STOP=new Set('that with from this which they their have because when more than into about also some such each only there then were will would could should being been does done make made used uses using give gives given like both other these those over under after before'.split(' '));
+  const stems=w=>String(w).toLowerCase().replace(/[^a-z0-9. ]/g,' ').split(/\s+/).filter(x=>x&&(x.length>=4||/^\d/.test(x))&&!STOP.has(x)).map(x=>x.replace(/\.$/,'').slice(0,4));
+  const ans=new Set(stems(answer));
+  const pts=String(q.modelAns||'').split(/\(\d\)|;/).map(x=>x.replace(/^\W+|\W+$/g,'')).filter(x=>x.split(/\s+/).length>=3);
+  const hit=[];
+  pts.forEach(p=>{const t=[...new Set(stems(p))];if(!t.length)return;const m=t.filter(x=>ans.has(x)).length;if(m>=Math.max(1,Math.ceil(t.length*0.4)))hit.push(p);});
+  return {score:Math.min(q.marks||6,hit.length),hit:hit,total:Math.min(q.marks||6,pts.length)||1};
+}
 async function submitWritten(){
   const q=shuffledQuiz[quizIndex];
   const answer=(document.getElementById('written-input')||{}).value||'';
@@ -1934,8 +1944,16 @@ async function submitWritten(){
     if(result.correct){quizScore++;updateStreak(true);awardXP(35,null,'correct');}
     else{updateStreak(false);showShield(null,'wrong',0);}
   }catch(err){
-    fb.className='written-fb show partial';
-    fb.innerHTML=`<div style="font-weight:600">⚠ The AI marker is busy right now</div><div style="margin-top:6px">This answer was NOT counted against you. Compare it with the model answer and self-mark, or retake the quiz later. <div class="written-model"><strong>Model answer to self-mark:</strong> ${q.modelAns}</div></div>`;
+    let _lm=null; try{ _lm=q.sci?_localMark(q,answer):null; }catch(e2){}
+    if(_lm){
+      const _mx=q.marks||6, _p=Math.round(_lm.score/_mx*100), _ok=_lm.score>=Math.ceil(_mx/2);
+      fb.className='written-fb show '+(_ok?'right':_p>=35?'partial':'wrong-f');
+      fb.innerHTML=`<div style="font-weight:600;margin-bottom:6px">${_ok?'✓':'◑'} ${_lm.score}/${_mx} marks — ${_p}% <span style="font-weight:400;font-size:12px;opacity:.75">(offline marking)</span></div><div>The AI marker is unavailable, so Ares matched your answer against the mark-scheme points (approximate): ${_lm.hit.length?'you covered '+_lm.hit.length+' of '+_lm.total+' points':'no mark-scheme points matched'}. Compare with the model answer below.</div><div class="written-model"><strong>Model answer:</strong> ${q.modelAns}</div>`;
+      if(_ok){quizScore++;updateStreak(true);awardXP(20,null,'correct');}
+    } else {
+      fb.className='written-fb show partial';
+      fb.innerHTML=`<div style="font-weight:600">⚠ The AI marker is busy right now</div><div style="margin-top:6px">This answer was NOT counted against you. Compare it with the model answer and self-mark, or retake the quiz later. <div class="written-model"><strong>Model answer to self-mark:</strong> ${q.modelAns}</div></div>`;
+    }
   }
   document.getElementById('qnext').classList.add('show');
 }
@@ -9808,23 +9826,37 @@ window.saveAresKeySettings=saveAresKeySettings; window.clearAresKeySettings=clea
 
 // Shared AI backend: Supabase edge function first, then the Vercel /api/ai route; one retry each on network/5xx errors.
 var _aresLastAIError='';
+var _aresBreaker={}, _aresGood=null;
 async function _aresProxyText(prompt, maxTokens){
+  var base='https://ares-revision.vercel.app/api/ai';
   var targets=[
-    {u:SUPABASE_URL+'/functions/v1/ares-ai', h:{'Content-Type':'application/json',apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+SUPABASE_ANON_KEY}},
-    {u:'/api/ai', h:{'Content-Type':'application/json'}},
-    {u:'/functions/v1/ares-ai', h:{'Content-Type':'application/json',apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+SUPABASE_ANON_KEY}}
+    {k:'sb',u:SUPABASE_URL+'/functions/v1/ares-ai', h:{'Content-Type':'application/json',apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+SUPABASE_ANON_KEY}},
+    {k:'api',u:'/api/ai', h:{'Content-Type':'application/json'}},
+    {k:'vercel',u:base, h:{'Content-Type':'application/json'}},
+    {k:'sb2',u:'/functions/v1/ares-ai', h:{'Content-Type':'application/json',apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+SUPABASE_ANON_KEY}}
   ];
-  for(var i=0;i<targets.length;i++){
+  if(_aresGood){ targets.sort(function(a,b){return (b.k===_aresGood)-(a.k===_aresGood);}); } // last working route first
+  var now=Date.now();
+  // circuit breaker: skip routes that failed twice in a row within the last 45s (unless every route is tripped)
+  var live=targets.filter(function(t){var b=_aresBreaker[t.k];return !(b&&b.n>=2&&now-b.t<45000);});
+  if(!live.length) live=targets;
+  for(var i=0;i<live.length;i++){
+    var T=live[i];
     for(var attempt=0;attempt<2;attempt++){
+      var ctl=(typeof AbortController!=='undefined')?new AbortController():null, tm=ctl?setTimeout(function(){ctl.abort();},30000):null;
       try{
-        var r=await fetch(targets[i].u,{method:'POST',headers:targets[i].h,body:JSON.stringify({prompt:prompt,maxTokens:maxTokens})});
-        if(r.ok){ var d=await r.json(); if(d&&d.text) return d.text; _aresLastAIError='empty reply'; break; }
-        var ed=null; try{ ed=await r.json(); }catch(e){}
-        _aresLastAIError=(ed&&ed.error)?String(ed.error).slice(0,120):('HTTP '+r.status);
-        if(r.status<500) break; // client error / missing route: retrying won't help
-      }catch(e){ _aresLastAIError='network'; }
-      await new Promise(function(res){setTimeout(res,600)});
+        var r=await fetch(T.u,{method:'POST',headers:T.h,body:JSON.stringify({prompt:prompt,maxTokens:maxTokens}),signal:ctl?ctl.signal:undefined});
+        if(tm)clearTimeout(tm);
+        if(r.ok){ var d=await r.json(); if(d&&d.text){ _aresBreaker[T.k]={n:0,t:0}; _aresGood=T.k; return d.text; } _aresLastAIError='empty reply'; }
+        else{
+          var ed=null; try{ ed=await r.json(); }catch(e){}
+          _aresLastAIError=(ed&&ed.error)?String(ed.error).slice(0,120):('HTTP '+r.status);
+          if(r.status<500&&r.status!==429) break; // client error / missing route: retrying won't help
+        }
+      }catch(e){ if(tm)clearTimeout(tm); _aresLastAIError=(e&&e.name==='AbortError')?'timeout':'network'; }
+      await new Promise(function(res){setTimeout(res,500*(attempt+1))});
     }
+    var bb=_aresBreaker[T.k]||{n:0,t:0}; _aresBreaker[T.k]={n:bb.n+1,t:Date.now()};
   }
   return null;
 }
