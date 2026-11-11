@@ -4,5 +4,10 @@
       "source": "/functions/v1/:path*",
       "destination": "https://lakjmdyzuqrwcncxybcw.supabase.co/functions/v1/:path*"
     }
-  ]
+  ],
+  "functions": {
+    "api/ai.js": {
+      "maxDuration": 30
+    }
+  }
 }
