@@ -2674,14 +2674,17 @@ window.__dbgScene = scene; window.__R = R; window.__dbgF = { botMove, collide, u
   // MagicWinter accounts: Supabase Auth with a username (stored as a private placeholder email; no emails are ever sent)
   const mwEmail = u => u.toLowerCase() + "@accounts.magicwinter.app";
   async function mwAuth(kind, username, password) {
-    const url = kind === "up" ? ARES + "/auth/v1/signup" : ARES + "/auth/v1/token?grant_type=password";
+    const path = kind === "up" ? "/auth/v1/signup" : "/auth/v1/token?grant_type=password";
     const body = kind === "up" ? { email: mwEmail(username), password, data: { username } } : { email: mwEmail(username), password };
     try {
-      const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", apikey: ARES_KEY }, body: JSON.stringify(body) });
+      let r, lastErr; const bases = [ARES]; if (/^https?:$/.test(location.protocol)) bases.push(location.origin); // own-site route for networks that block the server
+      for (const b of bases) { try { r = await fetch(b + path, { method: "POST", headers: { "Content-Type": "application/json", apikey: ARES_KEY }, body: JSON.stringify(body) }); if (r.status === 404 && b !== ARES) { r = null; continue; } break; } catch (e) { lastErr = e; } }
+      if (!r) throw lastErr || new Error("network");
       let j = {}; try { j = await r.json(); } catch {}
       const msg = j.msg || j.error_description || j.message || j.error || "";
       if (r.ok && j.access_token) return { ok: true, user: j.user?.user_metadata?.username || username, token: j.access_token };
-      if (r.ok && kind === "up") return { error: "Account made, but sign-in is waiting on email confirmation — the studio needs to switch that off in Supabase." };
+      if (r.ok && kind === "up") { const again = await mwAuth("in", username, password); return again.ok ? again : { error: "Account made, but it's waiting on email confirmation — the studio needs to switch \"Confirm email\" off in Supabase." }; }
+      if (/email not confirmed/i.test(msg)) return { error: "This account is waiting on email confirmation — the studio needs to switch \"Confirm email\" off in Supabase." };
       if (/already registered|already exists/i.test(msg)) return { error: "That username is taken." };
       if (/invalid login|invalid_credentials|invalid grant/i.test(msg + (j.error_code || ""))) return { error: "Wrong username or password.", bad: true };
       if (/signups? not allowed|disabled/i.test(msg)) return { error: "New accounts are switched off right now." };
