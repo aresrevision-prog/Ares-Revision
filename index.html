@@ -1944,7 +1944,7 @@ async function submitWritten(){
     if(result.correct){quizScore++;updateStreak(true);awardXP(35,null,'correct');}
     else{updateStreak(false);showShield(null,'wrong',0);}
   }catch(err){
-    let _lm=null; try{ _lm=q.sci?_localMark(q,answer):null; }catch(e2){}
+    let _lm=null; try{ _lm=q.modelAns?_localMark(q,answer):null; }catch(e2){}
     if(_lm){
       const _mx=q.marks||6, _p=Math.round(_lm.score/_mx*100), _ok=_lm.score>=Math.ceil(_mx/2);
       fb.className='written-fb show '+(_ok?'right':_p>=35?'partial':'wrong-f');
@@ -7787,7 +7787,10 @@ async function sendAresMessage() {
   } catch (err) {
     typingDiv.remove();
     var _msg = (err && err.message) || '';
-    if (_msg === 'NO_API_KEY') {
+    var _off=null; try{ _off=window.OfflineBrain?window.OfflineBrain.answer(text):null; }catch(e){}
+    if (_off) {
+      appendAresMessage('bot', _off);
+    } else if (_msg === 'NO_API_KEY') {
       appendAresMessage('bot', '⚠️ Athena AI needs a connection to work. If you\'re viewing this on the hosted site, it should connect automatically — try again in a moment. If that keeps failing, tap the <b>⚙️ Key</b> button above to add your own free Google Gemini key.' + (_aresLastAIError ? ' <span style="opacity:.6;font-size:11px">(server said: ' + _aresLastAIError + ')</span>' : ''));
     } else {
       appendAresMessage('bot', '⚠️ Something went wrong reaching the AI (' + _msg + '). Please try again — if it keeps happening, tap the <b>⚙️ Key</b> button above to add your own key.');
@@ -15782,7 +15785,9 @@ async function markIt(T,text){var parts=T.scale2?[['Content & organisation',T.sc
  var sp=T.spag!=null?T.spag:(T.marks===34?4:0);var spag=sp?'\nAlso award a SPaG mark 0-'+sp+' (top = accurate spelling, punctuation, grammar and wide vocabulary; 0 = negligible). Total = answer('+(T.marks-sp)+')+SPaG('+sp+').':'';
  var ex=T.ex?'\nSOURCE MATERIAL:\n'+(T.ex==='both'?['srcA','srcB']:[T.ex]).map(function(i){return EL_EX[i].t+': '+EL_EX[i].h.replace(/<br>/g,'\n').replace(/<[^>]+>/g,'')}).join('\n\n'):'';
  var pr='You are an experienced '+((EL_PAPERS[T.paper]||{}).ex||'AQA GCSE English examiner')+' marking a student answer. Use ONLY these level bands (own-words summary of the board\'s structure). Mark conservatively and fairly; place the answer in a level first, then choose the mark within the band. Do not reward length for its own sake. Assessment focus: '+T.ao.map(function(a){return EL_AO[a]}).join('; ')+'.\n\nQUESTION ('+T.marks+' marks): '+T.p+ex+(T.pts?'\n\nINDICATIVE CONTENT (examiner guidance; accept equivalent points; no need to include all): '+T.pts:'')+'\n\nBANDS:\n'+bands+spag+'\n\nSTUDENT ANSWER:\n'+text.slice(0,6000)+'\n\nReply ONLY JSON: {"mark":number,"max":'+T.marks+',"level":"e.g. Level 3","www":["2 short strengths"],"ebi":["2 short specific improvements"],"next":"one sentence: how to reach the next level"}';
- return jparse(await race(_aresProxyText(pr,700),35000));}
+ try{var _r=await race(_aresProxyText(pr,700),35000);var _jj=jparse(_r);if(_jj&&_jj.mark!=null)return _jj;}catch(e){}
+ if(W.OfflineBrain)return W.OfflineBrain.essay(T,text);
+ throw new Error('AI unavailable');}
 function fb(m,T){var mk=Math.max(0,Math.min(T.marks,Math.round(+m.mark||0)));return '<div class="el-score">'+AresMascot('ares',64)+'<span>'+mk+'<small>/'+T.marks+'</small></span><div><b>'+esc(m.level||'')+'</b><div style="font-size:12px;color:#9a9aa8">'+Math.round(mk/T.marks*100)+'%</div></div></div>'
  +'<div class="el-card"><div class="el-k">Went well</div><ul>'+(m.www||[]).map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul><div class="el-k">Even better if</div><ul>'+(m.ebi||[]).map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul><div style="font-size:13px;color:#fbbf24">⬆ '+esc(m.next||'')+'</div></div>';}
 function record(a){var p=load();p.att.push(a);if(p.att.length>80)p.att=p.att.slice(-80);save(p);}
@@ -15997,6 +16002,59 @@ if(location.hash==='#aicheck')setTimeout(W.AresAICheck,1500);
 /* add a "Check AI" button to the busy message */
 var mo=new MutationObserver(function(){var f=D.getElementById('qfb');if(!f||f.querySelector('.ai-diag-btn'))return;if(/AI marker is busy/.test(f.textContent)){var b=D.createElement('button');b.className='ai-diag-btn';b.textContent='🩺 Check AI';b.style.cssText='margin-top:8px;background:#f87171;color:#0a0a0a;border:0;border-radius:10px;padding:7px 12px;font-weight:700;cursor:pointer';b.onclick=function(){W.AresAICheck();};f.appendChild(b);}});
 mo.observe(D.body,{childList:true,subtree:true});
+})();
+</script>
+<script id="offline-brain">
+(function(){var W=window;
+var STOP={};'that with from this which they their have because when more than into about also some such each only there then were will would could should being been does done make made used uses using give gives given like both other these those what how why who where explain describe state name write give your answer question marks mark'.split(' ').forEach(function(w){STOP[w]=1;});
+function stems(t){return String(t||'').toLowerCase().replace(/<[^>]*>/g,' ').replace(/[^a-z0-9. ]/g,' ').split(/\s+/).filter(function(x){return x&&(x.length>=4||/^\d/.test(x))&&!STOP[x];}).map(function(x){return x.replace(/\.$/,'').slice(0,4);});}
+function uniq(a){var s={},o=[];a.forEach(function(x){if(!s[x]){s[x]=1;o.push(x);}});return o;}
+function wc(t){return (String(t).trim().match(/\S+/g)||[]).length;}
+function points(pts){return String(pts||'').split(/\(\d+\)|;|\.\s/).map(function(x){return x.replace(/^\W+|\W+$/g,'');}).filter(function(x){return x.split(/\s+/).length>=3;});}
+var CONN=['because','therefore','however','although','whereas','as a result','this suggests','this shows','this implies','in contrast','furthermore','overall','in conclusion','on the other hand','which means','this leads to','this creates','consequently','for example','for instance','whereas','meanwhile','this is because','so that'];
+var TECH=['metaphor','simile','imagery','symbol','tone','structure','foreshadow','personification','juxtaposition','irony','contrast','atmosphere','connotation','sibilance','alliteration','pathetic fallacy','dramatic irony','motif','narrator','perspective','audience','context','theme','character','writer','suggests','implies','presents','portrays','reflects','conveys'];
+W.OfflineBrain={
+ essay:function(T,text){
+  var words=wc(text),m=T.marks||6,tgt=m<=6?50:m<=9?110:m<=12?150:m<=16?200:m<=24?280:380;
+  var low=text.toLowerCase();
+  var conn=CONN.filter(function(c){return low.indexOf(c)>-1;}).length;
+  var paras=Math.max(1,text.split(/\n\s*\n/).filter(function(p){return wc(p)>8;}).length);
+  var quotes=(text.match(/["“][^"”]{3,}["”]/g)||[]).length;
+  var tech=TECH.filter(function(c){return low.indexOf(c)>-1;}).length;
+  var spec=(text.match(/\b(1[0-9]{3}|20[0-2][0-9])\b|\b[A-Z][a-z]{3,}\b/g)||[]).length;
+  var sa=uniq(stems(text)),have={};sa.forEach(function(s){have[s]=1;});
+  var pts=points(T.pts),hit=[],miss=[];
+  pts.forEach(function(p){var t=uniq(stems(p));if(!t.length)return;var c=t.filter(function(x){return have[x];}).length;(c>=Math.max(1,Math.ceil(t.length*0.4))?hit:miss).push(p);});
+  var qt=uniq(stems(T.p)),qh=qt.length?qt.filter(function(x){return have[x];}).length/qt.length:0;
+  var content=pts.length?Math.min(1,hit.length/Math.max(2,Math.min(4,pts.length))):Math.min(1,qh*0.6+Math.min(1,tech/5)*0.25+Math.min(1,(quotes+Math.min(spec,6)/3)/4)*0.15+0.1);
+  var f=0.22*Math.min(1,words/tgt)+0.18*Math.min(1,conn/4)+0.12*Math.min(1,(m>=8?paras/2:1))+0.48*content;
+  var mark=Math.max(words<8?0:1,Math.min(Math.round(f*m*0.97),Math.round(m*0.88)));
+  var www=[],ebi=[];
+  if(hit.length)www.push('You covered key points such as: '+hit.slice(0,2).map(function(x){return '"'+x.slice(0,80)+'"';}).join(' and '));
+  if(conn>=3)www.push('You link ideas with connectives, which builds an argument');
+  if(quotes>=2)www.push('You support points with quotations');
+  if(words>=tgt)www.push('Your answer is well developed');
+  if(!www.length)www.push('You attempted the question and wrote in your own words');
+  if(miss.length)ebi.push('Add a point about: '+miss[0].slice(0,100));
+  if(miss.length>1)ebi.push('Also consider: '+miss[1].slice(0,100));
+  if(words<tgt)ebi.push('Develop your answer further (aim for about '+tgt+' words)');
+  if(conn<2)ebi.push('Use connectives like because, therefore and however to explain, not just describe');
+  if(!pts.length&&quotes<1&&/^(L|T)\d/.test(T.paper||''))ebi.push('Embed short, precise quotations and zoom in on key words');
+  var out={mark:mark,max:m,level:'Offline estimate',www:www.slice(0,2),ebi:ebi.slice(0,3),next:'📴 The AI marker could not be reached, so this is Ares\' offline estimate from key points, structure and length. Cover the missing points and explain each one fully to move up. Try again later for full AI marking.',offline:true};
+  return out;},
+ /* offline tutor: search every subject's notes and flashcards */
+ _idx:null,
+ build:function(){if(this._idx)return this._idx;var subs=['bio','chem','phys','geo','his','eng','bks','spa','fre','ivr','rs','biz','art','dra','mus','ft','wdt','cs','mth'],ix=[],df={};
+  subs.forEach(function(s){var ts=[];try{ts=_getTopicsFor(s)||[];}catch(e){}ts.forEach(function(t){var chunks=[];(function w(o,d){if(d>6||o==null)return;if(typeof o==='string'){var c=o.replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim();if(c.length>=25&&c.length<=600)chunks.push(c);return;}if(Array.isArray(o)){if(o.length===2&&typeof o[0]==='string'&&typeof o[1]==='string'&&o[0].length<200){var c2=(o[0]+' — '+o[1]).replace(/<[^>]*>/g,' ');if(c2.length<=600)chunks.push(c2);return;}o.forEach(function(x){w(x,d+1);});return;}if(typeof o==='object'){if(typeof o.q==='string'&&typeof o.a==='string'){chunks.push((o.q+' — '+o.a).replace(/<[^>]*>/g,' ').slice(0,600));return;}if(o.opts&&o.q)return;if(o.q&&o.modelAns)return;Object.keys(o).forEach(function(k){if(k==='quiz'||k==='written')return;w(o[k],d+1);});}})([t.notes,t.flashcards,t.facts,t.tips,t.definitions],0);
+   chunks.forEach(function(c){var st=uniq(stems(c));st.forEach(function(x){df[x]=(df[x]||0)+1;});ix.push({c:c,st:st,s:s,n:t.name||t.title||''});});});});
+  this._idx={ix:ix,df:df,N:ix.length||1};return this._idx;},
+ answer:function(q){try{var I=this.build(),qs=uniq(stems(q));if(!qs.length||!I.ix.length)return null;var cur=(typeof currentSubject!=='undefined')?currentSubject:'';
+   var sc=I.ix.map(function(e){var s=0;qs.forEach(function(x){if(e.st.indexOf(x)>-1)s+=Math.log(1+I.N/(1+(I.df[x]||0)));});if(s&&e.s===cur)s*=1.25;var nm=stems(e.n);qs.forEach(function(x){if(nm.indexOf(x)>-1)s+=1;});return {e:e,s:s};}).filter(function(x){return x.s>0;}).sort(function(a,b){return b.s-a.s;});
+   var seen={},top=[];sc.forEach(function(x){var k=x.e.c.slice(0,40);if(top.length<3&&!seen[k]&&x.s>=Math.min(4,qs.length*1.2)){seen[k]=1;top.push(x.e);}});
+   var head='📴 I can\'t reach the AI right now, so I searched your notes instead.\n\n';
+   if(!top.length)return head+'I couldn\'t find anything about that in your notes. Try a keyword from the topic (e.g. "mitosis", "Macbeth ambition"), or ask again in a minute when the AI is back.';
+   return head+top.map(function(e){return '• '+e.c+'  ('+e.n+')';}).join('\n\n')+'\n\nAsk again later for a full explanation from the AI.';}catch(e){return null;}}
+};
 })();
 </script>
 </body>
