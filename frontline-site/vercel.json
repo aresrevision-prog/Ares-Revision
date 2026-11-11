@@ -1,6 +1,20 @@
 {
   "cleanUrls": true,
   "headers": [
-    { "source": "/(.*)", "headers": [ { "key": "Cache-Control", "value": "public, max-age=300" } ] }
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=300"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/functions/v1/:path*",
+      "destination": "https://lakjmdyzuqrwcncxybcw.supabase.co/functions/v1/:path*"
+    }
   ]
 }
