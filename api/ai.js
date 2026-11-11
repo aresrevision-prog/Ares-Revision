@@ -3,10 +3,11 @@
 // Static fallbacks, used only if the live model list cannot be fetched.
 const FALLBACK_MODELS = ['gemini-3.8-flash', 'gemini-3-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 let _cache = { t: 0, list: null };
+const _bad = {}; let _good = null;
 async function modelList(key) {
   if (_cache.list && Date.now() - _cache.t < 10 * 60 * 1000) return _cache.list;
   try {
-    const r = await withTimeout('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200&key=' + key, {}, 8000);
+    const r = await withTimeout('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200&key=' + key, {}, 3500);
     const d = await r.json();
     const names = (d.models || [])
       .filter((m) => (m.supportedGenerationMethods || []).includes('generateContent'))
@@ -24,22 +25,26 @@ async function withTimeout(url, opts, ms) {
   const t = setTimeout(() => c.abort(), ms);
   try { return await fetch(url, { ...opts, signal: c.signal }); } finally { clearTimeout(t); }
 }
-async function gemini(model, key, prompt, maxTokens) {
+async function gemini(model, key, prompt, maxTokens, budgetMs) {
   const is25 = /2\.5/.test(model);
-  const gen = { maxOutputTokens: is25 ? maxTokens : Math.max(maxTokens, 800), temperature: 0.7 };
-  if (is25) gen.thinkingConfig = { thinkingBudget: 0 };
-  const r = await withTimeout(
-    'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + key,
-    { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: gen }) },
-    20000
-  );
-  const d = await r.json();
-  if (d.error) throw new Error(d.error.message || 'gemini error');
-  const text = (d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts || [])
-    .map((p) => p.text || '').join('');
-  if (!text.trim()) throw new Error('empty reply');
-  return text;
+  const call = async (think) => {
+    const gen = { maxOutputTokens: is25 ? maxTokens : Math.max(maxTokens, 800), temperature: 0.7 };
+    if (think) gen.thinkingConfig = { thinkingBudget: 0 };
+    const r = await withTimeout(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + key,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: gen }) },
+      budgetMs
+    );
+    const d = await r.json();
+    if (d.error) throw new Error(d.error.message || 'gemini error');
+    const text = (d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts || [])
+      .map((p) => p.text || '').join('');
+    if (!text.trim()) throw new Error('empty reply');
+    return text;
+  };
+  try { return await call(true); }
+  catch (e) { if (/think/i.test((e && e.message) || '')) return await call(false); throw e; }
 }
 async function anthropic(key, prompt, maxTokens) {
   const r = await withTimeout('https://api.anthropic.com/v1/messages', {
@@ -71,20 +76,24 @@ export default async function handler(req, res) {
   if (!prompt || typeof prompt !== 'string') { res.status(400).json({ error: 'Missing prompt' }); return; }
 
   const errors = [];
+  const t0 = Date.now(), DEADLINE = 24000;
   if (gk) {
-    const models = await modelList(gk);
+    let models = await modelList(gk);
+    const fresh = models.filter((m) => !(_bad[m] && Date.now() - _bad[m] < 300000));
+    models = (fresh.length ? fresh : models).slice().sort((a, b) => (b === _good) - (a === _good));
     for (const m of models) {
-      try { const text = await gemini(m, gk, prompt, maxTokens); res.status(200).json({ text, via: m }); return; }
+      const left = DEADLINE - (Date.now() - t0);
+      if (left < 2500) { errors.push('out of time'); break; }
+      try { const text = await gemini(m, gk, prompt, maxTokens, Math.min(9000, left)); _good = m; res.status(200).json({ text, via: m }); return; }
       catch (e) {
-        const msg = (e && e.message) || 'failed';
+        _bad[m] = Date.now();
+        const msg = (e && e.name === 'AbortError') ? 'timeout' : ((e && e.message) || 'failed');
         errors.push(m + ': ' + msg);
-        if (/no longer available|not found|not supported|invalid argument/i.test(msg)) { _cache = { t: 0, list: null }; continue; }
-        await sleep(300);
-        try { const text = await gemini(m, gk, prompt, maxTokens); res.status(200).json({ text, via: m }); return; } catch (e2) { errors.push(m + ': ' + ((e2 && e2.message) || 'failed')); }
+        if (/no longer available|not found|not supported|invalid argument/i.test(msg)) { _cache = { t: 0, list: null }; }
       }
     }
   }
-  if (ak) {
+  if (ak && Date.now() - t0 < DEADLINE) {
     try { const text = await anthropic(ak, prompt, maxTokens); res.status(200).json({ text, via: 'anthropic' }); return; }
     catch (e) { errors.push('anthropic: ' + ((e && e.message) || 'failed')); }
   }
