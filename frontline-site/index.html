@@ -2671,26 +2671,17 @@ window.__dbgScene = scene; window.__R = R; window.__dbgF = { botMove, collide, u
   }
   const emit = () => dispatchEvent(new CustomEvent("mwaccount", { detail: { user: current()?.user || null } }));
 
-  // MagicWinter accounts: Supabase Auth with a username (stored as a private placeholder email; no emails are ever sent)
-  const mwEmail = u => u.toLowerCase() + "@accounts.magicwinter.app";
+  // MagicWinter accounts: username + password, checked by database functions on the account server (no emails)
   async function mwAuth(kind, username, password) {
-    const path = kind === "up" ? "/auth/v1/signup" : "/auth/v1/token?grant_type=password";
-    const body = kind === "up" ? { email: mwEmail(username), password, data: { username } } : { email: mwEmail(username), password };
+    const fn = kind === "up" ? "mw_signup" : "mw_login";
     try {
       let r, lastErr; const bases = [ARES]; if (/^https?:$/.test(location.protocol)) bases.push(location.origin); // own-site route for networks that block the server
-      for (const b of bases) { try { r = await fetch(b + path, { method: "POST", headers: { "Content-Type": "application/json", apikey: ARES_KEY }, body: JSON.stringify(body) }); if (r.status === 404 && b !== ARES) { r = null; continue; } break; } catch (e) { lastErr = e; } }
+      for (const b of bases) { try { r = await fetch(b + "/rest/v1/rpc/" + fn, { method: "POST", headers: { "Content-Type": "application/json", apikey: ARES_KEY }, body: JSON.stringify({ p_username: username, p_password: password }) }); if (r.status === 404 && b !== ARES) { r = null; continue; } break; } catch (e) { lastErr = e; } }
       if (!r) throw lastErr || new Error("network");
       let j = {}; try { j = await r.json(); } catch {}
-      const msg = j.msg || j.error_description || j.message || j.error || "";
-      if (r.ok && j.access_token) return { ok: true, user: j.user?.user_metadata?.username || username, token: j.access_token };
-      if (r.ok && kind === "up") { const again = await mwAuth("in", username, password); return again.ok ? again : { error: "Account made, but it's waiting on email confirmation — the studio needs to switch \"Confirm email\" off in Supabase." }; }
-      if (/email not confirmed/i.test(msg)) return { error: "This account is waiting on email confirmation — the studio needs to switch \"Confirm email\" off in Supabase." };
-      if (/already registered|already exists/i.test(msg)) return { error: "That username is taken." };
-      if (/invalid login|invalid_credentials|invalid grant/i.test(msg + (j.error_code || ""))) return { error: "Wrong username or password.", bad: true };
-      if (/signups? not allowed|disabled/i.test(msg)) return { error: "New accounts are switched off right now." };
-      if (/password/i.test(msg)) return { error: msg };
-      if (r.status === 429) return { error: "Too many attempts — wait a minute." };
-      return { error: msg || "Something went wrong (" + r.status + ")." };
+      if (r.status === 404 || /could not find the function|schema cache/i.test(j.message || "")) return { error: "MagicWinter accounts aren't switched on yet — the studio needs to run magicwinter-accounts.sql in Supabase." };
+      if (j.ok && j.token) return { ok: true, user: j.username || username, token: j.token };
+      return { error: j.error || j.message || "Something went wrong (" + r.status + ").", bad: /wrong username/i.test(j.error || "") };
     } catch { return { error: "Can't reach the account server — check your internet and try again." }; }
   }
 
