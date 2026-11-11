@@ -1917,7 +1917,13 @@ function _localMark(q,answer){
   const pts=String(q.modelAns||'').split(/\(\d\)|;/).map(x=>x.replace(/^\W+|\W+$/g,'')).filter(x=>x.split(/\s+/).length>=3);
   const hit=[];
   pts.forEach(p=>{const t=[...new Set(stems(p))];if(!t.length)return;const m=t.filter(x=>ans.has(x)).length;if(m>=Math.max(1,Math.ceil(t.length*0.4)))hit.push(p);});
-  return {score:Math.min(q.marks||6,hit.length),hit:hit,total:Math.min(q.marks||6,pts.length)||1};
+  return {score:Math.min(q.marks||6,hit.length),hit:hit,miss:pts.filter(function(x){return hit.indexOf(x)<0;}),total:Math.min(q.marks||6,pts.length)||1};
+}
+function _wwwEbiHTML(r){
+  const li=a=>(a||[]).filter(Boolean).slice(0,4).map(x=>'<li style="margin:3px 0">'+String(x).replace(/</g,'&lt;')+'</li>').join('');
+  const w=li(r&&r.www), e=li(r&&r.ebi);
+  if(!w&&!e)return '';
+  return '<div style="display:grid;gap:8px;margin-top:10px">'+(w?'<div style="background:rgba(74,222,128,.10);border:1px solid rgba(74,222,128,.3);border-radius:10px;padding:8px 12px"><div style="font-weight:700;font-size:12px;letter-spacing:.06em;color:#4ade80">WWW · WHAT WENT WELL</div><ul style="margin:4px 0 0 18px;padding:0;font-size:13px;line-height:1.5">'+w+'</ul></div>':'')+(e?'<div style="background:rgba(251,191,36,.10);border:1px solid rgba(251,191,36,.3);border-radius:10px;padding:8px 12px"><div style="font-weight:700;font-size:12px;letter-spacing:.06em;color:#fbbf24">EBI · EVEN BETTER IF</div><ul style="margin:4px 0 0 18px;padding:0;font-size:13px;line-height:1.5">'+e+'</ul></div>':'')+'</div>';
 }
 async function submitWritten(){
   const q=shuffledQuiz[quizIndex];
@@ -1930,7 +1936,7 @@ async function submitWritten(){
   fb.className='written-fb show partial';
   fb.innerHTML='<div class="ai-loading"><div class="dot"></div><div class="dot"></div><div class="dot"></div><span>AI is reading your answer...</span></div>';
   try{
-    const _wprompt=q.lang?`You are an experienced GCSE ${q.subj} examiner marking a short writing or translation task. Be fair and encouraging.\n\nTask (${q.marks} marks): ${q.q}\n\nModel answer and mark scheme: ${q.modelAns}\n\nStudent's answer: ${answer}\n\nMark for communication of the required message, correct vocabulary, verb forms and tenses, and accuracy of spelling and agreement. Accept any correct alternative to the model answer and do not penalise minor accent slips heavily. Award up to ${q.marks} marks. Reply ONLY in JSON: {\"score\":0-${q.marks},\"feedback\":\"2-3 sentences in English: what was good and what to correct (quote the corrected words)\",\"correct\":true_if_score_at_least_half}`:q.sci?`You are an experienced GCSE ${q.subj||'Science'} examiner marking against a mark scheme. Be fair, encouraging and accurate.\n\nQuestion (${q.marks} marks): ${q.q}\n\nMark scheme points (each point is worth 1 mark; accept equivalent wording, units and sensible alternatives; do not award marks for incorrect science): ${q.modelAns}\n\nStudent's answer: ${answer}\n\nAward 1 mark per valid point up to ${q.marks}. Reply ONLY in JSON: {\"score\":0-${q.marks},\"feedback\":\"2-3 sentences naming which mark points were gained and which were missed\",\"correct\":true_if_score_at_least_half}`:`You are marking a GCSE English answer. Be encouraging but honest.\n\nQuestion: ${q.q}\n\nModel answer key points: ${q.modelAns}\n\nStudent's answer: ${answer}\n\nMark out of ${q.marks||6}. Does the student: identify literary techniques? Quote or reference the text? Explain effect on reader? Show analytical thinking?\n\nReply ONLY in JSON: {"score":0-${q.marks||6},"feedback":"2-3 sentences of specific, helpful feedback","correct":true_if_score_above_half}`;
+    const _wprompt=q.lang?`You are an experienced GCSE ${q.subj} examiner marking a short writing or translation task. Be fair and encouraging.\n\nTask (${q.marks} marks): ${q.q}\n\nModel answer and mark scheme: ${q.modelAns}\n\nStudent's answer: ${answer}\n\nMark for communication of the required message, correct vocabulary, verb forms and tenses, and accuracy of spelling and agreement. Accept any correct alternative to the model answer and do not penalise minor accent slips heavily. Award up to ${q.marks} marks. Reply ONLY in JSON: {\"score\":0-${q.marks},\"feedback\":\"2-3 sentences in English: what was good and what to correct (quote the corrected words)\",\"www\":[\"2-3 specific things done well, quoting or naming what the student wrote\"],\"ebi\":[\"2-3 specific improvements, each saying exactly what to add or change\"],\"correct\":true_if_score_at_least_half}`:q.sci?`You are an experienced GCSE ${q.subj||'Science'} examiner marking against a mark scheme. Be fair, encouraging and accurate.\n\nQuestion (${q.marks} marks): ${q.q}\n\nMark scheme points (each point is worth 1 mark; accept equivalent wording, units and sensible alternatives; do not award marks for incorrect science): ${q.modelAns}\n\nStudent's answer: ${answer}\n\nAward 1 mark per valid point up to ${q.marks}. Reply ONLY in JSON: {\"score\":0-${q.marks},\"feedback\":\"2-3 sentences naming which mark points were gained and which were missed\",\"www\":[\"2-3 specific things done well, quoting or naming what the student wrote\"],\"ebi\":[\"2-3 specific improvements, each saying exactly what to add or change\"],\"correct\":true_if_score_at_least_half}`:`You are marking a GCSE English answer. Be encouraging but honest.\n\nQuestion: ${q.q}\n\nModel answer key points: ${q.modelAns}\n\nStudent's answer: ${answer}\n\nMark out of ${q.marks||6}. Does the student: identify literary techniques? Quote or reference the text? Explain effect on reader? Show analytical thinking?\n\nReply ONLY in JSON: {"score":0-${q.marks||6},"feedback":"2-3 sentences of specific, helpful feedback","www":["2-3 specific things done well, quoting the student"],"ebi":["2-3 specific improvements, each saying exactly what to add or change"],"correct":true_if_score_above_half}`;
     let result=null;
     let _lastE=null;
     for(let _a=0;_a<3&&!result;_a++){
@@ -1940,7 +1946,7 @@ async function submitWritten(){
     if(!result) throw (_lastE||new Error('AI unavailable'));
     const pct2=Math.round((result.score/(q.marks||6))*100);
     fb.className='written-fb show '+(result.correct?'right':pct2>=35?'partial':'wrong-f');
-    fb.innerHTML=`<div style="font-weight:600;margin-bottom:6px">${result.correct?'✓':'◑'} ${result.score}/${q.marks||6} marks — ${pct2}%</div><div>${result.feedback}</div><div class="written-model"><strong>Model answer:</strong> ${q.modelAns}</div>`;
+    fb.innerHTML=`<div style="font-weight:600;margin-bottom:6px">${result.correct?'✓':'◑'} ${result.score}/${q.marks||6} marks — ${pct2}%</div><div>${result.feedback||''}</div>${_wwwEbiHTML(result)}<div class="written-model"><strong>Model answer:</strong> ${q.modelAns}</div>`;
     if(result.correct){quizScore++;updateStreak(true);awardXP(35,null,'correct');}
     else{updateStreak(false);showShield(null,'wrong',0);}
   }catch(err){
@@ -1948,7 +1954,7 @@ async function submitWritten(){
     if(_lm){
       const _mx=q.marks||6, _p=Math.round(_lm.score/_mx*100), _ok=_lm.score>=Math.ceil(_mx/2);
       fb.className='written-fb show '+(_ok?'right':_p>=35?'partial':'wrong-f');
-      fb.innerHTML=`<div style="font-weight:600;margin-bottom:6px">${_ok?'✓':'◑'} ${_lm.score}/${_mx} marks — ${_p}% <span style="font-weight:400;font-size:12px;opacity:.75">(offline marking)</span></div><div>The AI marker is unavailable, so Ares matched your answer against the mark-scheme points (approximate): ${_lm.hit.length?'you covered '+_lm.hit.length+' of '+_lm.total+' points':'no mark-scheme points matched'}. Compare with the model answer below.</div><div class="written-model"><strong>Model answer:</strong> ${q.modelAns}</div>`;
+      fb.innerHTML=`<div style="font-weight:600;margin-bottom:6px">${_ok?'✓':'◑'} ${_lm.score}/${_mx} marks — ${_p}% <span style="font-weight:400;font-size:12px;opacity:.75">(offline marking)</span></div><div>The AI marker is unavailable, so Ares matched your answer against the mark-scheme points (approximate) and found ${_lm.hit.length} of ${_lm.total}.</div>${_wwwEbiHTML({www:_lm.hit.slice(0,3).map(x=>'You made the point: '+x.slice(0,110)),ebi:_lm.miss.slice(0,3).map(x=>'Add: '+x.slice(0,120))})}<div class="written-model"><strong>Model answer:</strong> ${q.modelAns}</div>`;
       if(_ok){quizScore++;updateStreak(true);awardXP(20,null,'correct');}
     } else {
       fb.className='written-fb show partial';
@@ -16046,15 +16052,36 @@ W.OfflineBrain={
  _idx:null,
  build:function(){if(this._idx)return this._idx;var subs=['bio','chem','phys','geo','his','eng','bks','spa','fre','ivr','rs','biz','art','dra','mus','ft','wdt','cs','mth'],ix=[],df={};
   subs.forEach(function(s){var ts=[];try{ts=_getTopicsFor(s)||[];}catch(e){}ts.forEach(function(t){var chunks=[];(function w(o,d){if(d>6||o==null)return;if(typeof o==='string'){var c=o.replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim();if(c.length>=25&&c.length<=600)chunks.push(c);return;}if(Array.isArray(o)){if(o.length===2&&typeof o[0]==='string'&&typeof o[1]==='string'&&o[0].length<200){var c2=(o[0]+' — '+o[1]).replace(/<[^>]*>/g,' ');if(c2.length<=600)chunks.push(c2);return;}o.forEach(function(x){w(x,d+1);});return;}if(typeof o==='object'){if(typeof o.q==='string'&&typeof o.a==='string'){chunks.push((o.q+' — '+o.a).replace(/<[^>]*>/g,' ').slice(0,600));return;}if(o.opts&&o.q)return;if(o.q&&o.modelAns)return;Object.keys(o).forEach(function(k){if(k==='quiz'||k==='written')return;w(o[k],d+1);});}})([t.notes,t.flashcards,t.facts,t.tips,t.definitions],0);
+   (t.written||[]).forEach(function(w){if(w&&w.q&&w.modelAns){var c3=(w.q+' — '+w.modelAns).replace(/<[^>]*>/g,' ').slice(0,900);var st3=uniq(stems(c3));st3.forEach(function(x){df[x]=(df[x]||0)+1;});ix.push({c:c3,q:w.q,a:w.modelAns,st:st3,s:s,n:(t.name||t.title||'')+' · mark scheme',ms:1});}});
    chunks.forEach(function(c){var st=uniq(stems(c));st.forEach(function(x){df[x]=(df[x]||0)+1;});ix.push({c:c,st:st,s:s,n:t.name||t.title||''});});});});
+  try{(W._el&&W._el.tasks||[]).forEach(function(T){if(T.pts&&T.p){var c4=(T.p+' — '+T.pts).slice(0,900),st4=uniq(stems(c4));st4.forEach(function(x){df[x]=(df[x]||0)+1;});ix.push({c:c4,q:T.p,a:T.pts,st:st4,s:T.subj||'',n:'Exam question · mark points',ms:1});}});}catch(e){}
   this._idx={ix:ix,df:df,N:ix.length||1};return this._idx;},
- answer:function(q){try{var I=this.build(),qs=uniq(stems(q));if(!qs.length||!I.ix.length)return null;var cur=(typeof currentSubject!=='undefined')?currentSubject:'';
-   var sc=I.ix.map(function(e){var s=0;qs.forEach(function(x){if(e.st.indexOf(x)>-1)s+=Math.log(1+I.N/(1+(I.df[x]||0)));});if(s&&e.s===cur)s*=1.25;var nm=stems(e.n);qs.forEach(function(x){if(nm.indexOf(x)>-1)s+=1;});return {e:e,s:s};}).filter(function(x){return x.s>0;}).sort(function(a,b){return b.s-a.s;});
-   var seen={},top=[];sc.forEach(function(x){var k=x.e.c.slice(0,40);if(top.length<3&&!seen[k]&&x.s>=Math.min(4,qs.length*1.2)){seen[k]=1;top.push(x.e);}});
-   var head='📴 I can\'t reach the AI right now, so I searched your notes instead.\n\n';
-   if(!top.length)return head+'I couldn\'t find anything about that in your notes. Try a keyword from the topic (e.g. "mitosis", "Macbeth ambition"), or ask again in a minute when the AI is back.';
-   return head+top.map(function(e){return '• '+e.c+'  ('+e.n+')';}).join('\n\n')+'\n\nAsk again later for a full explanation from the AI.';}catch(e){return null;}}
+ kind:function(q){q=String(q).toLowerCase();if(/\b(evaluate|assess|how far|to what extent|do you agree|judge)\b/.test(q))return 'evaluate';if(/\b(compare|difference|differ|similar|contrast)\b/.test(q))return 'compare';if(/\b(define|what is|what are|what does|meaning of|what do you mean)\b/.test(q))return 'def';if(/\bdescribe\b/.test(q))return 'describe';if(/\b(why|explain|how does|how do|how did|reason|cause)\b/.test(q))return 'explain';return 'general';},
+ tip:function(k){return {evaluate:'📌 Exam tip: for evaluate or assess questions give a point for, a point against, then a clear judgement that answers the question ("Overall…, because…").',compare:'📌 Exam tip: compare means similarities AND differences. Use "whereas", "both" and "however" so each point sits next to its pair.',def:'📌 Exam tip: give a precise definition first, then one example or fact for the extra mark.',describe:'📌 Exam tip: describe means say what it is like or what happens. Use facts, figures and names, and do not explain why unless asked.',explain:'📌 Exam tip: explain means give a reason. Use "because…, which leads to…, so…" and develop each point rather than listing.',general:'📌 Exam tip: answer the command word, include a fact, name or date, and link it back to the question.'}[k];},
+ feedbackOn:function(text){try{var I=this.build(),sa=uniq(stems(text));if(!I.ix.length||sa.length<5)return null;var cur=(typeof currentSubject!=='undefined')?currentSubject:'';
+   var sc=I.ix.map(function(e){var s=0;sa.forEach(function(x){if(e.st.indexOf(x)>-1)s+=Math.log(1+I.N/(1+(I.df[x]||0)));});if(s&&e.s===cur)s*=1.25;return {e:e,s:s};}).filter(function(x){return x.s>0;}).sort(function(a,b){return b.s-a.s;});
+   var pts=[],seen={};sc.forEach(function(x){var k=x.e.c.slice(0,40);if(pts.length<5&&!seen[k]){seen[k]=1;pts.push(x.e.ms?x.e.a:x.e.c);}});
+   var flat=[];pts.forEach(function(x){points(x).slice(0,4).forEach(function(y){flat.push(y);});});
+   var wcn=wc(text),m=wcn>=150?9:wcn>=80?6:4;var r=this.essay({marks:m,p:'',pts:flat.join('; '),paper:''},text);
+   var out='📴 The AI is unreachable, so here is my offline marking (an estimate):\n\n📊 Estimated mark: '+Math.min(r.mark,m-1)+'/'+m+'\n\n✅ WWW (What Went Well)\n'+r.www.map(function(x){return '• '+x;}).join('\n')+'\n\n🔧 EBI (Even Better If)\n'+r.ebi.map(function(x){return '• '+x;}).join('\n')+'\n\nTell me the exact question and I can match your answer to its mark-scheme points. Try again later for full AI feedback.';return out;}catch(e){return null;}},
+ answer:function(q){try{
+   if(wc(q)>=35&&/\b(mark|feedback|www|ebi|check|my answer|improve|good enough|what level)\b/i.test(q)||wc(q)>=70){var f=this.feedbackOn(q);if(f)return f;}
+   var I=this.build(),qs=uniq(stems(q));if(!qs.length||!I.ix.length)return null;var cur=(typeof currentSubject!=='undefined')?currentSubject:'',kd=this.kind(q);
+   var sc=I.ix.map(function(e){var s=0;qs.forEach(function(x){if(e.st.indexOf(x)>-1)s+=Math.log(1+I.N/(1+(I.df[x]||0)));});if(s&&e.s===cur)s*=1.25;if(s&&e.ms)s*=1.35;var nm=stems(e.n);qs.forEach(function(x){if(nm.indexOf(x)>-1)s+=1;});return {e:e,s:s};}).filter(function(x){return x.s>0;}).sort(function(a,b){return b.s-a.s;});
+   var th=Math.min(4,qs.length*1.2),seen={},top=[];sc.forEach(function(x){var k=x.e.c.slice(0,40);if(top.length<4&&!seen[k]&&x.s>=th){seen[k]=1;top.push(x);}});
+   var head='📴 The AI is unreachable right now, so I answered from your notes and the mark schemes.\n\n';
+   if(!top.length)return head+'I couldn\'t find that in your notes. Try a keyword from the topic (e.g. "mitosis", "Macbeth ambition"), or ask again in a minute when the AI is back.';
+   var best=top[0].e,out=head;
+   if(best.ms){var pp=points(best.a);out+='✅ Mark-scheme style answer ('+best.n.replace(' · mark scheme','')+')\nQuestion: '+best.q+'\n'+(pp.length?pp.slice(0,7).map(function(x,i){return (i+1)+'. '+x;}).join('\n'):best.a)+'\n';}
+   else{out+='💡 Key idea ('+best.n+')\n'+best.c+'\n';}
+   var more=top.slice(1).map(function(x){return x.e;}).filter(function(e){return e!==best;});
+   if(more.length)out+='\n📚 More from your notes\n'+more.map(function(e){return '• '+(e.ms?e.q+' — '+points(e.a).slice(0,3).join('; '):e.c)+'  ('+e.n+')';}).join('\n')+'\n';
+   out+='\n'+this.tip(kd);
+   var rel=[];top.forEach(function(x){var n=x.e.n.replace(' · mark scheme','');if(rel.indexOf(n)<0)rel.push(n);});
+   if(rel.length)out+='\n\n🔗 Revise: '+rel.slice(0,3).join(' · ');
+   out+='\n\nAsk again later for a full explanation from the AI, or paste your own answer and ask me to mark it (WWW and EBI).';return out;}catch(e){return null;}}
 };
+var _bsp=W.buildAresSystemPrompt;if(typeof _bsp==='function')W.buildAresSystemPrompt=function(){var r=_bsp.apply(this,arguments);return r+'\n\nMARKING RULE: whenever a student shares an answer or asks for feedback, reply in this exact shape: an estimated mark out of the available marks (ask for the question and marks if unknown), then "WWW (What Went Well):" with 2-3 specific bullets quoting their answer, then "EBI (Even Better If):" with 2-3 specific bullets saying exactly what to add or change, then one improved sentence they could use. When a student asks a revision question, give a direct, accurate, exam-board-style answer first, then one exam tip. Be concise.';};
 })();
 </script>
 </body>
