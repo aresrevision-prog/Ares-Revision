@@ -2630,7 +2630,7 @@ window.__dbgScene = scene; window.__R = R; window.__dbgF = { botMove, collide, u
   if (window.MWAccount) return;
   const ARES = "https://lakjmdyzuqrwcncxybcw.supabase.co", ARES_KEY = "sb_publishable__m0zTZ3-ThJVk0pktI65Ag_yDFPPD5s";
   const ARES_SITE = "https://ares-revision.vercel.app", SESS = "mw.session";
-  const FLOOF = window.MW_FLOOF_URL || (document.querySelector("[data-mw-account]") ? "/floof/" : ""); // set window.MW_FLOOF_URL to Floof's own website
+  const FLOOF = window.MW_FLOOF_URL || "https://floofai.vercel.app"; // set window.MW_FLOOF_URL to Floof's own website
   const me = document.currentScript, pos = (me && me.dataset.position) || "top-right";
   const HEX = '<svg viewBox="0 0 100 100" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M50 5l39 22.5v45L50 95 11 72.5v-45z" stroke="#3ddc84" stroke-width="6" fill="#0d1f16"/><path d="M16 38l18 26 16-28 16 28 18-26" stroke="#3ddc84" stroke-width="8"/><path d="M28 68V31l22 24 22-24v37" stroke="#0d1f16" stroke-width="12.5"/><path d="M28 68V31l22 24 22-24v37" stroke="#3ddc84" stroke-width="7.5"/></svg>';
   const MINI = '<svg viewBox="0 0 100 100" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:15px;height:15px;vertical-align:-3px"><path d="M50 5l39 22.5v45L50 95 11 72.5v-45z" stroke="#3ddc84" stroke-width="7" fill="#0d1f16"/><path d="M28 68V31l22 24 22-24v37" stroke="#3ddc84" stroke-width="9"/></svg>';
@@ -2696,7 +2696,7 @@ window.__dbgScene = scene; window.__R = R; window.__dbgF = { botMove, collide, u
     const s = current(), u = s && s.user;
     pill.innerHTML = u ? `<span class="mwa-av">${esc(u[0].toUpperCase())}</span><span class="mwa-nm">${esc(u)}</span><span style="opacity:.6">▾</span>` : `${HEX}<span>Sign in</span>`;
     pill.setAttribute("aria-label", u ? "MagicWinter account: " + u : "Sign in with your MagicWinter account");
-    menu.innerHTML = u ? `<div class="who">MagicWinter account<br><b>${esc(u)}</b></div><a href="${ARES_SITE}" target="_blank" rel="noopener">📚 Ares Revision ↗</a><a href="https://frontlineswarfare.vercel.app" target="_blank" rel="noopener">🎖️ Frontline Warzone ↗</a>${FLOOF ? `<a href="${FLOOF}">☁️ Floof AI</a>` : ""}<button type="button" data-out>↩ Sign out</button>` : "";
+    menu.innerHTML = u ? `<div class="who">MagicWinter account<br><b>${esc(u)}</b></div><a href="${ARES_SITE}" target="_blank" rel="noopener">📚 Ares Revision ↗</a><a href="https://frontlineswarfare.vercel.app" target="_blank" rel="noopener">🎖️ Frontline Warzone ↗</a>${FLOOF ? `<a href="${FLOOF}" target="_blank" rel="noopener">☁️ Floof AI ↗</a>` : ""}<button type="button" data-out>↩ Sign out</button>` : "";
     const o = menu.querySelector("[data-out]"); if (o) o.onclick = () => { localStorage.removeItem(SESS); sessionStorage.removeItem(SESS); menu.classList.remove("on"); render(); emit(); };
   }
   pill.onclick = e => { e.stopPropagation(); if (current()) { placeMenu(); menu.classList.toggle("on"); } else open(); };
