@@ -834,7 +834,7 @@ html,html,body{height:100%}body{min-height:100%;background:var(--bg);color:var(-
     <button onclick="closeFrontline()" style="background:#141a0c;color:#f2c14e;border:1px solid #2a3418;border-radius:6px;padding:6px 14px;cursor:pointer;font-family:inherit;font-size:13px;">← Back to Test</button>
     <span style="color:#f2c14e;letter-spacing:2px;font-weight:700;">🪖 FRONTLINE WARZONE</span>
   </div>
-  <iframe id="fl-frame" title="Frontline Warzone" style="width:100%;height:calc(100% - 41px);border:0;display:block;background:#000;" allow="autoplay; fullscreen; pointer-lock"></iframe>
+  <iframe id="fl-frame" title="Frontlines Warfare" style="width:100%;height:calc(100% - 41px);border:0;display:block;background:#000;" allow="autoplay; fullscreen; pointer-lock"></iframe>
 </div>
 <div id="page-worldminds" style="display:none;position:fixed;inset:0;z-index:99600;background:#0a0f17;">
   <div style="display:flex;align-items:center;gap:12px;padding:8px 14px;background:#0a0f17;border-bottom:2px solid #22314a;">
@@ -12917,7 +12917,7 @@ function _aresUpdateArenaButton(){
       </div>
     </div>
     <div id="game-codes-panel" style="display:none;flex-shrink:0;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,0.07);background:rgba(242,193,78,0.04);max-height:70vh;overflow-y:auto;">
-      <div style="font-size:12px;font-weight:700;color:#f2c14e;margin-bottom:6px;">🎟 Frontline Warzone codes</div>
+      <div style="font-size:12px;font-weight:700;color:#f2c14e;margin-bottom:6px;">🎟 Frontlines Warfare codes</div>
       <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:8px;">Players type these in the game's Armory. Each player can use a code once. Codes stop working when they expire or you delete them.</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
         <input id="gc-code" maxlength="24" placeholder="Code (e.g. weekend500)" style="border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:#fff;font-size:13px;box-sizing:border-box;font-family:inherit;padding:9px 11px;border-radius:9px;text-transform:lowercase;">
@@ -14629,7 +14629,7 @@ function closePortSable(){
 }
 window.openPortSable=openPortSable;window.closePortSable=closePortSable;
 var _AT_HASH='dd49477b0b970dde26d58606384cfedd0dc5740b719bffc06442e7d949849deb';
-var TEST_GAMES=[{id:'frontline',name:'Frontline Warzone'},{id:'worldminds',name:'World Minds'},{id:'empireheat',name:'Empire Heat'},{id:'portsable',name:'Port Sable'}];
+var TEST_GAMES=[{id:'frontline',name:'Frontlines Warfare'},{id:'worldminds',name:'World Minds'},{id:'empireheat',name:'Empire Heat'},{id:'portsable',name:'Port Sable'}];
 var REVIVE_AT=5; // 👍 "bring back" votes a rejected game needs to return to TEST
 // Shared state lives on the AdminHF account only: gameStatus[id]={state:'test'|'voting'|'promoted'|'rejected',round:n}
 // Each account's ballots live on its own row: testBallots[id]={r:round,v:1|-1}. A ballot only counts for the current round.

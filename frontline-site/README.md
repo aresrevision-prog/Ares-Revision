@@ -1,4 +1,4 @@
-# Frontline Warzone
+# Frontlines Warfare
 
 A 3D war shooter that runs in the browser. Single file: `index.html`.
 
