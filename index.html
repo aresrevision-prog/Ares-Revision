@@ -7734,7 +7734,8 @@ async function sendAresMessage() {
       }));
       // Try the shared server proxy first (one key, works for everyone, stays secret)
       const flat = sysPrompt + '\n\n' + aresConversation.slice(-12).map(m => (m.role === 'assistant' ? 'Ares' : 'Student') + ': ' + m.content).join('\n') + '\nAres:';
-      reply = await _aresProxyText(flat, 1024);
+      reply = await _athenaFloof(sysPrompt, aresConversation.slice(-12)); // Athena now runs on Floof Cloud
+      if (!reply) reply = await _aresProxyText(flat, 1024); // backup: the Ares server
 
       // Fall back to the user's own Gemini key (for local use without the proxy)
       if (!reply) {
@@ -9836,6 +9837,19 @@ window.saveAresKeySettings=saveAresKeySettings; window.clearAresKeySettings=clea
 // Shared AI backend: Supabase edge function first, then the Vercel /api/ai route; one retry each on network/5xx errors.
 var _aresLastAIError='';
 var _aresBreaker={}, _aresGood=null;
+// Athena's brain: Floof Cloud (floofai.vercel.app). Returns null on any failure so the Ares routes take over.
+var _floofBreaker={n:0,t:0};
+async function _athenaFloof(sys, msgs){
+  if(_floofBreaker.n>=2&&Date.now()-_floofBreaker.t<45000)return null;
+  var ctl=(typeof AbortController!=='undefined')?new AbortController():null, tm=ctl?setTimeout(function(){ctl.abort();},28000):null;
+  try{
+    var r=await fetch('https://floofai.vercel.app/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctl?ctl.signal:undefined,
+      body:JSON.stringify({ares:true,system:sys,messages:msgs.map(function(m){return {role:m.role==='assistant'?'assistant':'user',content:String(m.content||'')};}),maxTokens:1024})});
+    if(tm)clearTimeout(tm);
+    if(r.ok){var d=await r.json();if(d&&d.text&&String(d.text).trim()){_floofBreaker={n:0,t:0};return String(d.text).trim();}}
+  }catch(e){if(tm)clearTimeout(tm);}
+  _floofBreaker={n:_floofBreaker.n+1,t:Date.now()};return null;
+}
 async function _aresProxyText(prompt, maxTokens){
   var base='https://ares-revision.vercel.app/api/ai';
   var targets=[
