@@ -207,6 +207,9 @@ body.retro #c{filter:contrast(1.35) saturate(1.7) hue-rotate(-10deg)!important;i
 #ww2map .wb.won .core{fill:#2f5d8a}#ww2map .wb.next .core{fill:#b8862a}#ww2map .wb.next .halo{stroke:#f0c060;stroke-width:3;animation:wp 1.4s infinite}#ww2map .wb.lock{opacity:.7}#ww2map .wb.sel .halo{stroke:#fff;stroke-width:3}@keyframes wp{50%{stroke-opacity:.2}}
 #ww2side{flex:1;min-width:220px;border:1px solid rgba(232,214,168,.3);padding:16px;font-size:14px;background:rgba(0,0,0,.25)}#ww2side h3{font-family:var(--cond);font-size:28px;margin:2px 0;text-transform:uppercase;color:#f0dcae}#ww2side .wdate{color:#d9b25c;font-family:var(--cond);letter-spacing:.1em;text-transform:uppercase}#ww2side .wplace{color:var(--dim);margin-bottom:8px}#ww2side .dsc{color:#d8ccb0}#ww2side button{width:100%;margin-top:8px}
 .ww2btn{width:100%;background:linear-gradient(90deg,#6b5326,#a07a32)!important;color:#fff3d6!important}.ww2btn small{opacity:.75;font-weight:400;margin-left:6px}
+#acct{position:fixed;inset:0;z-index:43;background:rgba(6,9,7,.97);display:flex;justify-content:center;overflow:auto;padding:24px 16px}#acct h2{font-family:var(--cond);font-size:34px;margin:0;text-transform:uppercase;letter-spacing:.04em;color:#e8d6a8}#acct .top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+#acct form{display:flex;flex-direction:column;gap:8px;margin:10px 0}#acct input{width:100%;box-sizing:border-box}.actabs{display:flex;gap:4px;margin:14px 0 4px;flex-wrap:wrap}.actabs button{flex:1}.actabs button.on{background:#ffd36b;color:#1a1a12}
+.acrow{margin:14px 0;padding:12px;border:1px solid rgba(207,217,200,.2)}.ack{font-family:var(--cond);letter-spacing:.15em;text-transform:uppercase;color:#a9b4a0;font-size:12px}.acn{font-family:var(--cond);font-size:28px;color:#ffd36b}.acbox{padding:12px;border:1px solid rgba(61,220,132,.35);background:rgba(13,31,22,.5);margin:10px 0}.acact{display:flex;gap:8px;flex-wrap:wrap}#macct small{opacity:.7}
 #friends{position:fixed;inset:0;z-index:42;background:rgba(6,9,7,.97);display:flex;justify-content:center;overflow:auto;padding:24px 16px}#friends .fwrap{width:100%;max-width:620px}.frme{margin:14px 0;padding:12px;border:1px solid rgba(207,217,200,.2);display:flex;gap:10px;align-items:center;flex-wrap:wrap}.frme b{font-family:var(--cond);font-size:24px;letter-spacing:.08em;color:#ffd36b}#frin{flex:1;min-width:180px;text-transform:uppercase}
 .fr{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid rgba(207,217,200,.15);margin-top:8px;flex-wrap:wrap}.fr .dot{width:10px;height:10px;border-radius:50%;background:#555}.fr.on .dot{background:#5fd07a;box-shadow:0 0 8px #5fd07a}.fr .fi{flex:1;min-width:140px;display:flex;flex-direction:column}.fr .fi span{font-size:12px;color:var(--dim)}.fr .fb{display:flex;gap:6px;flex-wrap:wrap}.fr .x{padding:4px 9px}
 #invite{position:fixed;left:50%;top:16px;transform:translateX(-50%);z-index:60;background:#1c2418;border:1px solid #ffd36b;padding:12px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;max-width:calc(100% - 32px)}
@@ -248,7 +251,7 @@ body.retro #c{filter:contrast(1.35) saturate(1.7) hue-rotate(-10deg)!important;i
     <div class="row"><button class="pri" id="front" disabled>Frontline Offensive</button><button class="pri alt" id="scenb" disabled>Missions</button><button class="pri alt" id="conqb" disabled>Conquest</button></div><div class="row"><button class="pri ww2btn" id="ww2b" disabled>★ 1944–45 · Road to Berlin <small>16-battle WW2 event</small></button></div><span id="campinfo" class="campinfo"></span>
     <div class="row"><button class="pri" id="online" disabled>Online battle</button><label>Room code<input id="room" maxlength="20" value="ares" autocomplete="off"></label></div><span id="onlinenote" class="campinfo"></span>
     <div class="row"><button id="tdm" disabled>Team Deathmatch</button><button id="ffa" disabled>Free-for-all</button></div>
-    <div class="coinrow"><span id="mcoins"></span><button id="mshop">Armory</button><button id="mfriends">Friends</button></div>
+    <div class="coinrow"><span id="mcoins"></span><button id="mshop">Armory</button><button id="mfriends">Friends</button><button id="macct">👤 Sign in</button></div>
     <span id="load">Building the battlefield…</span><div id="err"></div>
     <div class="keys"><b>WASD</b> move · <b>Mouse</b> or <b>Arrow keys</b> look · <b>Click</b> or <b>E</b> fire · <b>Right-click</b> or <b>Q</b> aim · <b>Shift</b> sprint · <b>Space</b> jump / climb · <b>C</b> crouch (slide while sprinting) · <b>R</b> reload · <b>1 2 3</b> primary, marksman, launcher · <b>G</b> grenade · <b>B</b> throw C4 · <b>Z</b> detonate C4 · <b>X</b> pick up weapons · <b>J</b> power armour · <b>Offensive:</b> capture the sectors in order to push the front · <b>T</b> form squad, then give orders (follow, hold, attack task, disband) · <b>X</b> hold to plant or defuse a charge · <b>F</b> first / third person · <b>V</b> enter vehicle · <b>4–7</b> killstreaks · <b>Tab</b> scores · <b>Esc</b> pause<br>
     <b>Helicopter:</b> Space up · C down · W/S fly · A/D turn · E drop supplies · <b>Tank:</b> mouse aims · click/E main gun · right-click MG</div>
@@ -258,6 +261,7 @@ body.retro #c{filter:contrast(1.35) saturate(1.7) hue-rotate(-10deg)!important;i
 <div id="cine" class="hide"><div class="bar top"></div><div class="bar bot"></div><div id="cineText"><div id="cineT"></div><div id="cineS"></div></div><div id="skip">Space to skip</div></div>
 <div id="fade"></div><div id="inv" class="hide"><div class="iwrap"><div class="itop"><h2>Inventory</h2><button id="invclose">Close (I)</button></div><div id="invbody"></div></div></div><div id="rankup" class="hide"></div><div id="memorial" class="hide"></div><div id="vreward" class="hide"></div>
 <div id="ww2" class="hide"><div class="wrap"><div class="top"><h2>1944–45 · Road to Berlin</h2><button class="pri" id="ww2close">Back</button></div><p class="note" id="ww2stat"></p><div class="cq"><div id="ww2map"></div><div id="ww2side"></div></div><p class="note">Fight through 16 battles from the beaches of Normandy to Berlin and the Elbe, with M1 Garand, Springfield and Bazooka. Thompsons and BARs lie around the map.</p></div></div>
+<div id="acct" class="hide"><div class="fwrap"><div class="top"><h2>Account</h2><button class="pri" id="acctclose">Back</button></div><div id="acctbody"></div><p class="note" id="acctmsg" role="status"></p></div></div>
 <div id="friends" class="hide"><div class="fwrap"><div class="top"><h2>Friends</h2><button class="pri" id="frclose">Back</button></div><div class="frme">Your friend code <b id="frcode"></b><button id="frcopy">Copy</button></div><div class="row"><input id="frin" maxlength="9" placeholder="Friend's code, e.g. MW-AB12C" autocomplete="off"><button class="pri" id="fradd">Add friend</button></div><p class="note" id="frmsg"></p><p class="note" id="frnet"></p><div id="frlist"></div><p class="note">When a friend is in an online battle you can join on their team or on the other team. Invite a friend from the menu to start a private battle.</p></div></div>
 <div id="invite" class="hide"></div>
 <div id="conq" class="hide"><div class="wrap"><div class="top"><h2>Conquest</h2><button class="pri" id="conqclose">Back</button></div><p class="note" id="conqstat"></p><div class="cq"><div id="conqmap"></div><div id="conqside"></div></div></div></div>
@@ -1680,10 +1684,10 @@ const PASSES = {
 };
 const PROFILE = (() => { const d = { coins: 0, owned: ['m4', 'l96', 'rpg'], equip: ['m4', 'l96', 'rpg'], upg: [], passes: [], honors: 0, earned: 0 }; try { return Object.assign(d, JSON.parse(localStorage.getItem('fl_profile')) || {}); } catch (e) { return d; } })();
 const REINF_MAX = 5;
-const saveProfile = () => { try { localStorage.setItem('fl_profile', JSON.stringify(PROFILE)); } catch (e) { } };
+const saveProfile = () => { try { localStorage.setItem('fl_profile', JSON.stringify(PROFILE)); } catch (e) { } try { cloudSoon(); } catch (e) { } };
 function saveName() { const n = (($('name') && $('name').value) || '').trim().slice(0, 14); if (!n) return; PROFILE.name = n; if (typeof me !== 'undefined' && !playing) me.name = n; try { localStorage.setItem('fl_name', n); } catch (e) { } saveProfile(); }
-function saveAll() { saveProfile(); try { if (typeof saveCamp === 'function') saveCamp(); } catch (e) { } }
-setInterval(saveAll, 15000); addEventListener('pagehide', saveAll); addEventListener('beforeunload', saveAll); document.addEventListener('visibilitychange', () => { if (document.hidden) saveAll(); });
+function saveAll(final) { saveProfile(); try { if (typeof saveCamp === 'function') saveCamp(); } catch (e) { } if (final === true) try { cloudPush(true); } catch (e) { } }
+setInterval(saveAll, 15000); addEventListener('pagehide', () => saveAll(true)); document.addEventListener('visibilitychange', () => { if (document.hidden) saveAll(true); });
 const hasUpg = k => PROFILE.upg.includes(k), hasPass = k => PROFILE.passes.includes(k);
 // ── Ranks, XP and daily missions ──
 const RANKS = ['Recruit', 'Private', 'Private First Class', 'Lance Corporal', 'Corporal', 'Sergeant', 'Staff Sergeant', 'Sergeant First Class', 'Master Sergeant', 'First Sergeant', 'Sergeant Major', 'Warrant Officer', 'Second Lieutenant', 'First Lieutenant', 'Captain', 'Major', 'Lieutenant Colonel', 'Colonel', 'Brigadier General', 'Major General', 'Lieutenant General', 'General', 'General of the Army'];
@@ -2898,6 +2902,56 @@ $('frlist').onclick = e => { const t = e.target.closest('button'); if (!t) retur
   if (t.dataset.j != null) { const p = LOBBY.st[PROFILE.friends[+t.dataset.j].code]; if (p && p.room) joinFriend(p, t.dataset.s === 'same' ? p.team : (p.team === 'A' ? 'B' : 'A')); return; }
   if (t.dataset.inv != null) { const f = PROFILE.friends[+t.dataset.inv], room = 'mw-' + PROFILE.pcode.slice(3).toLowerCase(); LOBBY.ch.send({ type: 'broadcast', event: 'inv', payload: { to: f.code, from: PROFILE.pcode, n: lobbyMe().n, room, team: 'A' } }); announce(`Invite sent to ${f.name} · they can join your team or the other one`, true); joinOnline(room, 'A'); } };
 netReady.then(() => lobbyJoin());
+/* ---------------- Frontlines accounts: cloud save, sign in with MagicWinter, link to MagicWinter ---------------- */
+const ACCT = (() => { try { return JSON.parse(localStorage.getItem('fl_acct')) || {}; } catch (e) { return {}; } })();
+const acctSave = () => { try { localStorage.setItem('fl_acct', JSON.stringify(ACCT)); } catch (e) { } };
+async function flRpc(fn, args, keep) { const c = FL_NET; const r = await fetch(c.url + '/rest/v1/rpc/' + fn, { method: 'POST', keepalive: !!keep, headers: { apikey: c.key, Authorization: 'Bearer ' + c.key, 'Content-Type': 'application/json' }, body: JSON.stringify(args) });
+  if (r.status === 404) return { error: 'Accounts are being switched on — try again soon.' }; if (!r.ok) return { error: 'The account server had a problem. Try again.' }; return r.json(); }
+const cloudBlob = () => { let c = null; try { c = camp; } catch (e) { } return { v: 1, p: PROFILE, c }; };
+let cloudT = 0, cloudBusy = false;
+function cloudSoon() { if (!ACCT.token) return; clearTimeout(cloudT); cloudT = setTimeout(() => cloudPush(), 4000); }
+async function cloudPush(keep) { if (!ACCT.token || cloudBusy) return; cloudBusy = !keep; try { const r = await flRpc('fl_save', { p_token: ACCT.token, p_save: cloudBlob() }, keep); if (r && r.ok) { ACCT.saved = Date.now(); acctSave(); try { localStorage.setItem('fl_cloud_pushed', String(Date.now())); } catch (e) { } if (!keep) acctBadge(); } else if (r && r.error === 'signed out') acctSignedOut(); } catch (e) { } cloudBusy = false; }
+function applyCloud(save) { if (!save || !save.p) return false; try { localStorage.setItem('fl_profile_backup', JSON.stringify(PROFILE)); } catch (e) { }
+  for (const k of Object.keys(PROFILE)) delete PROFILE[k]; Object.assign(PROFILE, save.p); try { localStorage.setItem('fl_profile', JSON.stringify(PROFILE)); if (save.c) localStorage.setItem('fl_camp', JSON.stringify(save.c)); if (PROFILE.name) localStorage.setItem('fl_name', PROFILE.name); } catch (e) { } return true; }
+async function acctSignedIn(r, how) { ACCT.user = r.username; ACCT.token = r.token; ACCT.mw = r.mw || null; acctSave();
+  if (r.save && r.save.p) { applyCloud(r.save); $('acctmsg').textContent = 'Signed in · loading your saved progress…'; setTimeout(() => location.reload(), 700); return; }
+  await cloudPush(); renderAcct(); announceMenu(how === 'new' ? `Account created · your progress now saves to ${r.username}` : `Signed in as ${r.username} · progress saved to your account`); }
+function acctSignedOut() { delete ACCT.token; delete ACCT.user; delete ACCT.mw; acctSave(); renderAcct(); }
+function announceMenu(t) { const n = $('acctmsg'); if (n) n.textContent = t; acctBadge(); }
+function acctBadge() { const b = $('macct'); if (b) b.innerHTML = ACCT.user ? `👤 ${esc(ACCT.user)}${ACCT.mw ? ' <small>· MagicWinter</small>' : ''}` : '👤 Sign in'; }
+let acctTab = 'in';
+function renderAcct() { const o = $('acctbody'); if (!o) return; acctBadge();
+  if (ACCT.user) { o.innerHTML = `<div class="acrow"><div><div class="ack">Signed in as</div><div class="acn">${esc(ACCT.user)}</div><div class="note">Your progress, coins, Honors, rewards and friends save to this account, so you can play on any device.${ACCT.saved ? ' Last saved ' + new Date(ACCT.saved).toLocaleTimeString() + '.' : ''}</div></div></div>
+      <div class="acbox"><div class="ack">MagicWinter account</div>${ACCT.mw ? `<p>Linked to <b>${esc(ACCT.mw)}</b>. Sign in to Frontlines with it on any MagicWinter app.</p><button id="acunlink">Unlink</button>` : `<p class="note">Link your MagicWinter account to use one sign-in for every MagicWinter Studio app.</p><form id="aclinkf" autocomplete="off"><input name="u" placeholder="MagicWinter username" maxlength="20" required><input name="p" type="password" placeholder="MagicWinter password" required><button class="pri">Link MagicWinter account</button></form>`}</div>
+      <div class="acact"><button id="acsave">Save now</button><button id="acout">Sign out</button></div>`;
+    $('acsave').onclick = async () => { $('acctmsg').textContent = 'Saving…'; await cloudPush(); $('acctmsg').textContent = 'Saved.'; renderAcct(); };
+    $('acout').onclick = async () => { await cloudPush(); flRpc('fl_logout', { p_token: ACCT.token }).catch(() => { }); acctSignedOut(); $('acctmsg').textContent = 'Signed out. Progress on this device stays here.'; };
+    if ($('acunlink')) $('acunlink').onclick = async b => { const r = await flRpc('fl_unlink_mw', { p_token: ACCT.token }).catch(() => ({ error: "Can't reach the account server." })); if (r.ok) { ACCT.mw = null; acctSave(); renderAcct(); $('acctmsg').textContent = 'Unlinked from MagicWinter.'; } else $('acctmsg').textContent = r.error; };
+    if ($('aclinkf')) $('aclinkf').onsubmit = async e => { e.preventDefault(); const f = e.target, go = f.querySelector('button'); go.disabled = true; $('acctmsg').textContent = 'Checking…';
+      try { const m = await flRpc('mw_login', { p_username: f.u.value.trim(), p_password: f.p.value }); f.p.value = ''; if (!m.ok) throw new Error(m.error || 'Wrong username or password.');
+        const r = await flRpc('fl_link_mw', { p_token: ACCT.token, p_mw_token: m.token }); if (!r.ok) throw new Error(r.error); ACCT.mw = r.mw || m.username; acctSave(); renderAcct(); $('acctmsg').textContent = `Linked to MagicWinter account ${ACCT.mw}.`; }
+      catch (er) { go.disabled = false; $('acctmsg').textContent = er.message === 'Failed to fetch' ? "Can't reach the account server — check your internet." : er.message; } };
+    return; }
+  o.innerHTML = `<div class="actabs"><button data-t="in" class="${acctTab === 'in' ? 'on' : ''}">Sign in</button><button data-t="new" class="${acctTab === 'new' ? 'on' : ''}">Create account</button><button data-t="mw" class="${acctTab === 'mw' ? 'on' : ''}">MagicWinter</button></div>
+    <form id="acform" autocomplete="off"><p class="note">${acctTab === 'mw' ? 'Sign in with your MagicWinter account. A Frontlines account is made and linked for you the first time.' : acctTab === 'new' ? 'Make a Frontlines account to save your progress online. Your current progress moves into it.' : 'Sign in to your Frontlines account to load your saved progress.'}</p>
+    <input name="u" placeholder="${acctTab === 'mw' ? 'MagicWinter username' : 'Username'}" maxlength="20" required autocomplete="username"><input name="p" type="password" placeholder="Password${acctTab === 'new' ? ' (6+ characters)' : ''}" required autocomplete="${acctTab === 'new' ? 'new-password' : 'current-password'}">
+    ${acctTab === 'new' ? '<input name="p2" type="password" placeholder="Password again" required autocomplete="new-password">' : ''}<button class="pri">${acctTab === 'mw' ? 'Sign in with MagicWinter' : acctTab === 'new' ? 'Create account' : 'Sign in'}</button></form>
+    <p class="note">${acctTab === 'in' ? 'Signing in replaces the progress on this device with your saved progress (a backup is kept).' : 'No email needed. Keep your password safe: it can\'t be reset.'}</p>`;
+  o.querySelectorAll('.actabs button').forEach(b => b.onclick = () => { acctTab = b.dataset.t; $('acctmsg').textContent = ''; renderAcct(); });
+  $('acform').onsubmit = async e => { e.preventDefault(); const f = e.target, go = f.querySelector('button.pri'), u = f.u.value.trim(), p = f.p.value;
+    if (acctTab === 'new' && p !== f.p2.value) { $('acctmsg').textContent = "Passwords don't match."; return; }
+    go.disabled = true; $('acctmsg').textContent = acctTab === 'new' ? 'Creating…' : 'Signing in…';
+    try { let r; if (acctTab === 'mw') { const m = await flRpc('mw_login', { p_username: u, p_password: p }); if (!m.ok) throw new Error(m.error || 'Wrong username or password.'); r = await flRpc('fl_login_mw', { p_mw_token: m.token }); }
+      else r = await flRpc(acctTab === 'new' ? 'fl_signup' : 'fl_login', { p_username: u, p_password: p });
+      f.p.value = ''; if (!r.ok) throw new Error(r.error || 'Something went wrong.'); await acctSignedIn(r, acctTab); }
+    catch (er) { go.disabled = false; $('acctmsg').textContent = er.message === 'Failed to fetch' ? "Can't reach the account server — check your internet." : er.message; } }; }
+$('macct').onclick = () => { $('acct').classList.remove('hide'); $('acctmsg').textContent = ''; renderAcct(); };
+$('acctclose').onclick = () => $('acct').classList.add('hide');
+acctBadge();
+if (ACCT.token) flRpc('fl_load', { p_token: ACCT.token }).then(r => { if (r && r.ok) { ACCT.user = r.username; ACCT.mw = r.mw || null; acctSave(); acctBadge();
+    const local = +(localStorage.getItem('fl_cloud_pushed') || 0); if (r.save && r.save.p && r.saved_at && new Date(r.saved_at).getTime() > local + 5000 && JSON.stringify(r.save.p) !== JSON.stringify(PROFILE) && !playing) { if (applyCloud(r.save)) location.reload(); } }
+  else if (r && r.error === 'signed out') acctSignedOut(); }).catch(() => { });
+
 $('psens').oninput = e => { sens = +e.target.value; };
 
 /* ---------------- boot ---------------- */
