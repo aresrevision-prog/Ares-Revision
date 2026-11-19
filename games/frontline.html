@@ -2925,7 +2925,7 @@ netReady.then(() => lobbyJoin());
 /* ---------------- Frontlines accounts: cloud save, sign in with MagicWinter, link to MagicWinter ---------------- */
 const ACCT = (() => { try { return JSON.parse(localStorage.getItem('fl_acct')) || {}; } catch (e) { return {}; } })();
 const acctSave = () => { try { localStorage.setItem('fl_acct', JSON.stringify(ACCT)); } catch (e) { } };
-async function flRpc(fn, args, keep) { const c = FL_NET; const r = await fetch(c.url + '/rest/v1/rpc/' + fn, { method: 'POST', keepalive: !!keep, headers: { apikey: c.key, Authorization: 'Bearer ' + c.key, 'Content-Type': 'application/json' }, body: JSON.stringify(args) });
+async function flRpc(fn, args, keep) { const c = FL_NET; const r = await fetch(c.url + '/rest/v1/rpc/' + fn, { method: 'POST', keepalive: !!keep, headers: { apikey: c.key, 'Content-Type': 'application/json' }, body: JSON.stringify(args) });
   if (r.status === 404) return { error: 'Accounts are being switched on — try again soon.' }; if (!r.ok) return { error: 'The account server had a problem. Try again.' }; return r.json(); }
 const cloudBlob = () => { let c = null; try { c = camp; } catch (e) { } return { v: 1, p: PROFILE, c }; };
 let cloudT = 0, cloudBusy = false;
